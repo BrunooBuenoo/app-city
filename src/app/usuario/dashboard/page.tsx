@@ -3,89 +3,182 @@ import Link from "next/link";
 
 export default function UsuarioDashboard() {
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-[1280px] mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl md:text-3xl font-semibold text-[#112F4E] tracking-tight">Meu Painel</h2>
-          <p className="text-[#4A5D70] text-base mt-1 font-light">Bem-vindo de volta. Veja o que está acontecendo na cidade hoje.</p>
+    <div className="p-4 md:p-8 max-w-[1280px] mx-auto">
+      {/* Greeting Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-[28px] font-bold text-[#112F4E] tracking-tight">
+            Bem-vindo de volta, Cidadão
+          </h1>
+          <p className="text-[#94A3B8] text-[15px] mt-1">
+            Acompanhe suas reclamações e veja o que acontece na cidade.
+          </p>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E2E8F0] text-[13px] text-[#4A5D70]">
+            <span className="material-symbols-outlined text-[16px] text-[#94A3B8]">calendar_today</span>
+            {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+          </div>
+          <Link href="/reclamacao/nova">
+            <button className="flex items-center gap-2 bg-[#1a8ccc] text-white text-[13px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#1572a6] transition-colors shadow-sm">
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Nova Reclamação
+            </button>
+          </Link>
+        </div>
+      </div>
 
-        {/* Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "Minhas Reclamações", value: "12", badge: "+12%", icon: "description", color: "#1a8ccc", badgeBg: "bg-[#E8F2F8]", badgeText: "text-[#1a8ccc]", iconBg: "bg-[#E8F2F8]" },
-            { label: "Minhas Resolvidas", value: "8", badge: "Alta", icon: "check_circle", color: "#10B981", badgeBg: "bg-[#D1FAE5]", badgeText: "text-[#065F46]", iconBg: "bg-[#D1FAE5]" },
-            { label: "Em Andamento", value: "3", badge: "-5%", icon: "pending", color: "#F59E0B", badgeBg: "bg-[#FEF3C7]", badgeText: "text-[#B45309]", iconBg: "bg-[#FEF3C7]" },
-            { label: "Concordos Recebidos", value: "45", badge: "+42", icon: "favorite", color: "#EF4444", badgeBg: "bg-[#FEE2E2]", badgeText: "text-[#991B1B]", iconBg: "bg-[#FEE2E2]" },
-          ].map((card) => (
-            <div key={card.label} className="bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-card hover:shadow-card-hover transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-2.5 ${card.iconBg} rounded-xl`} style={{ color: card.color }}>
-                  <span className="material-symbols-outlined text-[22px]">{card.icon}</span>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { icon: "description", label: "Minhas Reclamações", value: "12", change: "+3.2%", changeUp: true, iconBg: "bg-[#E8F2F8]", iconColor: "text-[#1a8ccc]" },
+          { icon: "check_circle", label: "Resolvidas", value: "8", change: "Alta", changeUp: true, iconBg: "bg-[#D1FAE5]", iconColor: "text-[#10B981]" },
+          { icon: "pending", label: "Em Andamento", value: "3", change: "-5%", changeUp: false, iconBg: "bg-[#FEF3C7]", iconColor: "text-[#F59E0B]" },
+          { icon: "favorite", label: "Concordos Recebidos", value: "45", change: "+42", changeUp: true, iconBg: "bg-[#FEE2E2]", iconColor: "text-[#EF4444]" },
+        ].map((card) => (
+          <div key={card.label} className="bg-white rounded-2xl border border-[#E2E8F0] p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg ${card.iconBg} flex items-center justify-center`}>
+                  <span className={`material-symbols-outlined ${card.iconColor} text-[18px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{card.icon}</span>
                 </div>
-                <div className={`${card.badgeBg} ${card.badgeText} text-[11px] font-semibold px-2.5 py-1 rounded-lg`}>{card.badge}</div>
+                <span className="text-[13px] font-medium text-[#4A5D70]">{card.label}</span>
               </div>
-              <p className="text-[#94A3B8] text-xs font-medium uppercase tracking-wider">{card.label}</p>
-              <h3 className="text-2xl font-bold text-[#112F4E] mt-1 mb-4">{card.value}</h3>
-              <div className="h-10 w-full flex items-end gap-1">
-                {[1/4, 1/2, 1/3, 2/3, 1].map((h, i) => (
-                  <div key={i} className="w-full rounded-t-sm transition-all" style={{ height: `${h * 100}%`, backgroundColor: card.color, opacity: 0.15 + (i * 0.2) }}></div>
-                ))}
-              </div>
+              <button className="text-[#94A3B8] hover:text-[#4A5D70]">
+                <span className="material-symbols-outlined text-[18px]">more_horiz</span>
+              </button>
             </div>
-          ))}
+            <h2 className="text-[32px] font-bold text-[#112F4E] tracking-tight leading-none mb-2">{card.value}</h2>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[12px] font-semibold ${card.changeUp ? "text-[#10B981]" : "text-[#EF4444]"}`}>
+                {card.change} {card.changeUp ? "↑" : "↓"}
+              </span>
+              <span className="text-[12px] text-[#94A3B8]">desde o mês passado</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Second Row — Wallet-style cards + Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+        {/* My Complaints Summary */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[16px] font-semibold text-[#112F4E]">Minhas Categorias</span>
+            <Link href="/usuario/minhas-reclamacoes" className="text-[13px] font-medium text-[#1a8ccc] hover:underline">Ver Todas</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { emoji: "🔧", label: "Infraestrutura", value: "5", status: "Ativa", statusColor: "#10B981" },
+              { emoji: "💡", label: "Iluminação", value: "3", status: "Ativa", statusColor: "#10B981" },
+              { emoji: "🗑️", label: "Limpeza", value: "2", status: "Ativa", statusColor: "#10B981" },
+              { emoji: "💧", label: "Saneamento", value: "2", status: "Pendente", statusColor: "#94A3B8" },
+            ].map((cat) => (
+              <div key={cat.label} className="bg-[#FAF7F2] rounded-xl p-3.5 border border-[#E2E8F0]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-lg">{cat.emoji}</span>
+                  <button className="text-[#94A3B8] hover:text-[#4A5D70]">
+                    <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                  </button>
+                </div>
+                <p className="text-[13px] font-medium text-[#4A5D70]">{cat.label}</p>
+                <p className="text-[18px] font-bold text-[#112F4E] mt-0.5">{cat.value}</p>
+                <p className="text-[11px] font-semibold mt-1" style={{ color: cat.statusColor }}>{cat.status}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-card overflow-hidden flex-1 flex flex-col">
-          <div className="p-5 md:p-6 border-b border-[#E2E8F0] flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-[#112F4E]">Meus Relatórios Recentes</h3>
-            <button className="text-[#1a8ccc] text-sm font-semibold hover:underline transition-all">Ver todos</button>
+        {/* Timeline / Progress */}
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-[#E2E8F0] p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#E8F2F8] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#1a8ccc] text-[18px]">insights</span>
+              </div>
+              <span className="text-[16px] font-semibold text-[#112F4E]">Atividade</span>
+            </div>
+            <select className="text-[13px] text-[#4A5D70] bg-[#FAF7F2] border border-[#E2E8F0] rounded-lg px-3 py-1.5 outline-none">
+              <option>Este Mês</option>
+              <option>Último Mês</option>
+            </select>
           </div>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#FAF7F2]">
-                  {["Categoria", "Status", "Concordos", "Localização", "Data"].map((h, i) => (
-                    <th key={h} className={`px-6 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider ${i === 2 ? "text-center" : ""} ${i === 4 ? "text-right" : ""}`}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F5F2ED]">
-                {[
-                  { icon: "lightbulb", cat: "Iluminação Pública", status: "Em Andamento", statusClass: "bg-[#FEF3C7] text-[#B45309]", concordos: "124", local: "Av. Sampaio Vidal, Centro", data: "Hoje, 14:30", iconBg: "bg-[#E8F2F8]", iconColor: "text-[#1a8ccc]" },
-                  { icon: "construction", cat: "Buraco na Via", status: "Resolvido", statusClass: "bg-[#D1FAE5] text-[#065F46]", concordos: "89", local: "Rua das Azaleias, 452", data: "Ontem, 09:15", iconBg: "bg-[#FEE2E2]", iconColor: "text-[#991B1B]" },
-                  { icon: "delete", cat: "Coleta de Lixo", status: "Aguardando", statusClass: "bg-[#E8F2F8] text-[#1a8ccc]", concordos: "45", local: "Bairro Jd. Marília", data: "12 Mai, 16:40", iconBg: "bg-[#FEF3C7]", iconColor: "text-[#B45309]" },
-                ].map((row) => (
-                  <tr key={row.cat} className="hover:bg-[#FAF7F2] transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-9 w-9 rounded-xl ${row.iconBg} ${row.iconColor} flex items-center justify-center`}>
-                          <span className="material-symbols-outlined text-[20px]">{row.icon}</span>
-                        </div>
-                        <span className="text-sm font-medium text-[#112F4E]">{row.cat}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5"><span className={`px-3 py-1 rounded-full text-[11px] font-semibold ${row.statusClass}`}>{row.status}</span></td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex items-center justify-center gap-1 text-[#4A5D70]">
-                        <span className="material-symbols-outlined text-[16px] text-[#EF4444]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                        <span className="text-sm">{row.concordos}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2 text-[#4A5D70]">
-                        <span className="material-symbols-outlined text-[16px]">location_on</span>
-                        <span className="text-sm">{row.local}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-right"><span className="text-sm text-[#94A3B8]">{row.data}</span></td>
-                  </tr>
+          {/* Bar Chart */}
+          <div className="flex items-end gap-3 h-[180px]">
+            {["Sem 1", "Sem 2", "Sem 3", "Sem 4"].map((label, i) => {
+              const heights = [50, 75, 40, 90];
+              const isHighlight = i === 3;
+              return (
+                <div key={label} className="flex-1 flex flex-col items-center gap-2">
+                  {isHighlight && (
+                    <div className="bg-[#112F4E] text-white text-[11px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap mb-1">
+                      +5 reclamações
+                    </div>
+                  )}
+                  <div className="w-full relative">
+                    <div
+                      className={`w-full rounded-lg transition-all ${isHighlight ? "bg-[#1a8ccc]" : "bg-[#1a8ccc]/15 hover:bg-[#1a8ccc]/30"}`}
+                      style={{ height: `${heights[i]}%`, minHeight: "30px" }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-[#94A3B8]">{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Transactions Table */}
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
+        <div className="p-5 md:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#E8F2F8] flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#1a8ccc] text-[18px]">receipt_long</span>
+            </div>
+            <span className="text-[16px] font-semibold text-[#112F4E]">Atividade Recente</span>
+          </div>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E2E8F0] rounded-lg text-[13px] text-[#4A5D70] hover:bg-[#FAF7F2] transition-colors">
+            <span className="material-symbols-outlined text-[16px]">filter_list</span>
+            Filtrar
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-t border-b border-[#E2E8F0] bg-[#FAF7F2]">
+                {["Atividade", "Data", "Localização", "Status"].map((h) => (
+                  <th key={h} className="px-6 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">{h}</th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F5F2ED]">
+              {[
+                { icon: "💡", label: "Iluminação Pública", date: "Seg, 18 Mai 2026", local: "Av. Sampaio Vidal, Centro", status: "Em Andamento", statusColor: "#F59E0B" },
+                { icon: "🔧", label: "Buraco na Via", date: "Dom, 17 Mai 2026", local: "Rua das Azaleias, 452", status: "Resolvido", statusColor: "#10B981" },
+                { icon: "🗑️", label: "Coleta de Lixo", date: "Sáb, 16 Mai 2026", local: "Bairro Jd. Marília", status: "Aguardando", statusColor: "#1a8ccc" },
+              ].map((row) => (
+                <tr key={row.label} className="hover:bg-[#FAF7F2]/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-[#FAF7F2] border border-[#E2E8F0] rounded-lg flex items-center justify-center text-[14px]">
+                        {row.icon}
+                      </div>
+                      <span className="text-[14px] font-medium text-[#112F4E]">{row.label}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-[13px] text-[#4A5D70]">{row.date}</td>
+                  <td className="px-6 py-4 text-[13px] text-[#4A5D70]">{row.local}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: row.statusColor }} />
+                      <span className="text-[13px] font-medium" style={{ color: row.statusColor }}>{row.status}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
