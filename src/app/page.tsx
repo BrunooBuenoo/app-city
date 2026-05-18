@@ -6,7 +6,7 @@ import { Camera, MapPin, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans text-[#112F4E]">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-[#112F4E]">
       <Navbar />
 
       {/* Hero Section */}
