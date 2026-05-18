@@ -1,6 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
 import { Camera, MapPin, CheckCircle2 } from "lucide-react";
 
@@ -223,32 +224,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#112F4E] pt-20 pb-10 px-6 md:px-12 mt-auto">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-serif text-white mb-2 italic">Sac do Marília ao Contrário</h2>
-            <p className="text-[#94A3B8] font-light text-lg">Plataforma de Gestão Urbana</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-6">
-             <Link href="/admin/dashboard" className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors text-center">
-                Portal Administrativo
-             </Link>
-             <Link href="/usuario/dashboard" className="px-8 py-4 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-full font-medium transition-colors text-center">
-                Portal do Cidadão
-             </Link>
-          </div>
-        </div>
-        
-        <div className="max-w-[1400px] mx-auto mt-16 pt-8 border-t border-white/10 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#94A3B8]">
-          <p>© 2026 Sac do Marília ao Contrário. Todos os direitos reservados.</p>
-          <div className="flex gap-6">
-            <Link href="/termos" className="hover:text-white transition-colors">Termos de Uso</Link>
-            <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
