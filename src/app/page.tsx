@@ -1,40 +1,11 @@
 import Link from "next/link";
 import React from "react";
+import { Navbar } from "@/components/layout/Navbar";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-surface-bright flex flex-col font-body-md text-on-surface">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-surface-bright/80 backdrop-blur-md border-b border-outline-variant px-4 py-3 md:px-8 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-on-primary text-[24px]">
-              location_city
-            </span>
-          </div>
-          <div>
-            <h1 className="font-headline-sm text-headline-sm font-bold text-primary leading-tight">
-              SAC Marília
-            </h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="hidden md:flex items-center gap-2 px-4 py-2 text-on-surface-variant font-label-md hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
-            Acesso Restrito
-          </Link>
-          <Link
-            href="/usuario/dashboard"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-label-lg shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-lg">login</span>
-            <span className="hidden sm:inline">Acessar</span>
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col">
