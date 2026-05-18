@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body-md min-h-screen antialiased;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.pulsing-pin {
+  position: relative;
+}
+.pulsing-pin::after {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 77, 77, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: translate(-50%, -50%) scale(0.33); opacity: 1; }
+  80%, 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+.glass-panel {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
