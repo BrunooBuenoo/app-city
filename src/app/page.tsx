@@ -1,119 +1,109 @@
 import Link from "next/link";
 import React from "react";
 import { Navbar } from "@/components/layout/Navbar";
+import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
+import { Camera, MapPin, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-surface-bright flex flex-col font-body-md text-on-surface">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans text-[#112F4E]">
       <Navbar />
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col">
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="flex flex-col gap-6 text-center lg:text-left">
-            <div className="inline-block w-fit mx-auto lg:mx-0 px-3 py-1 rounded-full bg-secondary-container/30 text-secondary-container font-label-sm mb-2 border border-secondary-container/20">
+        <section className="w-full max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="flex flex-col gap-8 text-center lg:text-left z-10">
+            <div className="inline-flex items-center w-fit mx-auto lg:mx-0 px-5 py-2.5 rounded-full bg-[#E8F2F8] text-[#1a8ccc] text-sm font-bold tracking-wide uppercase">
               Transformando a nossa cidade
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-on-surface tracking-tight leading-[1.1]">
-              Cuidando de <span className="text-primary">Marília</span>, Juntos.
+            
+            <h2 className="text-5xl md:text-6xl lg:text-[5rem] font-medium text-[#112F4E] tracking-tight leading-[1.05]">
+              Cuidando de <br className="hidden lg:block" />
+              <span className="text-[#1a8ccc] italic font-serif">Marília</span>, Juntos.
             </h2>
-            <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto lg:mx-0">
+            
+            <p className="text-lg md:text-xl text-[#4A5D70] max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
               Sua voz faz a diferença. Reporte problemas de infraestrutura, acompanhe solicitações e ajude a construir uma cidade melhor para todos.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-4">
               <Link
                 href="/reclamacao/nova"
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-xl font-headline-sm shadow-md hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 px-8 py-5 bg-[#1a8ccc] text-white rounded-full text-lg font-medium shadow-[0_8px_30px_rgb(26,140,204,0.3)] hover:bg-[#1572a6] hover:-translate-y-1 transition-all"
               >
-                <span className="material-symbols-outlined text-2xl">add_a_photo</span>
                 Reportar Problema
               </Link>
               <Link
                 href="/mapa"
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-surface-container border-2 border-outline-variant text-on-surface rounded-xl font-headline-sm shadow-sm hover:border-primary hover:text-primary transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 px-8 py-5 bg-white border-2 border-[#E2E8F0] text-[#112F4E] rounded-full text-lg font-medium shadow-sm hover:border-[#112F4E] hover:-translate-y-1 transition-all"
               >
-                <span className="material-symbols-outlined text-2xl">map</span>
                 Ver Mapa
               </Link>
             </div>
           </div>
           
-          {/* Hero Illustration (Mocked with decorative elements) */}
-          <div className="relative h-[400px] w-full rounded-3xl overflow-hidden shadow-2xl border border-outline-variant bg-surface-container-highest">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeTThu0vAiC4G_6CGCUb9xU6o7ENl4Y6-Mrl6gFAspsKB8Ws-5uJhJebQZzgq6LVN-WCUUILC__ThDKanwUtCPEx9iYIaXOVKTjMr5j5YyAXWN-zukchrUbgLems0dx7lcuAhpwDfdRahksRRmMFhfh5BnuLM7ffHUl22ExCb7Y_RGSma4K0_jcxTtTTcAmnS8pE_0jFu50Ck99Zqf4oqHMNKySy94EIG3G7PKzbVqPe11JmHMofKivDpp-SFT3f4csoddxITZU2GU"
-              alt="Mapa de Marília"
-              className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay"
-            />
-            {/* Floating Mock Cards */}
-            <div className="absolute top-8 right-8 glass-panel bg-white/90 p-4 rounded-xl shadow-lg border border-white/20 animate-bounce-slow">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                  <span className="material-symbols-outlined">check_circle</span>
-                </div>
-                <div>
-                  <p className="font-label-md text-on-surface">Buraco tapado</p>
-                  <p className="font-body-sm text-on-surface-variant">Há 5 minutos</p>
-                </div>
-              </div>
+          {/* Hero Map Container */}
+          <div className="relative h-[500px] w-full lg:w-[110%] lg:-ml-[5%] rounded-[3rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08)] border-8 border-white bg-white">
+            <div className="absolute inset-0">
+              <Map center={[-49.9458, -22.2139]} zoom={13}>
+                <MapMarker longitude={-49.95} latitude={-22.22}>
+                  <MarkerContent>
+                    <div className="w-6 h-6 bg-[#1a8ccc] rounded-full border-4 border-white shadow-lg animate-pulse" />
+                  </MarkerContent>
+                </MapMarker>
+                <MapMarker longitude={-49.93} latitude={-22.20}>
+                  <MarkerContent>
+                    <div className="w-6 h-6 bg-[#F59E0B] rounded-full border-4 border-white shadow-lg animate-pulse" />
+                  </MarkerContent>
+                </MapMarker>
+              </Map>
             </div>
             
-            <div className="absolute bottom-12 left-8 glass-panel bg-white/90 p-4 rounded-xl shadow-lg border border-white/20">
-               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">lightbulb</span>
-                </div>
-                <div>
-                  <p className="font-label-md text-on-surface">Nova solicitação</p>
-                  <p className="font-body-sm text-on-surface-variant">Iluminação Pública</p>
-                </div>
-              </div>
-            </div>
+            {/* End of Hero Map */}
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="w-full bg-surface-container-lowest py-20 px-4 md:px-8 border-t border-outline-variant">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h3 className="text-3xl font-bold text-on-surface mb-4">Como funciona?</h3>
-              <p className="text-on-surface-variant max-w-2xl mx-auto text-lg">
-                Um processo simples, transparente e eficiente para melhorar o ambiente urbano da nossa cidade.
+        <section className="w-full bg-white py-24 px-6 md:px-12 rounded-t-[4rem] mt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] relative z-20">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="text-center mb-20">
+              <h3 className="text-4xl md:text-5xl font-medium text-[#112F4E] mb-6">Como funciona?</h3>
+              <p className="text-[#4A5D70] max-w-2xl mx-auto text-xl font-light">
+                Um processo desenhado para ser transparente, humano e eficiente.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {/* Feature 1 */}
-              <div className="bg-surface-bright p-8 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-on-primary transition-all duration-300">
-                  <span className="material-symbols-outlined text-3xl">add_location_alt</span>
+              <div className="bg-[#FAF7F2] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
+                <div className="w-24 h-24 bg-[#E8F2F8] rounded-full flex items-center justify-center text-[#1a8ccc] mb-8">
+                  <Camera className="w-10 h-10" />
                 </div>
-                <h4 className="text-xl font-bold text-on-surface mb-3">1. Reporte o Problema</h4>
-                <p className="text-on-surface-variant leading-relaxed">
-                  Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos sua solicitação é enviada.
+                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">1. Reporte o Problema</h4>
+                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
+                  Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos sua solicitação é enviada para as equipes.
                 </p>
               </div>
 
               {/* Feature 2 */}
-              <div className="bg-surface-bright p-8 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary mb-6 group-hover:scale-110 group-hover:bg-secondary group-hover:text-on-secondary transition-all duration-300">
-                  <span className="material-symbols-outlined text-3xl">track_changes</span>
+              <div className="bg-[#FDF2F2] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
+                <div className="w-24 h-24 bg-[#FCE8E8] rounded-full flex items-center justify-center text-[#EF4444] mb-8">
+                  <MapPin className="w-10 h-10" />
                 </div>
-                <h4 className="text-xl font-bold text-on-surface mb-3">2. Acompanhe o Status</h4>
-                <p className="text-on-surface-variant leading-relaxed">
-                  Receba notificações sobre o andamento e interaja com a comunidade dando "Concordo" em outros relatos.
+                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">2. Acompanhe o Status</h4>
+                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
+                  Receba notificações sobre o andamento e interaja com a comunidade dando "Concordo" em relatos próximos a você.
                 </p>
               </div>
 
               {/* Feature 3 */}
-              <div className="bg-surface-bright p-8 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary mb-6 group-hover:scale-110 group-hover:bg-tertiary group-hover:text-on-tertiary transition-all duration-300">
-                  <span className="material-symbols-outlined text-3xl">task_alt</span>
+              <div className="bg-[#F0FDF4] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
+                <div className="w-24 h-24 bg-[#DCFCE7] rounded-full flex items-center justify-center text-[#10B981] mb-8">
+                  <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h4 className="text-xl font-bold text-on-surface mb-3">3. Problema Resolvido</h4>
-                <p className="text-on-surface-variant leading-relaxed">
-                  As equipes da prefeitura atuam com base nos dados gerados e o problema é solucionado com eficiência.
+                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">3. Problema Resolvido</h4>
+                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
+                  As equipes da prefeitura atuam com base nos dados gerados e o problema é solucionado com máxima eficiência e transparência.
                 </p>
               </div>
             </div>
@@ -122,18 +112,28 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface-container border-t border-outline-variant py-8 px-4 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center">
-             <span className="material-symbols-outlined text-on-surface-variant">location_city</span>
+      <footer className="bg-[#112F4E] pt-20 pb-10 px-6 md:px-12 mt-auto">
+        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl md:text-4xl font-serif text-white mb-2 italic">SAC Marília</h2>
+            <p className="text-[#94A3B8] font-light text-lg">Plataforma de Gestão Urbana</p>
           </div>
-          <p className="text-on-surface-variant font-label-sm">
-            © 2026 SAC Marília. Plataforma de Gestão Urbana.
-          </p>
-          <div className="flex gap-4">
-             <Link href="/admin/dashboard" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Portal Administrativo</Link>
-             <span className="text-outline-variant">•</span>
-             <Link href="/usuario/dashboard" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Portal do Cidadão</Link>
+          
+          <div className="flex flex-col sm:flex-row gap-6">
+             <Link href="/admin/dashboard" className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors text-center">
+                Portal Administrativo
+             </Link>
+             <Link href="/usuario/dashboard" className="px-8 py-4 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-full font-medium transition-colors text-center">
+                Portal do Cidadão
+             </Link>
+          </div>
+        </div>
+        
+        <div className="max-w-[1400px] mx-auto mt-16 pt-8 border-t border-white/10 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#94A3B8]">
+          <p>© 2026 SAC Marília. Todos os direitos reservados.</p>
+          <div className="flex gap-6">
+            <Link href="/termos" className="hover:text-white transition-colors">Termos de Uso</Link>
+            <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>
           </div>
         </div>
       </footer>
