@@ -59,8 +59,16 @@ export default function Home() {
               </Map>
             </div>
             
-            {/* End of Hero Map */}
+           
           </div>
+           {/* Imagem do Victor com Dinossauro flutuando e saindo para fora */}
+            <div className="absolute -bottom-190 -right-10 md:-bottom-30 md:-right-0 z-30 pointer-events-none">
+              <img 
+                src="/image/victor.png" 
+                alt="Victor no Dinossauro" 
+                className="w-[300px] md:w-[550px] h-auto object-contain"
+              />
+            </div>
         </section>
 
         {/* Features Section */}
