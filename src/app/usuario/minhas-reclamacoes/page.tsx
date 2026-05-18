@@ -2,247 +2,109 @@ import React from "react";
 import Link from "next/link";
 
 export default function MinhasReclamacoes() {
+  const summaryCards = [
+    { label: "Total", value: "12", color: "#1a8ccc" },
+    { label: "Resolvidas", value: "8", color: "#10B981" },
+    { label: "Em Andamento", value: "3", color: "#F59E0B" },
+    { label: "Concordos", value: "45", color: "#EF4444", hasHeart: true },
+  ];
+
+  const complaints = [
+    {
+      icon: "water_damage", cat: "Infraestrutura", title: "Vazamento de Esgoto",
+      status: "Em Andamento", statusClass: "bg-[#FEF3C7] text-[#B45309]",
+      location: "Rua das Flores, 123 - Centro", date: "12 de Outubro, 2023",
+      concordos: 24, iconBg: "bg-[#FEE2E2]", iconColor: "text-[#991B1B]",
+    },
+    {
+      icon: "lightbulb", cat: "Serviços", title: "Iluminação Pública",
+      status: "Resolvido", statusClass: "bg-[#D1FAE5] text-[#065F46]",
+      location: "Av. Sampaio Vidal, 450", date: "08 de Outubro, 2023",
+      concordos: 12, iconBg: "bg-[#E8F2F8]", iconColor: "text-[#1a8ccc]",
+    },
+    {
+      icon: "delete", cat: "Saneamento", title: "Acúmulo de Lixo",
+      status: "Em Andamento", statusClass: "bg-[#FEF3C7] text-[#B45309]",
+      location: "Praça Saturnino de Brito", date: "05 de Outubro, 2023",
+      concordos: 9, iconBg: "bg-[#FEF3C7]", iconColor: "text-[#B45309]",
+    },
+  ];
+
   return (
-    <div className="p-4 md:p-8 max-w-container-max mx-auto w-full">
-      {/* Main Content */}
-      <main className="flex-1 mt-16 mb-24 px-4 overflow-x-hidden">
-        {/* Summary Cards (Horizontal Scrollable) */}
-        <section className="mt-6">
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
-            <div className="min-w-[140px] flex-shrink-0 bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant">
-              <span className="font-label-md text-label-md text-on-surface-variant block mb-1">
-                Total
-              </span>
-              <span className="font-headline-md text-headline-md font-bold text-primary">
-                12
-              </span>
-            </div>
-            <div className="min-w-[140px] flex-shrink-0 bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant">
-              <span className="font-label-md text-label-md text-on-surface-variant block mb-1">
-                Resolvidas
-              </span>
-              <span className="font-headline-md text-headline-md font-bold text-secondary">
-                8
-              </span>
-            </div>
-            <div className="min-w-[140px] flex-shrink-0 bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant">
-              <span className="font-label-md text-label-md text-on-surface-variant block mb-1">
-                Em Andamento
-              </span>
-              <span className="font-headline-md text-headline-md font-bold text-primary-container">
-                3
-              </span>
-            </div>
-            <div className="min-w-[140px] flex-shrink-0 bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant">
-              <span className="font-label-md text-label-md text-on-surface-variant block mb-1">
-                Concordos
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="font-headline-md text-headline-md font-bold text-on-surface">
-                  45
-                </span>
-                <span
-                  className="material-symbols-outlined text-secondary text-sm"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  favorite
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
+    <div className="p-4 md:p-8 max-w-[1280px] mx-auto w-full">
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl md:text-3xl font-semibold text-[#112F4E] tracking-tight">Minhas Reclamações</h2>
+        <p className="text-[#4A5D70] text-base mt-1 font-light">Acompanhe o andamento das suas solicitações.</p>
+      </div>
 
-        {/* Complaints List */}
-        <section className="mt-8 space-y-4">
-          <h2 className="font-label-lg text-label-lg text-outline uppercase tracking-wider">
-            Recentes
-          </h2>
-          {/* Card 1 */}
-          <div className="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant flex flex-col gap-3">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-secondary-container/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-secondary">
-                    water_damage
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-[16px] font-bold text-on-surface">
-                    Vazamento de Esgoto
-                  </h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Infraestrutura
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-primary-container/10 text-primary-container text-label-sm font-semibold rounded-full">
-                Em Andamento
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  location_on
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  Rua das Flores, 123 - Centro
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  calendar_today
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  12 de Outubro, 2023
-                </span>
+      {/* Summary Cards */}
+      <section>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+          {summaryCards.map((card) => (
+            <div key={card.label} className="min-w-[140px] flex-shrink-0 bg-white p-4 rounded-2xl shadow-card border border-[#E2E8F0]">
+              <span className="text-xs font-medium text-[#94A3B8] uppercase tracking-wider block mb-2">{card.label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xl font-bold" style={{ color: card.color }}>{card.value}</span>
+                {card.hasHeart && (
+                  <span className="material-symbols-outlined text-[#EF4444] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                )}
               </div>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t border-surface-variant">
-              <div className="flex items-center gap-1 text-secondary">
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  favorite
-                </span>
-                <span className="font-label-md text-label-md font-bold">
-                  24 Concordos
-                </span>
-              </div>
-              <button className="text-primary font-label-md text-label-md flex items-center gap-1">
-                Ver detalhes{" "}
-                <span className="material-symbols-outlined text-[16px]">
-                  chevron_right
-                </span>
-              </button>
-            </div>
-          </div>
-          {/* Card 2 */}
-          <div className="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant flex flex-col gap-3 opacity-90">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-tertiary-container/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-tertiary">
-                    lightbulb
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-[16px] font-bold text-on-surface">
-                    Iluminação Pública
-                  </h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Serviços
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-label-sm font-semibold rounded-full">
-                Resolvido
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  location_on
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  Av. Sampaio Vidal, 450
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  calendar_today
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  08 de Outubro, 2023
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t border-surface-variant">
-              <div className="flex items-center gap-1 text-secondary">
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  favorite
-                </span>
-                <span className="font-label-md text-label-md font-bold">
-                  12 Concordos
-                </span>
-              </div>
-              <button className="text-primary font-label-md text-label-md flex items-center gap-1">
-                Ver detalhes{" "}
-                <span className="material-symbols-outlined text-[16px]">
-                  chevron_right
-                </span>
-              </button>
-            </div>
-          </div>
-          {/* Card 3 */}
-          <div className="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(26,28,30,0.04)] border border-outline-variant flex flex-col gap-3">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary">
-                    delete
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-[16px] font-bold text-on-surface">
-                    Acúmulo de Lixo
-                  </h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Saneamento
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-primary-container/10 text-primary-container text-label-sm font-semibold rounded-full">
-                Em Andamento
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  location_on
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  Praça Saturnino de Brito
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-outline">
-                <span className="material-symbols-outlined text-[18px]">
-                  calendar_today
-                </span>
-                <span className="font-body-sm text-body-sm">
-                  05 de Outubro, 2023
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t border-surface-variant">
-              <div className="flex items-center gap-1 text-secondary">
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  favorite
-                </span>
-                <span className="font-label-md text-label-md font-bold">
-                  9 Concordos
-                </span>
-              </div>
-              <button className="text-primary font-label-md text-label-md flex items-center gap-1">
-                Ver detalhes{" "}
-                <span className="material-symbols-outlined text-[16px]">
-                  chevron_right
-                </span>
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
+          ))}
+        </div>
+      </section>
 
-      {/* Floating Action Button */}
+      {/* Complaints List */}
+      <section className="mt-8 space-y-3">
+        <h3 className="text-xs font-semibold text-[#94A3B8] uppercase tracking-widest mb-2">Recentes</h3>
+
+        {complaints.map((c) => (
+          <div key={c.title} className="bg-white p-5 rounded-2xl shadow-card border border-[#E2E8F0] flex flex-col gap-4 hover:shadow-card-hover transition-shadow">
+            {/* Top Row */}
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className={`w-11 h-11 rounded-xl ${c.iconBg} flex items-center justify-center`}>
+                  <span className={`material-symbols-outlined ${c.iconColor} text-[22px]`}>{c.icon}</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-[#112F4E]">{c.title}</h3>
+                  <p className="text-sm text-[#94A3B8]">{c.cat}</p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 ${c.statusClass} text-[11px] font-semibold rounded-full`}>{c.status}</span>
+            </div>
+
+            {/* Details */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2 text-[#4A5D70]">
+                <span className="material-symbols-outlined text-[18px]">location_on</span>
+                <span className="text-sm">{c.location}</span>
+              </div>
+              <div className="flex items-center gap-2 text-[#4A5D70]">
+                <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                <span className="text-sm">{c.date}</span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-between items-center pt-3 border-t border-[#F5F2ED]">
+              <div className="flex items-center gap-1.5 text-[#EF4444]">
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                <span className="text-sm font-semibold">{c.concordos} Concordos</span>
+              </div>
+              <button className="text-[#1a8ccc] text-sm font-semibold flex items-center gap-1 hover:underline">
+                Ver detalhes
+                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* FAB */}
       <Link href="/reclamacao/nova">
-        <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-90 z-50">
+        <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl shadow-elevated flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50">
           <span className="material-symbols-outlined text-[28px]">add</span>
         </button>
       </Link>

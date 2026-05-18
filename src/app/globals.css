@@ -3,7 +3,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-on-surface font-body-md min-h-screen antialiased;
+    @apply bg-[#FAF7F2] text-[#112F4E] min-h-screen antialiased;
   }
 }
 
@@ -11,6 +11,15 @@
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+/* ─── Clean Card System ─── */
+.card-clean {
+  @apply bg-white rounded-2xl border border-[#E2E8F0] shadow-card;
+}
+.card-clean:hover {
+  @apply shadow-card-hover;
+}
+
+/* ─── Pulsing Pin ─── */
 .pulsing-pin {
   position: relative;
 }
@@ -19,7 +28,7 @@
   position: absolute;
   width: 32px;
   height: 32px;
-  background: rgba(255, 77, 77, 0.4);
+  background: rgba(26, 140, 204, 0.3);
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -30,14 +39,32 @@
   0% { transform: translate(-50%, -50%) scale(0.33); opacity: 1; }
   80%, 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
+
+/* ─── Glass Panel ─── */
 .glass-panel {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* ─── Scrollbar ─── */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ─── Status Badge Colors ─── */
+.badge-open {
+  @apply bg-[#E8F2F8] text-[#1a8ccc];
+}
+.badge-progress {
+  @apply bg-[#FEF3C7] text-[#B45309];
+}
+.badge-resolved {
+  @apply bg-[#D1FAE5] text-[#065F46];
+}
+.badge-critical {
+  @apply bg-[#FEE2E2] text-[#991B1B];
 }

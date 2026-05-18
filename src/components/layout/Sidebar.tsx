@@ -17,23 +17,26 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface shadow-sm flex-col p-unit z-50">
-      <div className="mb-gutter flex items-center gap-3 px-2 mt-4">
-        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-headline-sm">
-            map
-          </span>
-        </div>
-        <div>
-          <h1 className="font-headline-sm text-[20px] font-bold text-primary leading-tight">
-            App Marília
-          </h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant">
-            Cidadão
-          </p>
-        </div>
+    <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex-col z-50">
+      {/* Brand */}
+      <div className="px-6 pt-7 pb-6 border-b border-[#E2E8F0]">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-xl bg-[#1a8ccc] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+            <span className="text-white text-xl font-bold leading-none">S</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-[#112F4E] leading-tight tracking-tight">
+              SAC <span className="text-[#1a8ccc]">Marília</span>
+            </h1>
+            <p className="text-[11px] text-[#94A3B8] font-medium tracking-widest uppercase">
+              Cidadão
+            </p>
+          </div>
+        </Link>
       </div>
-      <nav className="flex-1 space-y-2 mt-4">
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
         {links.map((link) => {
           const isActive = pathname === link.href;
           return (
@@ -41,22 +44,33 @@ export default function Sidebar() {
               key={link.label}
               href={link.href}
               className={clsx(
-                "flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-colors",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 relative",
                 isActive
-                  ? "text-primary bg-primary-fixed-dim/20"
-                  : "text-on-surface-variant hover:bg-surface-container-high active:scale-95 duration-150"
+                  ? "bg-[#E8F2F8] text-[#1a8ccc]"
+                  : "text-[#4A5D70] hover:bg-[#FAF7F2] hover:text-[#112F4E]"
               )}
             >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{link.icon}</span>
-              <span className="font-label-lg text-label-lg">{link.label}</span>
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#1a8ccc] rounded-r-full" />
+              )}
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                {link.icon}
+              </span>
+              <span>{link.label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="mt-auto pt-gutter border-t border-outline-variant pb-4">
+
+      {/* Footer */}
+      <div className="px-4 pb-5 pt-3 border-t border-[#E2E8F0]">
         <Link href="/">
-          <button className="w-full flex items-center justify-center gap-2 text-on-surface-variant py-3 rounded-xl font-label-lg text-label-lg hover:bg-surface-container-high transition-all">
-            <span className="material-symbols-outlined">logout</span> Sair
+          <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[#4A5D70] text-sm font-medium hover:bg-[#FAF7F2] hover:text-[#112F4E] transition-all">
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            Sair
           </button>
         </Link>
       </div>

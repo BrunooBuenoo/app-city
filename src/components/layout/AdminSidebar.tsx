@@ -10,31 +10,33 @@ export default function AdminSidebar() {
 
   const links = [
     { href: "/admin/dashboard", icon: "dashboard", label: "Painel" },
-    { href: "/admin/relatorios", icon: "report", label: "Relatórios" },
-    { href: "#", icon: "map", label: "Mapa" },
+    { href: "/admin/reclamacoes", icon: "assignment", label: "Reclamações" },
+    { href: "/admin/relatorios", icon: "bar_chart", label: "Relatórios" },
     { href: "/admin/categorias", icon: "category", label: "Categorias" },
     { href: "/admin/usuarios", icon: "group", label: "Usuários" },
-    { href: "#", icon: "analytics", label: "Análise" },
   ];
 
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline bg-surface dark:bg-inverse-surface shadow-sm flex flex-col p-unit z-50">
-      <div className="mb-gutter flex items-center gap-3 px-2 mt-4">
-        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-headline-sm">
-            copy_all
-          </span>
-        </div>
-        <div>
-          <h1 className="font-headline-sm text-headline-sm font-bold text-primary dark:text-inverse-primary leading-tight">
-            Sac Marília
-          </h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant">
-            Admin
-          </p>
-        </div>
+    <aside className="h-screen w-64 fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex flex-col z-50">
+      {/* Brand */}
+      <div className="px-6 pt-7 pb-6 border-b border-[#E2E8F0]">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-xl bg-[#1a8ccc] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+            <span className="text-white text-xl font-bold leading-none">S</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-[#112F4E] leading-tight tracking-tight">
+              SAC <span className="text-[#1a8ccc]">Marília</span>
+            </h1>
+            <p className="text-[11px] text-[#94A3B8] font-medium tracking-widest uppercase">
+              Administrativo
+            </p>
+          </div>
+        </Link>
       </div>
-      <nav className="flex-1 space-y-2 mt-4">
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
         {links.map((link) => {
           const isActive = pathname === link.href;
           return (
@@ -42,27 +44,32 @@ export default function AdminSidebar() {
               key={link.label}
               href={link.href}
               className={clsx(
-                "flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-colors",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 relative",
                 isActive
-                  ? "text-primary dark:text-inverse-primary bg-primary-fixed-dim/20 dark:bg-primary-container/30"
-                  : "text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant active:scale-95 duration-150"
+                  ? "bg-[#E8F2F8] text-[#1a8ccc]"
+                  : "text-[#4A5D70] hover:bg-[#FAF7F2] hover:text-[#112F4E]"
               )}
             >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{link.icon}</span>
-              <span className="font-label-lg text-label-lg">{link.label}</span>
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#1a8ccc] rounded-r-full" />
+              )}
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                {link.icon}
+              </span>
+              <span>{link.label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="mt-auto pt-gutter border-t border-outline-variant pb-4">
-        <button className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl font-label-lg text-label-lg hover:bg-primary-container transition-all shadow-sm">
-          <span
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            upload
-          </span>{" "}
-          Exportar
+
+      {/* Footer */}
+      <div className="px-4 pb-5 pt-3 border-t border-[#E2E8F0]">
+        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#E2E8F0] text-[#4A5D70] text-sm font-medium hover:bg-[#FAF7F2] hover:border-[#1a8ccc] hover:text-[#1a8ccc] transition-all">
+          <span className="material-symbols-outlined text-[20px]">upload</span>
+          Exportar Dados
         </button>
       </div>
     </aside>
