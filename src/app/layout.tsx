@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Gestão Urbana",
 };
 
+import { SmoothScroll } from "@/components/providers/smooth-scroll";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +25,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} selection:bg-primary/10`}>
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

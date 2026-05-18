@@ -29,7 +29,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-4">
               <Link
                 href="/reclamacao/nova"
-                className="flex items-center justify-center gap-2 px-8 py-5 bg-[#1a8ccc] text-white rounded-full text-lg font-medium shadow-[0_8px_30px_rgb(26,140,204,0.3)] hover:bg-[#1572a6] hover:-translate-y-1 transition-all"
+                className="flex items-center justify-center gap-2 px-8 py-5 bg-[#1a8ccc] text-white rounded-full text-lg font-medium hover:bg-[#1572a6] hover:-translate-y-1 transition-all"
               >
                 Reportar Problema
               </Link>
@@ -48,12 +48,12 @@ export default function Home() {
               <Map center={[-49.9458, -22.2139]} zoom={13}>
                 <MapMarker longitude={-49.95} latitude={-22.22}>
                   <MarkerContent>
-                    <div className="w-6 h-6 bg-[#1a8ccc] rounded-full border-4 border-white shadow-lg animate-pulse" />
+                    <div className="w-6 h-6 bg-[#1a8ccc] rounded-full shadow-lg animate-pulse" />
                   </MarkerContent>
                 </MapMarker>
                 <MapMarker longitude={-49.93} latitude={-22.20}>
                   <MarkerContent>
-                    <div className="w-6 h-6 bg-[#F59E0B] rounded-full border-4 border-white shadow-lg animate-pulse" />
+                    <div className="w-6 h-6 bg-[#F59E0B] rounded-full shadow-lg animate-pulse" />
                   </MarkerContent>
                 </MapMarker>
               </Map>
@@ -64,48 +64,152 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="w-full bg-white py-24 px-6 md:px-12 rounded-t-[4rem] mt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] relative z-20">
+        <section className="w-full bg-white py-24 px-6 md:px-12 rounded-t-[4rem] mt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] relative z-20 overflow-hidden">
           <div className="max-w-[1400px] mx-auto">
-            <div className="text-center mb-20">
-              <h3 className="text-4xl md:text-5xl font-medium text-[#112F4E] mb-6">Como funciona?</h3>
-              <p className="text-[#4A5D70] max-w-2xl mx-auto text-xl font-light">
-                Um processo desenhado para ser transparente, humano e eficiente.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {/* Feature 1 */}
-              <div className="bg-[#FAF7F2] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
-                <div className="w-24 h-24 bg-[#E8F2F8] rounded-full flex items-center justify-center text-[#1a8ccc] mb-8">
-                  <Camera className="w-10 h-10" />
-                </div>
-                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">1. Reporte o Problema</h4>
-                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
-                  Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos sua solicitação é enviada para as equipes.
+            <div className="grid lg:grid-cols-12 gap-12">
+              {/* Left Side - Title and CTA */}
+              <div className="lg:col-span-4 flex flex-col justify-center pt-8">
+                <p className="text-[#1a8ccc] text-sm font-bold tracking-wide uppercase mb-4">
+                  COMO FUNCIONA
                 </p>
+                <h2 className="text-4xl md:text-5xl font-medium text-[#112F4E] leading-tight mb-6">
+                  Um processo simples
+                  <br />
+                  e transparente
+                </h2>
+                <p className="text-[#4A5D70] text-lg font-light leading-relaxed mb-8 max-w-md">
+                  Entenda como a sua solicitação chega até as equipes da prefeitura e é solucionada de forma eficiente para melhorar a nossa cidade.
+                </p>
+                <Link href="/reclamacao/nova" className="bg-[#1a8ccc] hover:bg-[#1572a6] text-white font-medium px-8 py-4 rounded-full w-fit transition-all hover:-translate-y-1">
+                  Reportar Agora
+                </Link>
               </div>
 
-              {/* Feature 2 */}
-              <div className="bg-[#FDF2F2] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
-                <div className="w-24 h-24 bg-[#FCE8E8] rounded-full flex items-center justify-center text-[#EF4444] mb-8">
-                  <MapPin className="w-10 h-10" />
+              {/* Right Side - Timeline with curved path */}
+              <div className="lg:col-span-8 relative min-h-[500px] hidden lg:block">
+                {/* Curved SVG Path */}
+                <svg
+                  className="absolute inset-0 w-full h-full"
+                  viewBox="0 0 700 500"
+                  fill="none"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  {/* Main curved line */}
+                  <path
+                    d="M 0 400 Q 150 420 250 350 Q 350 280 400 300 Q 500 340 550 250 Q 620 150 700 180"
+                    stroke="#1a8ccc"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                    className="opacity-40"
+                  />
+                  {/* Dashed extension at the end */}
+                  <path
+                    d="M 680 185 L 700 180"
+                    stroke="#1a8ccc"
+                    strokeWidth="3"
+                    strokeDasharray="8 8"
+                    fill="none"
+                    className="opacity-40"
+                  />
+                </svg>
+
+                {/* Step 1 - Bottom Left */}
+                <div className="absolute left-[10%] bottom-[10%] flex flex-col items-start transition-transform hover:-translate-y-2 duration-300">
+                  {/* Large background number */}
+                  <span className="absolute -left-12 -top-20 text-[180px] font-bold text-[#F1F5F9] select-none pointer-events-none leading-none">
+                    1
+                  </span>
+                  {/* Dot */}
+                  <div className="relative z-10 w-5 h-5 rounded-full bg-[#1a8ccc] mb-4 shadow-md" />
+                  {/* Content */}
+                  <div className="relative z-10 max-w-[250px] bg-white/60 backdrop-blur-md p-4 rounded-2xl shadow-sm">
+                    <h3 className="text-xl font-bold text-[#112F4E] mb-2">
+                      Reporte o Problema
+                    </h3>
+                    <p className="text-[#4A5D70] text-sm leading-relaxed font-light">
+                      Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos sua solicitação é enviada.
+                    </p>
+                  </div>
                 </div>
-                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">2. Acompanhe o Status</h4>
-                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
-                  Receba notificações sobre o andamento e interaja com a comunidade dando "Concordo" em relatos próximos a você.
-                </p>
+
+                {/* Step 2 - Middle */}
+                <div className="absolute left-[40%] top-[35%] flex flex-col items-start transition-transform hover:-translate-y-2 duration-300">
+                  {/* Large background number */}
+                  <span className="absolute -left-12 -top-20 text-[180px] font-bold text-[#F1F5F9] select-none pointer-events-none leading-none">
+                    2
+                  </span>
+                  {/* Dot */}
+                  <div className="relative z-10 w-5 h-5 rounded-full bg-[#F59E0B] mb-4 shadow-md" />
+                  {/* Content */}
+                  <div className="relative z-10 max-w-[250px] bg-white/60 backdrop-blur-md p-4 rounded-2xl shadow-sm">
+                    <h3 className="text-xl font-bold text-[#112F4E] mb-2">
+                      Acompanhe o Status
+                    </h3>
+                    <p className="text-[#4A5D70] text-sm leading-relaxed font-light">
+                      Receba notificações sobre o andamento e interaja com a comunidade dando "Concordo" em relatos próximos.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 - Top Right */}
+                <div className="absolute right-[5%] top-[5%] flex flex-col items-start transition-transform hover:-translate-y-2 duration-300">
+                  {/* Large background number */}
+                  <span className="absolute -left-12 -top-20 text-[180px] font-bold text-[#F1F5F9] select-none pointer-events-none leading-none">
+                    3
+                  </span>
+                  {/* Dot */}
+                  <div className="relative z-10 w-5 h-5 rounded-full bg-[#10B981] mb-4 shadow-md" />
+                  {/* Content */}
+                  <div className="relative z-10 max-w-[250px] bg-white/60 backdrop-blur-md p-4 rounded-2xl shadow-sm">
+                    <h3 className="text-xl font-bold text-[#112F4E] mb-2">
+                      Problema Resolvido
+                    </h3>
+                    <p className="text-[#4A5D70] text-sm leading-relaxed font-light">
+                      As equipes da prefeitura atuam com base nos dados gerados e o problema é solucionado com eficiência.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mobile/Tablet Fallback Vertical Timeline */}
+              <div className="lg:hidden flex flex-col gap-12 mt-12 relative px-4">
+                 <div className="absolute left-10 top-8 bottom-8 w-1 bg-[#E8F2F8] rounded-full" />
+                 
+                 {/* Step 1 Mobile */}
+                 <div className="flex gap-6 relative z-10">
+                    <div className="w-14 h-14 rounded-full bg-[#E8F2F8] flex items-center justify-center font-bold text-[#1a8ccc] shrink-0 text-xl shadow-sm">
+                      1
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-[#112F4E] mb-2 mt-3">Reporte o Problema</h3>
+                      <p className="text-[#4A5D70] text-base leading-relaxed font-light">Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos sua solicitação é enviada.</p>
+                    </div>
+                 </div>
+                 
+                 {/* Step 2 Mobile */}
+                 <div className="flex gap-6 relative z-10">
+                    <div className="w-14 h-14 rounded-full bg-[#FEF3C7] flex items-center justify-center font-bold text-[#F59E0B] shrink-0 text-xl shadow-sm">
+                      2
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-[#112F4E] mb-2 mt-3">Acompanhe o Status</h3>
+                      <p className="text-[#4A5D70] text-base leading-relaxed font-light">Receba notificações sobre o andamento e interaja com a comunidade dando "Concordo" em relatos próximos.</p>
+                    </div>
+                 </div>
+                 
+                 {/* Step 3 Mobile */}
+                 <div className="flex gap-6 relative z-10">
+                    <div className="w-14 h-14 rounded-full bg-[#D1FAE5] flex items-center justify-center font-bold text-[#10B981] shrink-0 text-xl shadow-sm">
+                      3
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-[#112F4E] mb-2 mt-3">Problema Resolvido</h3>
+                      <p className="text-[#4A5D70] text-base leading-relaxed font-light">As equipes da prefeitura atuam com base nos dados gerados e o problema é solucionado com eficiência.</p>
+                    </div>
+                 </div>
               </div>
 
-              {/* Feature 3 */}
-              <div className="bg-[#F0FDF4] p-10 rounded-[3rem] flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300">
-                <div className="w-24 h-24 bg-[#DCFCE7] rounded-full flex items-center justify-center text-[#10B981] mb-8">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h4 className="text-2xl font-bold text-[#112F4E] mb-4">3. Problema Resolvido</h4>
-                <p className="text-[#4A5D70] text-lg leading-relaxed font-light">
-                  As equipes da prefeitura atuam com base nos dados gerados e o problema é solucionado com máxima eficiência e transparência.
-                </p>
-              </div>
             </div>
           </div>
         </section>
