@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
 
 const pins = [
@@ -47,6 +48,8 @@ const pins = [
 ];
 
 export default function MapaPrincipal() {
+  const router = useRouter();
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Full-screen Interactive Map */}
@@ -83,12 +86,12 @@ export default function MapaPrincipal() {
 
       {/* Top Bar — Search + Back */}
       <div className="absolute top-0 left-0 right-0 z-30 p-4 flex items-center gap-3">
-        <Link
-          href="/"
+        <button
+          onClick={() => router.back()}
           className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-elevated border border-[#E2E8F0] hover:scale-105 transition-transform shrink-0"
         >
           <span className="material-symbols-outlined text-[#112F4E] text-[22px]">arrow_back</span>
-        </Link>
+        </button>
         <div className="flex-1 relative">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] text-[20px]">
             search

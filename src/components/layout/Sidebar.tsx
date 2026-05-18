@@ -26,7 +26,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-[#112F4E] leading-tight tracking-tight">
-              SAC <span className="text-[#1a8ccc]">Marília</span>
+              Sac do Marília <span className="text-[#1a8ccc]">ao Contrário</span>
             </h1>
             <p className="text-[11px] text-[#94A3B8] font-medium tracking-widest uppercase">
               Cidadão

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 export default function TopAppBar() {
   const pathname = usePathname();
   
-  let title = "SAC Marília";
+  let title = "Sac do Marília ao Contrário";
   if (pathname === "/usuario/dashboard") title = "Meu Painel";
   if (pathname === "/usuario/minhas-reclamacoes") title = "Minhas Reclamações";
   if (pathname === "/reclamacao/nova") title = "Novo Relatório";

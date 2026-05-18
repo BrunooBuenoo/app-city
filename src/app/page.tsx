@@ -219,7 +219,7 @@ export default function Home() {
       <footer className="bg-[#112F4E] pt-20 pb-10 px-6 md:px-12 mt-auto">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-serif text-white mb-2 italic">SAC Marília</h2>
+            <h2 className="text-3xl md:text-4xl font-serif text-white mb-2 italic">Sac do Marília ao Contrário</h2>
             <p className="text-[#94A3B8] font-light text-lg">Plataforma de Gestão Urbana</p>
           </div>
           
@@ -234,7 +234,7 @@ export default function Home() {
         </div>
         
         <div className="max-w-[1400px] mx-auto mt-16 pt-8 border-t border-white/10 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#94A3B8]">
-          <p>© 2026 SAC Marília. Todos os direitos reservados.</p>
+          <p>© 2026 Sac do Marília ao Contrário. Todos os direitos reservados.</p>
           <div className="flex gap-6">
             <Link href="/termos" className="hover:text-white transition-colors">Termos de Uso</Link>
             <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>

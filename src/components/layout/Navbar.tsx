@@ -58,8 +58,8 @@ export function Navbar() {
           {/* Logo Texto */}
           <div className="flex items-center text-center md:text-left">
             <div>
-              <h1 className="text-[#1a8ccc] text-2xl md:text-2xl font-light tracking-wide">SAC</h1>
-              <h2 className="text-[#1a8ccc] text-3xl md:text-3xl font-bold tracking-tight -mt-1">MARÍLIA</h2>
+              <h1 className="text-[#1a8ccc] text-2xl md:text-2xl font-light tracking-wide">Sac do Marília</h1>
+              <h2 className="text-[#1a8ccc] text-3xl md:text-3xl font-bold tracking-tight -mt-1">ao Contrário</h2>
               <p className="text-[#1a8ccc] text-[10px] md:text-xs tracking-widest mt-1 md:mt-0">SERVIÇO DE ATENDIMENTO</p>
             </div>
           </div>
