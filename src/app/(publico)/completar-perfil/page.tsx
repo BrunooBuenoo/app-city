@@ -3,26 +3,8 @@ import Link from "next/link";
 
 export default function CompletarPerfil() {
   return (
-    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
-      {/* TopAppBar */}
-      <header className="sticky top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile h-16 bg-surface-bright border-b border-outline-variant shadow-sm">
-        <Link href="/usuario/dashboard">
-          <button className="active:scale-95 transition-transform duration-200 text-primary">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-        </Link>
-        <h1 className="font-headline-sm-mobile text-headline-sm-mobile text-primary font-bold tracking-tight">
-          Concluir Perfil
-        </h1>
-        <div className="w-6"></div> {/* Spacer for centering */}
-      </header>
-
-      {/* Progress Indicator */}
-      <div className="w-full h-1 bg-surface-container">
-        <div className="h-full bg-primary-container w-full transition-all duration-500"></div>
-      </div>
-
-      <main className="flex-1 px-margin-mobile pt-8 pb-12 overflow-y-auto">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto w-full">
+      <main className="md:bg-surface-container-lowest md:p-8 md:rounded-2xl md:shadow-sm md:border md:border-outline-variant">
         {/* Header Section */}
         <section className="mb-10">
           <h2 className="font-headline-md text-headline-md text-on-surface mb-2">

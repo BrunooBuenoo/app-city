@@ -3,112 +3,9 @@ import Link from "next/link";
 
 export default function UsuarioDashboard() {
   return (
-    <div className="bg-surface selection:bg-primary/10 min-h-screen">
-      {/* SideNavBar Anchor */}
-      <aside className="fixed left-0 top-0 h-full w-64 border-r border-outline-variant bg-surface-container-lowest shadow-[0_4px_20px_rgba(26,28,30,0.04)] flex flex-col py-8 px-4 gap-unit z-50">
-        <div className="mb-8 px-2">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined">location_city</span>
-            </div>
-            <div>
-              <h1 className="text-label-lg font-headline-md font-bold tracking-tight text-primary">
-                Sac do Marilia ao Contrário
-              </h1>
-              <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
-                Gestão Urbana
-              </p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 space-y-1">
-          <Link
-            href="/usuario/dashboard"
-            className="flex items-center gap-3 px-3 py-2.5 text-primary font-bold bg-primary-fixed/30 rounded-lg transition-all duration-150 scale-98"
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-body-md font-body-md">Início</span>
-          </Link>
-          <Link
-            href="/usuario/minhas-reclamacoes"
-            className="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all duration-200"
-          >
-            <span className="material-symbols-outlined">report_problem</span>
-            <span className="text-body-md font-body-md">
-              Minhas Reclamações
-            </span>
-          </Link>
-          <Link
-            href="/usuario/historico"
-            className="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all duration-200"
-          >
-            <span className="material-symbols-outlined">history</span>
-            <span className="text-body-md font-body-md">Histórico</span>
-          </Link>
-          <Link
-            href="/usuario/perfil"
-            className="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all duration-200"
-          >
-            <span className="material-symbols-outlined">person</span>
-            <span className="text-body-md font-body-md">Perfil</span>
-          </Link>
-        </nav>
-        <div className="mt-auto">
-          <Link href="/reclamacao/nova">
-            <button className="w-full bg-primary-container text-white py-3 rounded-xl font-label-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-              <span className="material-symbols-outlined text-sm">add</span>
-              Novo Chamado
-            </button>
-          </Link>
-        </div>
-      </aside>
-
-      {/* TopAppBar Anchor */}
-      <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant z-40">
-        <div className="flex justify-between items-center px-8 w-full h-full">
-          <div className="flex items-center flex-1 max-w-xl">
-            <div className="relative w-full">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
-                search
-              </span>
-              <input
-                className="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 text-body-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                placeholder="Pesquisar chamados, protocolos..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-            <div className="h-8 w-px bg-outline-variant mx-2"></div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-label-md font-label-md text-on-surface font-semibold">
-                  Gabriel Bueno
-                </p>
-                <p className="text-[10px] text-on-surface-variant">
-                  Cidadão Mariliense
-                </p>
-              </div>
-              <img
-                alt="Avatar"
-                className="h-10 w-10 rounded-full border-2 border-primary/20 object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUiQz7Tjoo97vkOGIzdUNGRnwZ-0DhbPUVHrNIvo4tohhvRHGJhRWQkUdAdMvJC9SE00HDQGOWra7YuvRuK2FYcwsKpwXfnPYp7ZDJNBS888hBorpoAQqspZ6me2s6pOqosi1acVv27jUNRjay7KkU3dupyzwcARpcLiq5rlGXxATVeLVR2Dh5XJbm7kXeiSN9k9OauTFCSBsX-tz3fpArt_JtcYb24oR3i1io9PXOuYg_iwlHzm3j5Lf3fdOo-OHWKWyMid9m-RNh"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Canvas */}
-      <main className="ml-64 pt-24 pb-12 px-8 min-h-screen">
-        <div className="max-w-container-max mx-auto">
-          {/* Dashboard Header */}
+    <div className="p-4 md:p-8">
+      <div className="max-w-container-max mx-auto">
+        {/* Dashboard Header */}
           <div className="mb-8">
             <h2 className="text-headline-md font-headline-md text-on-surface">
               Meu Painel
@@ -393,10 +290,9 @@ export default function UsuarioDashboard() {
                   </tr>
                 </tbody>
               </table>
-            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

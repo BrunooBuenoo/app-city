@@ -3,28 +3,9 @@ import Link from "next/link";
 
 export default function MapaPrincipal() {
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
-      {/* Top App Bar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md shadow-sm">
-        <div className="flex items-center justify-between px-4 py-2 w-full max-w-container-max mx-auto h-16">
-          <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors duration-200 text-primary">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <h1 className="font-headline-sm text-headline-sm font-bold text-primary">
-              Sac do Marilia ao Contrário
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors duration-200 text-on-surface-variant">
-              <span className="material-symbols-outlined">search</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden">
       {/* Main Map Canvas */}
-      <main className="relative w-full h-screen">
+      <main className="relative w-full h-full">
         {/* Map Background */}
         <div className="absolute inset-0 z-0">
           <img
@@ -181,58 +162,6 @@ export default function MapaPrincipal() {
           </div>
         </div>
       </main>
-
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-lg shadow-[0_-4px_20px_rgba(26,28,30,0.04)] rounded-t-xl">
-        <Link
-          className="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 transition-transform duration-150 scale-95 active:scale-90"
-          href="/mapa"
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            map
-          </span>
-          <span className="font-label-sm text-label-sm mt-1">Mapa</span>
-        </Link>
-        <Link
-          className="flex flex-col items-center justify-center text-outline-variant px-3 py-1 transition-transform duration-150 scale-95 active:scale-90 hover:bg-surface-container"
-          href="/usuario/minhas-reclamacoes"
-        >
-          <span className="material-symbols-outlined">description</span>
-          <span className="font-label-sm text-label-sm mt-1">Reclamações</span>
-        </Link>
-        <Link
-          className="flex flex-col items-center justify-center text-outline-variant px-3 py-1 transition-transform duration-150 scale-95 active:scale-90 hover:bg-surface-container"
-          href="#"
-        >
-          <span className="material-symbols-outlined">notifications</span>
-          <span className="font-label-sm text-label-sm mt-1">Alertas</span>
-        </Link>
-        <Link
-          className="flex flex-col items-center justify-center text-outline-variant px-3 py-1 transition-transform duration-150 scale-95 active:scale-90 hover:bg-surface-container"
-          href="/usuario/perfil"
-        >
-          <span className="material-symbols-outlined">person</span>
-          <span className="font-label-sm text-label-sm mt-1">Perfil</span>
-        </Link>
-      </nav>
-
-      {/* Map Search / Filter Pill */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40">
-        <div className="bg-white/95 glass-panel px-4 py-2 rounded-full shadow-md flex items-center gap-3 border border-outline-variant/20">
-          <span className="material-symbols-outlined text-primary text-sm">
-            filter_list
-          </span>
-          <span className="font-label-md text-label-md text-on-surface whitespace-nowrap">
-            Todos os Problemas
-          </span>
-          <span className="material-symbols-outlined text-outline-variant text-sm">
-            expand_more
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

@@ -3,34 +3,8 @@ import Link from "next/link";
 
 export default function NovaReclamacao() {
   return (
-    <div className="bg-background font-body-md text-on-surface min-h-screen flex flex-col">
-      {/* Top App Bar */}
-      <header className="fixed top-0 w-full z-50 bg-surface-bright dark:bg-surface-dim border-b border-outline-variant dark:border-outline shadow-sm dark:shadow-none flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-4">
-          <Link href="/usuario/dashboard">
-            <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors active:scale-95 duration-100">
-              <span className="material-symbols-outlined text-primary">
-                arrow_back
-              </span>
-            </button>
-          </Link>
-          <div className="flex flex-col">
-            <h1 className="font-headline-sm text-headline-sm font-bold text-primary">
-              Novo Relatório
-            </h1>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">
-              Passo 1 de 3
-            </span>
-          </div>
-        </div>
-        <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors active:scale-95 duration-100">
-          <span className="material-symbols-outlined text-primary">
-            more_vert
-          </span>
-        </button>
-      </header>
-
-      <main className="pt-20 pb-32 px-margin-mobile flex-1">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto w-full">
+      <main className="md:bg-surface-container-lowest md:p-8 md:rounded-2xl md:shadow-sm md:border md:border-outline-variant">
         {/* Category Selection (2-column Grid) */}
         <section className="mb-gutter">
           <h2 className="font-headline-sm text-headline-sm mb-4 text-on-surface">
@@ -226,38 +200,6 @@ export default function NovaReclamacao() {
           </button>
         </div>
       </main>
-
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-md shadow-[0_-4px_20px_rgba(26,28,30,0.04)] rounded-t-xl">
-        <Link
-          href="/usuario/dashboard"
-          className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:text-primary transition-colors active:scale-90 duration-200"
-        >
-          <span className="material-symbols-outlined">home</span>
-          <span className="font-label-md text-label-md">Início</span>
-        </Link>
-        <Link
-          href="/usuario/minhas-reclamacoes"
-          className="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary-fixed-dim text-on-secondary-container dark:text-on-secondary-fixed rounded-full px-4 py-1 hover:text-primary transition-colors active:scale-90 duration-200"
-        >
-          <span className="material-symbols-outlined">assignment</span>
-          <span className="font-label-md text-label-md">Reclamações</span>
-        </Link>
-        <Link
-          href="#"
-          className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:text-primary transition-colors active:scale-90 duration-200"
-        >
-          <span className="material-symbols-outlined">notifications</span>
-          <span className="font-label-md text-label-md">Alertas</span>
-        </Link>
-        <Link
-          href="/usuario/perfil"
-          className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:text-primary transition-colors active:scale-90 duration-200"
-        >
-          <span className="material-symbols-outlined">person</span>
-          <span className="font-label-md text-label-md">Perfil</span>
-        </Link>
-      </nav>
     </div>
   );
 }

@@ -3,128 +3,8 @@ import Link from "next/link";
 
 export default function AdminDashboard() {
   return (
-    <div className="bg-surface text-on-surface min-h-screen">
-      {/* SideNavBar */}
-      <aside className="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline bg-surface dark:bg-inverse-surface shadow-sm flex flex-col p-unit z-50">
-        <div className="mb-gutter flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-headline-sm">
-              copy_all
-            </span>
-          </div>
-          <div>
-            <h1 className="font-headline-sm text-headline-sm font-bold text-primary dark:text-inverse-primary leading-tight">
-              Sac do Marilia
-            </h1>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">
-              Urban Management
-            </p>
-          </div>
-        </div>
-        <nav className="flex-1 space-y-1">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-inverse-primary bg-primary-fixed-dim/20 dark:bg-primary-container/30 font-bold transition-colors"
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="font-label-lg text-label-lg">Painel</span>
-          </Link>
-          <Link
-            href="/admin/relatorios"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-95 duration-150"
-          >
-            <span className="material-symbols-outlined">report</span>
-            <span className="font-label-lg text-label-lg">Relatórios</span>
-          </Link>
-          <Link
-            href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-95 duration-150"
-          >
-            <span className="material-symbols-outlined">map</span>
-            <span className="font-label-lg text-label-lg">Mapa</span>
-          </Link>
-          <Link
-            href="/admin/categorias"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-95 duration-150"
-          >
-            <span className="material-symbols-outlined">category</span>
-            <span className="font-label-lg text-label-lg">Categorias</span>
-          </Link>
-          <Link
-            href="/admin/usuarios"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-95 duration-150"
-          >
-            <span className="material-symbols-outlined">group</span>
-            <span className="font-label-lg text-label-lg">Usuários</span>
-          </Link>
-          <Link
-            href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-95 duration-150"
-          >
-            <span className="material-symbols-outlined">analytics</span>
-            <span className="font-label-lg text-label-lg">Análise</span>
-          </Link>
-        </nav>
-        <div className="mt-auto pt-gutter border-t border-outline-variant">
-          <button className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl font-label-lg text-label-lg hover:bg-primary-container transition-all shadow-sm">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              upload
-            </span>{" "}
-            Exportar Dados
-          </button>
-        </div>
-      </aside>
-
-      {/* TopNavBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline shadow-sm flex justify-between items-center h-16 px-gutter ml-64">
-        <div className="flex items-center flex-1">
-          <div className="relative w-full max-w-md group">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md group-focus-within:text-primary">
-              search
-            </span>
-            <input
-              className="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-body-sm text-body-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              placeholder="Pesquisar registros administrativos..."
-              type="text"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-gutter">
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-all relative">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
-            </button>
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-all">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-          </div>
-          <div className="h-8 w-px bg-outline-variant"></div>
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="font-label-lg text-label-lg text-on-surface leading-none">
-                Perfil do Administrador
-              </p>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">
-                Gestor do Sistema
-              </p>
-            </div>
-            <img
-              alt="Administrator Avatar"
-              className="w-10 h-10 rounded-full border border-outline-variant object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4wXddsjeB8-KtROcVD4GsDcIolXY4hcjWUWjX-e9zvWSRZXJxfl6Wmyzd2QvkZ0cVxuKMIhqvaMWz-xRzMxaPVCpw0lbCNUfF6jqWoKgZQ1Z2YjnRJKfHmL4nJGGV1uFmBWUP1v37CAFnNBhDCoLMAReTbJz0Ey3_6q9mKiejbypuB_1EZuNUwcNUR0xVxu0TDM_df4IMZa5x40K7l0cMInlIMkTU38AYcD3K_Th5WVQVQKOl9Rf-ODNC_guUvNTbRI-EKpBzilOv"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Canvas */}
-      <main className="ml-64 pt-16 min-h-screen bg-surface-bright transition-all duration-300 pb-12">
-        <div className="p-gutter max-w-container-max mx-auto space-y-gutter">
-          {/* Analytics Grid */}
+    <div className="p-gutter max-w-container-max mx-auto space-y-gutter">
+      {/* Analytics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-gutter">
             {/* Total Card */}
             <div className="bg-surface-container-lowest p-gutter rounded-xl border border-outline-variant shadow-[0_4px_20px_rgba(26,28,30,0.04)]">
@@ -489,8 +369,6 @@ export default function AdminDashboard() {
               </div>
             </div>
           </section>
-        </div>
-      </main>
     </div>
   );
 }
