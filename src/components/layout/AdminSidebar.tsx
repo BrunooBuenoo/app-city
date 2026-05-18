@@ -1,121 +1,165 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clsx } from "clsx";
+import {
+  BarChart3,
+  ClipboardList,
+  FileText,
+  FolderOpen,
+  Users,
+  Settings,
+  HelpCircle,
+  LogOut,
+  ChevronDown,
+  ChevronUp,
+  MoreVertical,
+  Copy,
+  MessageCircle,
+} from "lucide-react";
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
+  const [isManagementExpanded, setIsManagementExpanded] = useState(true);
 
-  const mainMenu = [
-    { href: "/admin/dashboard", icon: "dashboard", label: "Dashboard" },
-    { href: "/admin/reclamacoes", icon: "assignment", label: "Reclamações", badge: "47" },
-    { href: "/admin/relatorios", icon: "bar_chart", label: "Relatórios" },
+  const mainItems = [
+    { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },
   ];
 
-  const management = [
-    { href: "/admin/categorias", icon: "category", label: "Categorias" },
-    { href: "/admin/usuarios", icon: "group", label: "Usuários" },
+  const managementItems = [
+    { href: "/admin/reclamacoes", icon: ClipboardList, label: "Reclamações" },
+    { href: "/admin/relatorios", icon: FileText, label: "Relatórios" },
+    { href: "/admin/categorias", icon: FolderOpen, label: "Categorias" },
+    { href: "/admin/usuarios", icon: Users, label: "Usuários" },
   ];
-
-  const general = [
-    { href: "#", icon: "settings", label: "Configurações" },
-    { href: "#", icon: "help", label: "Ajuda" },
-    { href: "/", icon: "logout", label: "Sair" },
-  ];
-
-  const renderLink = (link: { href: string; icon: string; label: string; badge?: string }) => {
-    const isActive = pathname === link.href;
-    return (
-      <Link
-        key={link.label}
-        href={link.href}
-        className={clsx(
-          "flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 relative group",
-          isActive
-            ? "bg-[#1a8ccc] text-white shadow-sm"
-            : "text-[#4A5D70] hover:bg-[#F5F2ED]"
-        )}
-      >
-        {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#1a8ccc] rounded-r-full -ml-3" />
-        )}
-        <span
-          className={clsx("material-symbols-outlined text-[20px]", isActive ? "text-white" : "text-[#94A3B8]")}
-          style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-        >
-          {link.icon}
-        </span>
-        <span className="flex-1">{link.label}</span>
-        {link.badge && (
-          <span className={clsx(
-            "text-[11px] font-semibold px-2 py-0.5 rounded-md min-w-[24px] text-center",
-            isActive ? "bg-white/20 text-white" : "bg-[#E8F2F8] text-[#1a8ccc]"
-          )}>
-            {link.badge}
-          </span>
-        )}
-      </Link>
-    );
-  };
 
   return (
-    <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex-col z-50">
-      {/* Brand + Collapse */}
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-[#1a8ccc] flex items-center justify-center group-hover:scale-105 transition-transform">
-            <span className="text-white text-base font-bold">S</span>
+    <aside
+      className={`hidden md:flex flex-col h-full bg-[#FAF7F2] transition-all duration-300 ${
+        isExpanded ? "w-[220px]" : "w-[60px]"
+      }`}
+    >
+      {/* Logo */}
+      <div className="flex items-center gap-2 p-3">
+        <button
+          onClick={onToggle}
+          className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-black/5 transition-colors"
+        >
+          <div className="w-8 h-8 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
+            <span className="text-white text-sm font-bold">S</span>
           </div>
-          <span className="text-[16px] font-bold text-[#112F4E]">Sac Marília</span>
-        </Link>
-        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-[#94A3B8] hover:bg-[#F5F2ED] transition-colors">
-          <span className="material-symbols-outlined text-[18px]">chevron_left</span>
         </button>
+        {isExpanded && (
+          <button className="p-1.5 hover:bg-black/5 rounded transition-colors">
+            <Copy className="w-4 h-4 text-[#94A3B8]" />
+          </button>
+        )}
       </div>
 
-      {/* Search */}
-      <div className="px-4 mb-4">
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] text-[18px]">search</span>
-          <input
-            className="w-full bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl pl-9 pr-3 py-2 text-[13px] text-[#112F4E] placeholder:text-[#94A3B8] outline-none focus:ring-2 focus:ring-[#1a8ccc]/15 transition-all"
-            placeholder="Buscar..."
-            type="text"
-          />
+      {/* Store / Context selector */}
+      {isExpanded && (
+        <div className="px-3 py-2">
+          <button className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg hover:bg-black/5 transition-colors">
+            <span className="font-medium text-[#112F4E] truncate">Sac Marília</span>
+            <ChevronDown className="w-4 h-4 text-[#94A3B8]" />
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Navigation Groups */}
-      <nav className="flex-1 px-3 overflow-y-auto no-scrollbar">
-        {/* Main Menu */}
-        <div className="mb-5">
-          <p className="px-4 mb-2 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-widest">Menu Principal</p>
-          <div className="space-y-0.5">{mainMenu.map(renderLink)}</div>
-        </div>
+      {/* Navigation */}
+      <nav className="flex-1 px-2 py-2 overflow-y-auto">
+        {mainItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors mb-1 ${
+                isActive
+                  ? "bg-[#E8F2F8] text-[#1a8ccc]"
+                  : "text-[#4A5D70] hover:bg-black/5"
+              }`}
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              {isExpanded && <span className="text-sm font-medium">{item.label}</span>}
+            </Link>
+          );
+        })}
 
-        {/* Management */}
-        <div className="mb-5">
-          <p className="px-4 mb-2 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-widest">Gestão</p>
-          <div className="space-y-0.5">{management.map(renderLink)}</div>
-        </div>
+        {/* Management Section */}
+        <button
+          onClick={() => isExpanded && setIsManagementExpanded(!isManagementExpanded)}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1"
+        >
+          <Settings className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && (
+            <>
+              <span className="text-sm font-medium flex-1 text-left">Gestão</span>
+              {isManagementExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </>
+          )}
+        </button>
 
-        {/* General */}
-        <div className="mb-5">
-          <p className="px-4 mb-2 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-widest">Geral</p>
-          <div className="space-y-0.5">{general.map(renderLink)}</div>
-        </div>
+        {isExpanded && isManagementExpanded && (
+          <div className="ml-4 space-y-0.5">
+            {managementItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-[#E8F2F8] text-[#1a8ccc]"
+                      : "text-[#4A5D70] hover:bg-black/5"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
-      {/* Bottom CTA Card */}
-      <div className="px-4 pb-4 pt-2">
-        <div className="bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] rounded-2xl p-4 text-white">
-          <p className="text-sm font-bold mb-0.5">Exportar Dados</p>
-          <p className="text-[11px] text-white/70 leading-snug mb-3">Relatórios completos da plataforma</p>
-          <button className="w-full bg-white text-[#1a8ccc] text-[13px] font-semibold py-2 rounded-xl hover:bg-white/90 transition-colors">
-            Exportar
-          </button>
+      {/* Bottom */}
+      <div className="px-2 py-2">
+        <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1">
+          <MessageCircle className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && <span className="text-sm font-medium">Suporte</span>}
+        </button>
+
+        <Link
+          href="/"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1"
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && <span className="text-sm font-medium">Sair</span>}
+        </Link>
+
+        <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${isExpanded ? "justify-between" : "justify-center"}`}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#1a8ccc] flex items-center justify-center text-white text-sm font-medium">
+              A
+            </div>
+            {isExpanded && <span className="text-sm font-medium text-[#112F4E]">Admin</span>}
+          </div>
+          {isExpanded && (
+            <button className="p-1 hover:bg-black/5 rounded transition-colors">
+              <MoreVertical className="w-4 h-4 text-[#94A3B8]" />
+            </button>
+          )}
         </div>
       </div>
     </aside>

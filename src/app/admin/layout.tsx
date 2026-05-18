@@ -1,15 +1,24 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-import AdminTopAppBar from "@/components/layout/AdminTopAppBar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
   return (
-    <div className="bg-[#FAF7F2] text-[#112F4E] min-h-screen">
-      <AdminSidebar />
-      <AdminTopAppBar />
-      <main className="md:ml-64 pt-16 min-h-screen transition-all duration-300 pb-12">
-        {children}
-      </main>
+    <div className="flex flex-col h-screen bg-[#FAF7F2]">
+      <div className="flex flex-1 overflow-hidden">
+        <AdminSidebar
+          isExpanded={sidebarExpanded}
+          onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+        />
+        <div className="flex-1 flex flex-col overflow-hidden p-2 pl-0">
+          <main className="flex-1 bg-white rounded-2xl overflow-y-auto shadow-sm">
+            {children}
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
