@@ -61,7 +61,7 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex flex-col z-50">
+    <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-white border-r border-[#E2E8F0] flex-col z-50">
       {/* Brand + Collapse */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
@@ -111,7 +111,7 @@ export default function AdminSidebar() {
       {/* Bottom CTA Card */}
       <div className="px-4 pb-4 pt-2">
         <div className="bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] rounded-2xl p-4 text-white">
-          <p className="text-sm font-bold mb-0.5">Exportar Dados 📊</p>
+          <p className="text-sm font-bold mb-0.5">Exportar Dados</p>
           <p className="text-[11px] text-white/70 leading-snug mb-3">Relatórios completos da plataforma</p>
           <button className="w-full bg-white text-[#1a8ccc] text-[13px] font-semibold py-2 rounded-xl hover:bg-white/90 transition-colors">
             Exportar

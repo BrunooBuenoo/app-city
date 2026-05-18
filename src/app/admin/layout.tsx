@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="bg-[#FAF7F2] text-[#112F4E] min-h-screen">
       <AdminSidebar />
       <AdminTopAppBar />
-      <main className="ml-64 pt-16 min-h-screen transition-all duration-300 pb-12">
+      <main className="md:ml-64 pt-16 min-h-screen transition-all duration-300 pb-12">
         {children}
       </main>
     </div>

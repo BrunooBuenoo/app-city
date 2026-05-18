@@ -99,7 +99,7 @@ export default function Sidebar() {
       {/* Bottom CTA */}
       <div className="px-4 pb-4 pt-2">
         <div className="bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] rounded-2xl p-4 text-white">
-          <p className="text-sm font-bold mb-0.5">Nova Reclamação ✍️</p>
+          <p className="text-sm font-bold mb-0.5">Nova Reclamação</p>
           <p className="text-[11px] text-white/70 leading-snug mb-3">Reporte um problema na cidade</p>
           <Link href="/reclamacao/nova">
             <button className="w-full bg-white text-[#1a8ccc] text-[13px] font-semibold py-2 rounded-xl hover:bg-white/90 transition-colors">
