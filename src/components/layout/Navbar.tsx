@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Phone, Mail, Clock, ChevronDown, Menu, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 const navItems = [
   { label: "HOME", href: "/" },
@@ -57,11 +58,16 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
           {/* Logo Texto */}
           <div className="flex items-center text-center md:text-left">
-            <div>
-              <h1 className="text-[#1a8ccc] text-2xl md:text-2xl font-light tracking-wide">Sac do Marília</h1>
-              <h2 className="text-[#1a8ccc] text-3xl md:text-3xl font-bold tracking-tight -mt-1">ao Contrário</h2>
-              <p className="text-[#1a8ccc] text-[10px] md:text-xs tracking-widest mt-1 md:mt-0">SERVIÇO DE ATENDIMENTO</p>
-            </div>
+            <Link href="/">
+              <Image 
+                src="/image/logo.png" 
+                alt="SAC Marília" 
+                width={120} 
+                height={50}
+                className="h-auto w-auto"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Contact Info */}

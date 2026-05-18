@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
 import { Camera, MapPin, CheckCircle2 } from "lucide-react";
+import Image from "next/image"
 
 export default function Home() {
   return (
