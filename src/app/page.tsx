@@ -24,6 +24,11 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
 
+  // Filtros
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+
   // Listener em tempo real do Firestore
   useEffect(() => {
     const unsubscribe = onReclamacoesChange(
@@ -45,6 +50,29 @@ export default function Home() {
     }
   };
 
+  // Filtragem dinâmica
+  const filteredReclamacoes = reclamacoes.filter((rec) => {
+    // 1. Filtro de Busca
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const titleMatch = (rec.titulo || "").toLowerCase().includes(q);
+      const descMatch = (rec.descricao || "").toLowerCase().includes(q);
+      const addrMatch = (rec.endereco || "").toLowerCase().includes(q);
+      if (!titleMatch && !descMatch && !addrMatch) return false;
+    }
+    // 2. Filtro de Categoria
+    if (selectedCategory) {
+      const cleanRecCat = (rec.categoria || "").toLowerCase();
+      const cleanSelCat = selectedCategory.toLowerCase();
+      if (!cleanRecCat.includes(cleanSelCat)) return false;
+    }
+    // 3. Filtro de Status
+    if (selectedStatus && rec.status !== selectedStatus) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Full-screen Interactive Map */}
@@ -52,8 +80,8 @@ export default function Home() {
         <Map center={[-49.9458, -22.2139]} zoom={14}>
           <MapControls position="bottom-right" showZoom showLocate />
 
-          {/* Pins vindos do Firestore em tempo real */}
-          {reclamacoes.map((rec) => {
+          {/* Pins vindos do Firestore em tempo real filtrados */}
+          {filteredReclamacoes.map((rec) => {
             if (!rec.latitude || !rec.longitude) return null;
             const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
             const pinColor = cat.color;
@@ -80,21 +108,28 @@ export default function Home() {
         </Map>
       </div>
 
-      {/* MapNavbar */}
-      <MapNavbar />
+      {/* MapNavbar com propriedades de filtro */}
+      <MapNavbar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+      />
 
       {/* FAB */}
       <button
         onClick={handleFabClick}
-        className="absolute bottom-36 md:bottom-28 right-4 z-30 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all"
+        className="absolute bottom-44 md:bottom-36 right-4 z-30 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer"
       >
         <span className="material-symbols-outlined text-[28px]">add</span>
       </button>
 
-      {/* Bottom Cards Carousel — dados reais */}
-      <div className="absolute bottom-6 md:bottom-8 left-0 right-0 z-20 px-4">
+      {/* Bottom Cards Carousel — dados reais filtrados */}
+      <div className="absolute bottom-10 md:bottom-12 left-0 right-0 z-20 px-4">
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-          {reclamacoes.slice(0, 10).map((card) => {
+          {filteredReclamacoes.slice(0, 10).map((card) => {
             const cat = getCategoryByLabel(card.categoria);
             const catColor = cat?.color ?? "#94A3B8";
             const st = statusLabels[card.status] ?? { label: card.status, color: "#94A3B8" };
@@ -113,7 +148,7 @@ export default function Home() {
                     >
                       {cat?.label ?? card.categoria}
                     </span>
-                    <h3 className="text-base font-semibold text-[#112F4E] mt-0.5">
+                    <h3 className="text-base font-semibold text-[#112F4E] mt-0.5 truncate">
                       {card.titulo}
                     </h3>
                   </div>
@@ -138,10 +173,10 @@ export default function Home() {
           })}
 
           {/* Empty state */}
-          {reclamacoes.length === 0 && (
+          {filteredReclamacoes.length === 0 && (
             <div className="min-w-[300px] bg-white/95 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 text-center">
               <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] mb-2 block">map</span>
-              <p className="text-sm text-[#94A3B8]">Nenhuma reclamação ainda. Seja o primeiro!</p>
+              <p className="text-sm text-[#94A3B8]">Nenhuma reclamação encontrada.</p>
             </div>
           )}
         </div>

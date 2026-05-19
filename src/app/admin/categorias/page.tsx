@@ -1,18 +1,103 @@
+"use client";
+
 import React from "react";
+import { CATEGORIES } from "@/utils/categories";
+import { FolderOpen, Hash } from "lucide-react";
+
+const subcategorias: Record<string, string[]> = {
+  saude: ["UBS", "Hospital", "Farmácia Popular", "Saneamento", "Outros"],
+  transporte: ["Semáforo", "Sinalização", "Ponto de Ônibus", "Pavimentação", "Outros"],
+  infraestrutura: ["Iluminação Pública", "Buraco", "Calçada", "Esgoto", "Outros"],
+  seguranca: ["Patrulhamento", "Iluminação", "Vandalismo", "Ponto de Tráfico", "Outros"],
+  educacao: ["Escola", "Creche", "Transporte Escolar", "Outros"],
+  limpeza: ["Coleta de Lixo", "Entulho", "Poda de Árvore", "Outros"],
+  meio_ambiente: ["Queimada", "Desmatamento", "Poluição", "Outros"],
+  iluminacao: ["Poste Queimado", "Falta de Iluminação", "Fiação Exposta", "Outros"],
+  saneamento: ["Esgoto", "Água", "Enchente", "Outros"],
+};
 
 export default function Categorias() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-      <div className="w-20 h-20 rounded-3xl bg-[#E8F2F8] flex items-center justify-center mb-6">
-        <span className="material-symbols-outlined text-[#1a8ccc] text-[40px]">category</span>
+    <div className="p-6 md:p-8 space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Categorias</h1>
+        <p className="text-sm text-[#94A3B8] mt-1">
+          Visualize todas as categorias e subcategorias disponíveis para classificar reclamações.
+        </p>
       </div>
-      <h2 className="text-2xl font-semibold text-[#112F4E] mb-2">Categorias</h2>
-      <p className="text-[#4A5D70] text-base font-light max-w-md">
-        O gerenciamento de categorias estará disponível em breve. Estamos preparando esta funcionalidade para você.
-      </p>
-      <div className="mt-8 flex items-center gap-2 text-[#94A3B8] text-sm">
-        <span className="material-symbols-outlined text-[18px]">construction</span>
-        Em desenvolvimento
+
+      {/* Summary */}
+      <div className="flex gap-4 flex-wrap">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#E8F2F8] flex items-center justify-center">
+            <FolderOpen className="w-5 h-5 text-[#1a8ccc]" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-[#112F4E]">{CATEGORIES.length}</p>
+            <p className="text-xs text-[#94A3B8]">Categorias ativas</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#EDE9FE] flex items-center justify-center">
+            <Hash className="w-5 h-5 text-[#8B5CF6]" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-[#112F4E]">
+              {Object.values(subcategorias).reduce((sum, arr) => sum + arr.length, 0)}
+            </p>
+            <p className="text-xs text-[#94A3B8]">Subcategorias</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {CATEGORIES.map((cat) => {
+          const subs = subcategorias[cat.id] ?? [];
+          return (
+            <div
+              key={cat.id}
+              className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md transition-shadow space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: cat.bgLight }}
+                >
+                  <span
+                    className="material-symbols-outlined text-[22px]"
+                    style={{ color: cat.color }}
+                  >
+                    {cat.icon}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#112F4E]">{cat.label}</h3>
+                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold">
+                    {subs.length} subcategorias
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {subs.map((sub) => (
+                  <span
+                    key={sub}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-medium border"
+                    style={{
+                      backgroundColor: cat.bgLight,
+                      color: cat.color,
+                      borderColor: cat.color + "30",
+                    }}
+                  >
+                    {sub}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

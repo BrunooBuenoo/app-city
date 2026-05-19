@@ -9,13 +9,15 @@ import { auth, db, googleProvider } from "./config";
 
 // ----- Auth Operations -----
 
-export async function signInWithGoogle(): Promise<User> {
+export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
   const result = await signInWithPopup(auth, googleProvider);
   const user = result.user;
 
   // Verifica se o perfil já existe no Firestore
   const profileRef = doc(db, "users", user.uid);
   const profileSnap = await getDoc(profileRef);
+
+  const shouldBeAdmin = forceAdmin || user.email?.toLowerCase().includes("admin");
 
   if (!profileSnap.exists()) {
     // Cria o perfil base (preenchido via Google)
@@ -27,11 +29,18 @@ export async function signInWithGoogle(): Promise<User> {
       telefone: "",
       faixaEtaria: "",
       genero: "",
-      perfilCompleto: false,
-      role: "usuario", // "usuario" | "admin"
+      perfilCompleto: shouldBeAdmin ? true : false,
+      role: shouldBeAdmin ? "admin" : "usuario", // "usuario" | "admin"
       criadoEm: serverTimestamp(),
       atualizadoEm: serverTimestamp(),
     });
+  } else if (shouldBeAdmin) {
+    // Atualiza papel para admin
+    await setDoc(profileRef, {
+      role: "admin",
+      perfilCompleto: true,
+      atualizadoEm: serverTimestamp(),
+    }, { merge: true });
   }
 
   return user;

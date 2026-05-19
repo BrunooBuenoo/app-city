@@ -899,6 +899,30 @@ function MapRoute({
   return null;
 }
 
+type MapClickHandlerProps = {
+  onClick: (lngLat: { lng: number; lat: number }) => void;
+};
+
+function MapClickHandler({ onClick }: MapClickHandlerProps) {
+  const { map } = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    const handleClick = (e: MapLibreGL.MapMouseEvent) => {
+      onClick({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+    };
+
+    map.on("click", handleClick);
+
+    return () => {
+      map.off("click", handleClick);
+    };
+  }, [map, onClick]);
+
+  return null;
+}
+
 export {
   Map,
   useMap,
@@ -910,4 +934,6 @@ export {
   MapPopup,
   MapControls,
   MapRoute,
+  MapClickHandler,
 };
+

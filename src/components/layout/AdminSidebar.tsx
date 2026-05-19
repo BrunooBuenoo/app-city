@@ -49,28 +49,16 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
       <div className="flex items-center gap-2 p-3">
         <button
           onClick={onToggle}
-          className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-black/5 transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-black/5 transition-colors shrink-0"
         >
-          <div className="w-8 h-8 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
-            <span className="text-white text-sm font-bold">S</span>
-          </div>
+          <span className="material-symbols-outlined text-[#1a8ccc] text-[22px]">menu</span>
         </button>
         {isExpanded && (
-          <button className="p-1.5 hover:bg-black/5 rounded transition-colors">
-            <Copy className="w-4 h-4 text-[#94A3B8]" />
-          </button>
+          <span className="text-xs font-bold text-[#112F4E] leading-tight truncate">
+            Sac do Marília<br />ao Contrário
+          </span>
         )}
       </div>
-
-      {/* Store / Context selector */}
-      {isExpanded && (
-        <div className="px-3 py-2">
-          <button className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg hover:bg-black/5 transition-colors">
-            <span className="font-medium text-[#112F4E] truncate">Sac Marília</span>
-            <ChevronDown className="w-4 h-4 text-[#94A3B8]" />
-          </button>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 px-2 py-2 overflow-y-auto">

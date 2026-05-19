@@ -16,6 +16,9 @@ export {
   getTimeline,
   votar,
   uploadFotoReclamacao,
+  adicionarComentario,
+  listarComentarios,
+  onComentariosChange,
   type Reclamacao,
   type TimelineEvent,
 } from "./reclamacoes";

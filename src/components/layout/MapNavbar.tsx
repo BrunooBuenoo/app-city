@@ -1,19 +1,93 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Menu, X, LogIn, Info, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 
-export default function MapNavbar() {
+interface MapNavbarProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
+  selectedStatus: string;
+  setSelectedStatus: (status: string) => void;
+}
+
+interface AddressSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+export default function MapNavbar({
+  searchQuery,
+  setSearchQuery,
+  selectedCategory,
+  setSelectedCategory,
+  selectedStatus,
+  setSelectedStatus,
+}: MapNavbarProps) {
   const { user, isLoggedIn, loading } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Address autocomplete
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const handleSignOut = async () => {
     await signOutUser();
     setMobileMenuOpen(false);
+  };
+
+  // Fetch address suggestions from Nominatim
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    if (searchQuery.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery + " Marília SP")}&limit=5&addressdetails=1`,
+          { headers: { "Accept-Language": "pt-BR" } }
+        );
+        const data: AddressSuggestion[] = await res.json();
+        setSuggestions(data);
+        setShowSuggestions(data.length > 0);
+      } catch (err) {
+        console.error("Erro ao buscar sugestões:", err);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [searchQuery]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectSuggestion = (s: AddressSuggestion) => {
+    setSearchQuery(s.display_name);
+    setShowSuggestions(false);
   };
 
   return (
@@ -22,21 +96,26 @@ export default function MapNavbar() {
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3">
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
-              <span className="text-white text-sm font-bold">S</span>
-            </div>
-            <span className="hidden md:block text-sm font-semibold text-[#112F4E]">
-              SAC Marília
+            <span className="text-xs font-bold text-[#112F4E] leading-tight whitespace-nowrap hidden sm:block">
+              Sac do Marília<br />ao Contrário
+            </span>
+            <span className="text-[10px] font-bold text-[#112F4E] leading-tight whitespace-nowrap sm:hidden">
+              SAC
             </span>
           </Link>
 
-          {/* Search */}
-          <div className="flex-1 relative">
+          {/* Search with autocomplete */}
+          <div className="flex-1 relative" ref={suggestionsRef}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
             <input
               type="text"
               placeholder="Buscar endereço ou reclamação..."
-              onFocus={() => setSearchFocused(true)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                setSearchFocused(true);
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
               onBlur={() => setSearchFocused(false)}
               className={`w-full pl-9 pr-4 py-2.5 bg-[#FAF7F2] border rounded-xl text-sm text-[#112F4E] placeholder:text-[#94A3B8] outline-none transition-all ${
                 searchFocused
@@ -44,11 +123,33 @@ export default function MapNavbar() {
                   : "border-[#E2E8F0]"
               }`}
             />
+
+            {/* Autocomplete suggestions dropdown */}
+            {showSuggestions && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-elevated border border-[#E2E8F0] overflow-hidden z-50 max-h-[220px] overflow-y-auto">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleSelectSuggestion(s)}
+                    className="w-full text-left px-4 py-3 text-xs text-[#4A5D70] hover:bg-[#FAF7F2] transition-colors border-b border-[#F5F2ED] last:border-b-0 flex items-start gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-[#94A3B8] mt-0.5 shrink-0">location_on</span>
+                    <span className="line-clamp-2 leading-relaxed">{s.display_name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Filter button (mobile only) */}
-          <button className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[#FAF7F2] transition-colors shrink-0">
-            <span className="material-symbols-outlined text-[#4A5D70] text-[20px]">tune</span>
+          {/* Filter button */}
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[#FAF7F2] transition-colors shrink-0 cursor-pointer ${
+              selectedCategory || selectedStatus ? "bg-[#E8F2F8] text-[#1a8ccc]" : "text-[#4A5D70]"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">tune</span>
           </button>
 
           {/* Desktop actions */}
@@ -104,6 +205,43 @@ export default function MapNavbar() {
             )}
           </button>
         </div>
+
+        {/* Filter panel */}
+        {showFilters && (
+          <div className="mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[#112F4E] uppercase tracking-wider mb-2">Filtrar por Categoria</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full p-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl text-xs text-[#112F4E] outline-none"
+              >
+                <option value="">Todas as Categorias</option>
+                <option value="Infraestrutura">Infraestrutura</option>
+                <option value="Iluminação">Iluminação</option>
+                <option value="Limpeza">Limpeza</option>
+                <option value="Saneamento">Saneamento</option>
+                <option value="Segurança">Segurança</option>
+                <option value="Saúde">Saúde</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#112F4E] uppercase tracking-wider mb-2">Filtrar por Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full p-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl text-xs text-[#112F4E] outline-none"
+              >
+                <option value="">Todos os Status</option>
+                <option value="aberto">Aberto</option>
+                <option value="em_analise">Em Análise</option>
+                <option value="em_andamento">Em Progresso</option>
+                <option value="resolvido">Resolvido</option>
+                <option value="critico">Crítico</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Mobile dropdown */}
         {mobileMenuOpen && (

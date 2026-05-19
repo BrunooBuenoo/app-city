@@ -1,53 +1,111 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import {
+  Wrench, Lightbulb, Trash2, Droplets, Heart, HelpCircle, Shield, Plus,
+  MapPin, Calendar, ThumbsUp, ChevronRight, Loader2
+} from "lucide-react";
+
+const categoryIconMap: Record<string, any> = {
+  infraestrutura: Wrench,
+  iluminação: Lightbulb,
+  limpeza: Trash2,
+  saneamento: Droplets,
+  saúde: Heart,
+  segurança: Shield,
+};
+
+const getCategoryIcon = (category: string) => {
+  const clean = (category || "").toLowerCase();
+  for (const [key, icon] of Object.entries(categoryIconMap)) {
+    if (clean.includes(key)) return icon;
+  }
+  return HelpCircle;
+};
+
+const statusMeta: Record<string, { label: string; bg: string; text: string }> = {
+  aberto: { label: "Aberto", bg: "bg-[#E8F2F8]", text: "text-[#1a8ccc]" },
+  em_analise: { label: "Em Análise", bg: "bg-[#F3E8FF]", text: "text-[#8B5CF6]" },
+  em_andamento: { label: "Em Progresso", bg: "bg-[#FEF3C7]", text: "text-[#B45309]" },
+  resolvido: { label: "Resolvido", bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
+  critico: { label: "Crítico", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]" },
+};
 
 export default function MinhasReclamacoes() {
+  const router = useRouter();
+  const { user, isLoggedIn, loading } = useAuth();
+
+  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = onReclamacoesChange(
+      (items) => {
+        // Filtrar reclamações do usuário
+        const filtered = items.filter((r) => r.autorId === user.uid);
+        setReclamacoes(filtered);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Erro no listener de minhas reclamações:", error);
+        setIsLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, [user]);
+
+  // Cálculos dinâmicos
+  const totalCount = reclamacoes.length;
+  const resolvidoCount = reclamacoes.filter((r) => r.status === "resolvido").length;
+  const emAndamentoCount = reclamacoes.filter((r) => r.status === "em_andamento" || r.status === "em_analise").length;
+  const totalConcordos = reclamacoes.reduce((acc, r) => acc + (r.concordos || 0), 0);
+
   const summaryCards = [
-    { label: "Total", value: "12", color: "#1a8ccc" },
-    { label: "Resolvidas", value: "8", color: "#10B981" },
-    { label: "Em Andamento", value: "3", color: "#F59E0B" },
-    { label: "Concordos", value: "45", color: "#EF4444", hasHeart: true },
+    { label: "Total", value: totalCount, color: "#1a8ccc" },
+    { label: "Resolvidas", value: resolvidoCount, color: "#10B981" },
+    { label: "Em Progresso", value: emAndamentoCount, color: "#F59E0B" },
+    { label: "Apoios", value: totalConcordos, color: "#EF4444", hasHeart: true },
   ];
 
-  const complaints = [
-    {
-      icon: "water_damage", cat: "Infraestrutura", title: "Vazamento de Esgoto",
-      status: "Em Andamento", statusClass: "bg-[#FEF3C7] text-[#B45309]",
-      location: "Rua das Flores, 123 - Centro", date: "12 de Outubro, 2023",
-      concordos: 24, iconBg: "bg-[#FEE2E2]", iconColor: "text-[#991B1B]",
-    },
-    {
-      icon: "lightbulb", cat: "Serviços", title: "Iluminação Pública",
-      status: "Resolvido", statusClass: "bg-[#D1FAE5] text-[#065F46]",
-      location: "Av. Sampaio Vidal, 450", date: "08 de Outubro, 2023",
-      concordos: 12, iconBg: "bg-[#E8F2F8]", iconColor: "text-[#1a8ccc]",
-    },
-    {
-      icon: "delete", cat: "Saneamento", title: "Acúmulo de Lixo",
-      status: "Em Andamento", statusClass: "bg-[#FEF3C7] text-[#B45309]",
-      location: "Praça Saturnino de Brito", date: "05 de Outubro, 2023",
-      concordos: 9, iconBg: "bg-[#FEF3C7]", iconColor: "text-[#B45309]",
-    },
-  ];
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "—";
+    const date = timestamp.toDate();
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  };
+
+  if (loading || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
+        <p className="text-sm text-[#4A5D70] font-light">Carregando suas reclamações...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 md:p-8 max-w-[1280px] mx-auto w-full">
+    <div className="p-4 md:p-8 max-w-[1280px] mx-auto w-full space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div>
         <h2 className="text-2xl md:text-3xl font-semibold text-[#112F4E] tracking-tight">Minhas Reclamações</h2>
-        <p className="text-[#4A5D70] text-base mt-1 font-light">Acompanhe o andamento das suas solicitações.</p>
+        <p className="text-[#4A5D70] text-sm md:text-base mt-1 font-light">Acompanhe e fiscalize o andamento de cada uma das suas solicitações.</p>
       </div>
 
       {/* Summary Cards */}
       <section>
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
           {summaryCards.map((card) => (
-            <div key={card.label} className="min-w-[140px] flex-shrink-0 bg-white p-4 rounded-2xl shadow-card border border-[#E2E8F0]">
-              <span className="text-xs font-medium text-[#94A3B8] uppercase tracking-wider block mb-2">{card.label}</span>
+            <div key={card.label} className="min-w-[140px] flex-1 bg-white p-4 rounded-2xl shadow-sm border border-[#E2E8F0] hover:shadow-md transition-shadow">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block mb-2">{card.label}</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-bold" style={{ color: card.color }}>{card.value}</span>
+                <span className="text-2xl font-extrabold" style={{ color: card.color }}>{card.value}</span>
                 {card.hasHeart && (
-                  <span className="material-symbols-outlined text-[#EF4444] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                  <Heart className="w-4 h-4 text-[#EF4444] fill-[#EF4444]" />
                 )}
               </div>
             </div>
@@ -56,56 +114,76 @@ export default function MinhasReclamacoes() {
       </section>
 
       {/* Complaints List */}
-      <section className="mt-8 space-y-3">
-        <h3 className="text-xs font-semibold text-[#94A3B8] uppercase tracking-widest mb-2">Recentes</h3>
+      <section className="space-y-4">
+        <h3 className="text-xs font-semibold text-[#94A3B8] uppercase tracking-widest mb-1">Registros Recentes ({reclamacoes.length})</h3>
 
-        {complaints.map((c) => (
-          <div key={c.title} className="bg-white p-5 rounded-2xl shadow-card border border-[#E2E8F0] flex flex-col gap-4 hover:shadow-card-hover transition-shadow">
-            {/* Top Row */}
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-xl ${c.iconBg} flex items-center justify-center`}>
-                  <span className={`material-symbols-outlined ${c.iconColor} text-[22px]`}>{c.icon}</span>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-[#112F4E]">{c.title}</h3>
-                  <p className="text-sm text-[#94A3B8]">{c.cat}</p>
-                </div>
-              </div>
-              <span className={`px-3 py-1 ${c.statusClass} text-[11px] font-semibold rounded-full`}>{c.status}</span>
-            </div>
-
-            {/* Details */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 text-[#4A5D70]">
-                <span className="material-symbols-outlined text-[18px]">location_on</span>
-                <span className="text-sm">{c.location}</span>
-              </div>
-              <div className="flex items-center gap-2 text-[#4A5D70]">
-                <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                <span className="text-sm">{c.date}</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-between items-center pt-3 border-t border-[#F5F2ED]">
-              <div className="flex items-center gap-1.5 text-[#EF4444]">
-                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                <span className="text-sm font-semibold">{c.concordos} Concordos</span>
-              </div>
-              <button className="text-[#1a8ccc] text-sm font-semibold flex items-center gap-1 hover:underline">
-                Ver detalhes
-                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-              </button>
-            </div>
+        {reclamacoes.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl border border-dashed border-[#E2E8F0] text-center space-y-3">
+            <HelpCircle className="w-12 h-12 text-[#94A3B8] mx-auto opacity-70" />
+            <p className="text-sm text-[#4A5D70] font-light">Você ainda não registrou nenhuma reclamação.</p>
+            <Link href="/reclamacao/nova" className="inline-block px-4 py-2 bg-[#1a8ccc] text-white font-semibold text-xs rounded-xl hover:bg-[#1572a6] transition-colors shadow-sm">
+              Criar Primeira Reclamação
+            </Link>
           </div>
-        ))}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reclamacoes.map((c) => {
+              const Icon = getCategoryIcon(c.categoria);
+              const meta = statusMeta[c.status] || { label: c.status, bg: "bg-[#FAF7F2]", text: "text-[#4A5D70]" };
+              return (
+                <div key={c.id} className="bg-white p-5 rounded-2xl shadow-sm border border-[#E2E8F0] flex flex-col justify-between gap-4 hover:shadow-md transition-all hover:-translate-y-0.5">
+                  <div>
+                    {/* Top Row */}
+                    <div className="flex justify-between items-start gap-2 mb-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#E2E8F0]/80 flex items-center justify-center shrink-0">
+                          <Icon className="w-4.5 h-4.5 text-[#4A5D70]" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-[#112F4E] truncate" title={c.titulo}>{c.titulo}</h4>
+                          <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold">{c.categoria}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 ${meta.bg} ${meta.text} text-[10px] font-bold rounded-full shrink-0`}>
+                        {meta.label}
+                      </span>
+                    </div>
+
+                    {/* Details */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-start gap-2 text-[#4A5D70]">
+                        <MapPin className="w-4 h-4 text-[#94A3B8] shrink-0 mt-0.5" />
+                        <span className="text-xs font-light leading-snug truncate" title={c.endereco}>{c.endereco}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#4A5D70]">
+                        <Calendar className="w-4 h-4 text-[#94A3B8] shrink-0" />
+                        <span className="text-xs font-light">{formatDate(c.criadoEm)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex justify-between items-center pt-3 border-t border-[#F5F2ED]">
+                    <div className="flex items-center gap-1.5 text-[#10B981]">
+                      <ThumbsUp className="w-4 h-4" />
+                      <span className="text-xs font-bold">{c.concordos} Apoios</span>
+                    </div>
+                    <Link href={`/reclamacao/${c.id}`} className="text-[#1a8ccc] text-xs font-semibold flex items-center gap-0.5 hover:underline cursor-pointer">
+                      Ver detalhes
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* FAB */}
       <Link href="/reclamacao/nova">
-        <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl shadow-elevated flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50">
-          <span className="material-symbols-outlined text-[28px]">add</span>
+        <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 cursor-pointer">
+          <Plus className="w-7 h-7" />
         </button>
       </Link>
     </div>

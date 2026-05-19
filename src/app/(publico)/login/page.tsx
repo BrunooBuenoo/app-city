@@ -11,12 +11,15 @@ export default function Login() {
   const router = useRouter();
   const { isLoggedIn, profile, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState("");
 
   // Se já logado, redireciona
   useEffect(() => {
-    if (!loading && isLoggedIn) {
-      if (profile?.perfilCompleto) {
+    if (!loading && isLoggedIn && profile) {
+      if (profile.role === "admin") {
+        router.push("/admin/dashboard");
+      } else if (profile.perfilCompleto) {
         router.push("/usuario/dashboard");
       } else {
         router.push("/completar-perfil");
@@ -28,9 +31,11 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      const user = await signInWithGoogle();
+      const user = await signInWithGoogle(isAdminLogin);
       const userProfile = await getUserProfile(user.uid);
-      if (userProfile?.perfilCompleto) {
+      if (userProfile?.role === "admin") {
+        router.push("/admin/dashboard");
+      } else if (userProfile?.perfilCompleto) {
         router.push("/usuario/dashboard");
       } else {
         router.push("/completar-perfil");
@@ -123,6 +128,18 @@ export default function Login() {
 
             {/* Google Sign-In Button */}
             <div className="space-y-4">
+              <label className="flex items-center gap-2.5 px-4 py-3 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl cursor-pointer hover:bg-[#FAF7F2]/80 transition-all select-none mb-1">
+                <input
+                  type="checkbox"
+                  checked={isAdminLogin}
+                  onChange={(e) => setIsAdminLogin(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#1a8ccc] focus:ring-[#1a8ccc] accent-[#1a8ccc] cursor-pointer"
+                />
+                <span className="text-xs md:text-sm font-semibold text-[#4A5D70]">
+                  Entrar como Administrador
+                </span>
+              </label>
+
               <button
                 onClick={handleGoogleLogin}
                 disabled={isLoading}

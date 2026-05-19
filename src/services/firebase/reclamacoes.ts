@@ -236,3 +236,46 @@ export async function uploadFotoReclamacao(
   await uploadBytes(fileRef, file);
   return getDownloadURL(fileRef);
 }
+
+// ----- Comentários -----
+
+export async function adicionarComentario(
+  reclamacaoId: string,
+  autorId: string,
+  autorNome: string,
+  autorFoto: string,
+  texto: string
+): Promise<string> {
+  const docRef = await addDoc(collection(db, COLLECTION, reclamacaoId, "comentarios"), {
+    autorId,
+    autorNome,
+    autorFoto,
+    texto,
+    criadoEm: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function listarComentarios(reclamacaoId: string): Promise<any[]> {
+  const q = query(
+    collection(db, COLLECTION, reclamacaoId, "comentarios"),
+    orderBy("criadoEm", "asc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export function onComentariosChange(
+  reclamacaoId: string,
+  callback: (comentarios: any[]) => void
+) {
+  const q = query(
+    collection(db, COLLECTION, reclamacaoId, "comentarios"),
+    orderBy("criadoEm", "asc")
+  );
+  return onSnapshot(q, (snap) => {
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(items);
+  });
+}
+
