@@ -54,8 +54,14 @@ export function Navbar() {
       </div>
 
       {/* Middle Section - Logo and Contact */}
-      <div className="bg-white py-6 px-4 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
+      <div 
+        className="relative py-6 px-4 border-b border-gray-100 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/image/marilia.jpeg')" }}
+      >
+        {/* Overlay para legibilidade premium e efeito sutil */}
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
+        
+        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
           {/* Logo Texto */}
           <div className="flex items-center text-center md:text-left">
             <Link href="/">
