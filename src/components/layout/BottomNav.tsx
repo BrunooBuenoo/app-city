@@ -9,16 +9,16 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/mapa", icon: "home", label: "Início" },
+    { href: "/", icon: "home", label: "Início" },
     { href: "/usuario/minhas-reclamacoes", icon: "assignment", label: "Reclamações" },
     { href: "#", icon: "notifications", label: "Alertas" },
-    { href: "/completar-perfil", icon: "person", label: "Perfil" },
+    { href: "/usuario/perfil", icon: "person", label: "Perfil" },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-5 pt-2.5 bg-white/90 backdrop-blur-xl border-t border-[#E2E8F0]">
       {links.map((link) => {
-        const isActive = pathname === link.href || (link.href === '/mapa' && pathname === '/usuario/dashboard'); 
+        const isActive = pathname === link.href || (link.href === '/' && pathname === '/usuario/dashboard'); 
         return (
           <Link
             key={link.label}

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart3, Bell, Calendar, TrendingUp, TrendingDown,
   Inbox, Clock, CheckCircle, MoreHorizontal, Filter,
   ReceiptText, PieChart, Info, ChevronLeft, ChevronRight,
   Download,
 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -18,6 +19,16 @@ const dateFilters = [
 
 export default function AdminDashboard() {
   const [activeFilter, setActiveFilter] = useState("hoje");
+  const { showToast } = useToast();
+
+  // Notificação simulada — nova reclamação
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showToast("info", "Nova reclamação recebida", "Buraco na Via — Cascata, 12:32");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
 
   return (
     <>

@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="bg-[#112F4E] pt-20 pb-10 px-6 md:px-12 mt-auto">
       <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="text-center md:text-left">
-          <Link href="/">
+          <Link href="/sobre">
             <Image 
               src="/image/logo.png" 
               alt="SAC Marília" 

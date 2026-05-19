@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Cadastro() {
-  return <div>Em construção...</div>;
+  redirect("/login");
 }

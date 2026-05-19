@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   BarChart3, Bell, Calendar, TrendingUp, TrendingDown,
@@ -8,6 +8,7 @@ import {
   MoreHorizontal, Filter, ReceiptText, PieChart, Info,
   ChevronLeft, ChevronRight, Plus,
 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -18,6 +19,16 @@ const dateFilters = [
 
 export default function UsuarioDashboard() {
   const [activeFilter, setActiveFilter] = useState("mes");
+  const { showToast } = useToast();
+
+  // Notificação simulada — avanço de status
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showToast("success", "Atualização de reclamação", "\"Iluminação Pública\" avançou para Em Andamento");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
 
   return (
     <>

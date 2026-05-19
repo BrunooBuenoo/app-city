@@ -34,9 +34,10 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
 
   const featureItems = [
     { href: "/usuario/minhas-reclamacoes", icon: ClipboardList, label: "Reclamações" },
-    { href: "/mapa", icon: MapPin, label: "Mapa" },
+    { href: "/", icon: MapPin, label: "Mapa" },
     { href: "/reclamacao/nova", icon: MessageCircle, label: "Nova Reclamação" },
-    { href: "/completar-perfil", icon: User, label: "Perfil" },
+    { href: "/usuario/historico", icon: BellIcon, label: "Histórico" },
+    { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];
 
   return (

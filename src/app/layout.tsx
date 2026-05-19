@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 };
 
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
+import { ToastProvider } from "@/components/ui/Toast";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function RootLayout({
   children,
@@ -25,8 +27,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`${plusJakarta.className} selection:bg-primary/10`}>
-        <SmoothScroll>{children}</SmoothScroll>
+        <AuthProvider>
+          <ToastProvider>
+            <SmoothScroll>{children}</SmoothScroll>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
