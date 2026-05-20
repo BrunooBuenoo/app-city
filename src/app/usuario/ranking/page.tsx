@@ -1,317 +1,270 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Trophy, Flame, Medal, Crown, Star, TrendingUp,
-  ChevronRight, Loader2, ThumbsUp, FileText,
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
-import {
-  buildLeaderboard,
-  calculateUserXP,
-  getNextRankProgress,
-  RANKS,
-  type LeaderboardEntry,
-} from "@/utils/gamification";
-
-const podiumColors = [
-  { bg: "from-yellow-400 to-amber-500", text: "text-amber-600", medal: "🥇", size: "w-20 h-20" },
-  { bg: "from-gray-300 to-gray-400", text: "text-gray-500", medal: "🥈", size: "w-16 h-16" },
-  { bg: "from-orange-300 to-orange-400", text: "text-orange-500", medal: "🥉", size: "w-16 h-16" },
-];
+import { obterRankingUsuarios, type UserProfile } from "@/services/firebase/auth";
+import { calcularNivel } from "@/utils/gamification";
+import InsigniaBadge from "@/components/ui/InsigniaBadge";
+import { Loader2, Award, Trophy, User, ArrowLeft, Heart, MessageSquare, PlusCircle, CheckCircle } from "lucide-react";
 
 export default function RankingPage() {
-  const { user } = useAuth();
-  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [ranking, setRanking] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onReclamacoesChange(
-      (items) => {
-        setReclamacoes(items);
-        setIsLoading(false);
-      },
-      () => setIsLoading(false)
-    );
-    return () => unsubscribe();
+    async function loadRanking() {
+      try {
+        const list = await obterRankingUsuarios(20);
+        setRanking(list);
+      } catch (err) {
+        console.error("Erro ao carregar o ranking global:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRanking();
   }, []);
 
-  const leaderboard = useMemo(() => buildLeaderboard(reclamacoes), [reclamacoes]);
-
-  const userPosition = useMemo(() => {
-    if (!user) return -1;
-    return leaderboard.findIndex((e) => e.uid === user.uid) + 1;
-  }, [leaderboard, user]);
-
-  const userXP = useMemo(
-    () => (user ? calculateUserXP(user.uid, reclamacoes) : 0),
-    [user, reclamacoes]
-  );
-  const rankInfo = useMemo(() => getNextRankProgress(userXP), [userXP]);
-
-  const top3 = leaderboard.slice(0, 3);
-  const restList = leaderboard.slice(3, 20);
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Carregando ranking...</p>
+        <p className="text-sm text-[#4A5D70] font-light">Calculando o ranking de cidadãos...</p>
       </div>
     );
   }
 
+  // Separar o pódio (Top 3)
+  const top1 = ranking[0] || null;
+  const top2 = ranking[1] || null;
+  const top3 = ranking[2] || null;
+  
+  // O restante dos usuários do ranking
+  const outros = ranking.slice(3);
+
+  const regrasPontuacao = [
+    { acao: "Cadastrar Nova Ocorrência", pontos: "+10", desc: "Ajude a mapear os problemas reais da nossa cidade.", icon: PlusCircle, color: "text-[#1a8ccc]", bgColor: "bg-[#E8F2F8]" },
+    { acao: "Apoiar um Problema (Concordar)", pontos: "+5", desc: "Fortaleça relatos de outros moradores com seu apoio.", icon: Heart, color: "text-[#EF4444]", bgColor: "bg-[#FEE2E2]" },
+    { acao: "Ocorrência Apoiada Resolvida", pontos: "+30", desc: "Bônus supremo por apoiar causas solucionadas!", icon: Award, color: "text-[#F59E0B]", bgColor: "bg-[#FEF3C7]" },
+    { acao: "Sua Ocorrência Resolvida por Nós", pontos: "+50", desc: "Nossa equipe deve marcar sua reclamação como resolvida para contabilizar.", icon: CheckCircle, color: "text-[#10B981]", bgColor: "bg-[#D1FAE5]" },
+  ];
+
   return (
-    <>
+    <div className="px-4 md:px-6 pb-12 space-y-6">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-[#F5F2ED]">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-[#F59E0B]" />
-          <h1 className="text-lg font-semibold text-[#112F4E]">Ranking de Cidadãos</h1>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
-          <span className="material-symbols-outlined text-[14px]">group</span>
-          {leaderboard.length} participantes
+      <header className="flex items-center gap-3 pt-4 border-b border-[#F5F2ED] pb-4">
+        <Link href="/usuario/dashboard" className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#FAF7F2] transition-colors shrink-0">
+          <ArrowLeft className="w-4.5 h-4.5 text-[#112F4E]" />
+        </Link>
+        <div>
+          <h1 className="text-lg font-bold text-[#112F4E] flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-[#F59E0B]" />
+            Ranking de Cidadania
+          </h1>
+          <p className="text-xs text-[#94A3B8] font-light">Os moradores mais engajados e ativos de Marília</p>
         </div>
       </header>
 
-      <div className="px-4 md:px-6 pb-8 space-y-6">
-        {/* My Position Card */}
-        {user && userPosition > 0 && (
-          <div className="mt-4 p-5 rounded-2xl border border-[#E2E8F0] bg-gradient-to-r from-[#E8F2F8] to-white shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-full overflow-hidden border-3 border-white shadow-md bg-[#E8F2F8]">
-                    {user.photoURL ? (
-                      <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center text-white text-xl font-bold">
-                        {(user.displayName || "C").charAt(0)}
+      {/* Grid: Pódio + Regras */}
+      <div className="flex flex-col xl:grid xl:grid-cols-12 gap-6 items-start">
+        
+        {/* Pódio & Leaderboard (col-span-8) */}
+        <div className="order-2 xl:order-none xl:col-span-8 space-y-6 w-full">
+          
+          {/* Pódio Visual (Glassmorphism 3D-like columns) */}
+          {ranking.length > 0 ? (
+            <div className="bg-gradient-to-b from-white to-[#FAF7F2]/30 rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
+              <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-6 text-center">
+                🏆 Placar de Líderes do Prestígio
+              </h3>
+              
+              <div className="flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-2 pt-6 pb-2">
+                
+                {/* TOP 2 (Prata) - Esquerda */}
+                {top2 && (
+                  <div className="w-full sm:w-36 flex flex-col items-center order-2 sm:order-1 transition-all hover:scale-[1.02] duration-300">
+                    <div className="relative mb-2">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#94A3B8] bg-white shadow-md relative z-10 flex items-center justify-center">
+                        {top2.foto ? (
+                          <img src={top2.foto} alt={top2.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-[#94A3B8]" />
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 text-lg">{rankInfo.current.icon}</span>
-                </div>
-                <div>
-                  <p className="text-xs text-[#94A3B8] font-medium">Sua posição</p>
-                  <p className="text-2xl font-bold text-[#112F4E]">#{userPosition}</p>
-                  <p className="text-xs font-semibold" style={{ color: rankInfo.current.color }}>
-                    {rankInfo.current.name}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1.5 text-[#F59E0B] mb-1">
-                  <Flame className="w-5 h-5" />
-                  <span className="text-xl font-bold">{userXP}</span>
-                  <span className="text-xs text-[#94A3B8]">XP</span>
-                </div>
-                {rankInfo.next && (
-                  <div>
-                    <div className="w-32 h-2 bg-[#E2E8F0] rounded-full overflow-hidden mb-1">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${rankInfo.progress}%`, background: rankInfo.current.gradient }}
-                      />
+                      <div className="absolute -top-3 -right-1 w-6 h-6 rounded-full bg-[#94A3B8] border-2 border-white shadow flex items-center justify-center text-[10px] font-bold text-white z-20">
+                        2º
+                      </div>
                     </div>
-                    <p className="text-[9px] text-[#94A3B8]">
-                      {rankInfo.xpToNext} XP para {rankInfo.next.name} {rankInfo.next.icon}
-                    </p>
+                    <div className="text-center px-2 min-w-0 w-full mb-1">
+                      <p className="text-xs font-bold text-[#112F4E] truncate">{top2.nome}</p>
+                      <p className="text-[10px] text-[#94A3B8] font-medium truncate">{calcularNivel(top2.pontos || 0).nome}</p>
+                    </div>
+                    {/* Pedestal Prata */}
+                    <div className="w-full h-24 bg-gradient-to-t from-[#94A3B8]/20 to-[#E2E8F0]/40 rounded-t-xl border-t border-x border-[#E2E8F0] shadow-inner flex flex-col justify-end items-center pb-3 gap-1">
+                      <InsigniaBadge nivelId={calcularNivel(top2.pontos || 0).id} size="sm" />
+                      <span className="text-xs font-bold text-[#4A5D70]">{top2.pontos || 0} pts</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* TOP 1 (Ouro) - Centro */}
+                {top1 && (
+                  <div className="w-full sm:w-40 flex flex-col items-center order-1 sm:order-2 transition-all hover:scale-[1.03] duration-300 relative -top-3">
+                    <div className="relative mb-2">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-[#F59E0B] bg-white shadow-lg relative z-10 flex items-center justify-center">
+                        {top1.foto ? (
+                          <img src={top1.foto} alt={top1.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-10 h-10 text-[#F59E0B]" />
+                        )}
+                      </div>
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl z-20 select-none animate-bounce">
+                        👑
+                      </div>
+                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#F59E0B] border-2 border-white shadow text-[9px] font-extrabold text-white z-20 whitespace-nowrap">
+                        1º LUGAR
+                      </div>
+                    </div>
+                    <div className="text-center px-2 min-w-0 w-full mb-1 mt-1">
+                      <p className="text-sm font-bold text-[#112F4E] truncate">{top1.nome}</p>
+                      <p className="text-[10px] text-[#F59E0B] font-semibold truncate">{calcularNivel(top1.pontos || 0).nome}</p>
+                    </div>
+                    {/* Pedestal Ouro */}
+                    <div className="w-full h-32 bg-gradient-to-t from-[#F59E0B]/20 to-[#FEF3C7]/40 rounded-t-xl border-t-2 border-x border-[#FEF3C7] shadow flex flex-col justify-end items-center pb-4 gap-1">
+                      <InsigniaBadge nivelId={calcularNivel(top1.pontos || 0).id} size="md" />
+                      <span className="text-sm font-extrabold text-[#B45309]">{top1.pontos || 0} pts</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* TOP 3 (Bronze) - Direita */}
+                {top3 && (
+                  <div className="w-full sm:w-36 flex flex-col items-center order-3 transition-all hover:scale-[1.02] duration-300">
+                    <div className="relative mb-2">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#D97706]/70 bg-white shadow-md relative z-10 flex items-center justify-center">
+                        {top3.foto ? (
+                          <img src={top3.foto} alt={top3.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-[#D97706]" />
+                        )}
+                      </div>
+                      <div className="absolute -top-3 -right-1 w-6 h-6 rounded-full bg-[#D97706]/85 border-2 border-white shadow flex items-center justify-center text-[10px] font-bold text-white z-20">
+                        3º
+                      </div>
+                    </div>
+                    <div className="text-center px-2 min-w-0 w-full mb-1">
+                      <p className="text-xs font-bold text-[#112F4E] truncate">{top3.nome}</p>
+                      <p className="text-[10px] text-[#94A3B8] font-medium truncate">{calcularNivel(top3.pontos || 0).nome}</p>
+                    </div>
+                    {/* Pedestal Bronze */}
+                    <div className="w-full h-20 bg-gradient-to-t from-[#D97706]/15 to-[#FEF3C7]/20 rounded-t-xl border-t border-x border-[#E2E8F0] shadow-inner flex flex-col justify-end items-center pb-3 gap-1">
+                      <InsigniaBadge nivelId={calcularNivel(top3.pontos || 0).id} size="sm" />
+                      <span className="text-xs font-bold text-[#B45309]">{top3.pontos || 0} pts</span>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Ranks/Patents Info */}
-        <div className="p-5 rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
-          <h3 className="text-sm font-semibold text-[#112F4E] mb-3 flex items-center gap-2">
-            <Star className="w-4 h-4 text-[#F59E0B]" />
-            Patentes
-          </h3>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {RANKS.map((rank) => {
-              const isCurrent = rankInfo.current.level === rank.level;
-              return (
-                <div
-                  key={rank.level}
-                  className={`flex flex-col items-center p-3 rounded-xl min-w-[90px] border transition-all ${
-                    isCurrent
-                      ? "border-[#1a8ccc] bg-[#E8F2F8] shadow-sm scale-105"
-                      : "border-[#E2E8F0] bg-[#FAF7F2]"
-                  }`}
-                >
-                  <span className="text-2xl mb-1">{rank.icon}</span>
-                  <p className="text-[10px] font-bold text-[#112F4E] text-center">{rank.name}</p>
-                  <p className="text-[9px] text-[#94A3B8] mt-0.5">{rank.minXP}+ XP</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Podium */}
-        {top3.length >= 3 && (
-          <div className="flex items-end justify-center gap-4 pt-4">
-            {/* 2nd place */}
-            <PodiumCard entry={top3[1]} position={2} config={podiumColors[1]} isCurrentUser={top3[1].uid === user?.uid} />
-            {/* 1st place */}
-            <PodiumCard entry={top3[0]} position={1} config={podiumColors[0]} isCurrentUser={top3[0].uid === user?.uid} />
-            {/* 3rd place */}
-            <PodiumCard entry={top3[2]} position={3} config={podiumColors[2]} isCurrentUser={top3[2].uid === user?.uid} />
-          </div>
-        )}
-
-        {/* Leaderboard List */}
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#F1F5F9] flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[#112F4E] flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#94A3B8]" />
-              Classificação Geral
-            </h3>
-          </div>
-
-          {leaderboard.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[#94A3B8]">
-              Nenhum cidadão ativo ainda. Seja o primeiro a participar!
-            </div>
           ) : (
-            <div className="divide-y divide-[#F5F2ED]">
-              {/* Top 3 in list too */}
-              {top3.map((entry, i) => (
-                <LeaderboardRow
-                  key={entry.uid}
-                  entry={entry}
-                  position={i + 1}
-                  isCurrentUser={entry.uid === user?.uid}
-                  isTop3
-                />
-              ))}
-              {restList.map((entry, i) => (
-                <LeaderboardRow
-                  key={entry.uid}
-                  entry={entry}
-                  position={i + 4}
-                  isCurrentUser={entry.uid === user?.uid}
-                />
-              ))}
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center text-[#94A3B8] font-light shadow-sm">
+              Nenhum cidadão cadastrado ainda no ranking.
+            </div>
+          )}
+
+          {/* Lista com os Demais Colocados */}
+          {outros.length > 0 && (
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+              <div className="px-5 py-3.5 bg-[#FAF7F2]/50 border-b border-[#E2E8F0] flex justify-between items-center">
+                <span className="text-xs font-bold text-[#112F4E] uppercase tracking-wider">Restante dos Defensores</span>
+                <span className="text-[10px] font-medium text-[#94A3B8]">{outros.length} outros membros</span>
+              </div>
+              <div className="divide-y divide-[#F5F2ED]">
+                {outros.map((item, index) => {
+                  const level = calcularNivel(item.pontos || 0);
+                  const posicao = index + 4; // Top 4 em diante
+                  return (
+                    <div key={item.uid} className="flex items-center justify-between p-4 hover:bg-[#FAF7F2]/30 transition-colors">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Posição */}
+                        <span className="w-5 text-center text-xs font-bold text-[#94A3B8] shrink-0">
+                          {posicao}º
+                        </span>
+                        
+                        {/* Avatar */}
+                        <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#E2E8F0] flex items-center justify-center bg-white">
+                          {item.foto ? (
+                            <img src={item.foto} alt={item.nome} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-4 h-4 text-[#94A3B8]" />
+                          )}
+                        </div>
+
+                        {/* Nome e Nível */}
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#112F4E] truncate">{item.nome}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <InsigniaBadge nivelId={level.id} size="sm" />
+                            <span className="text-[10px] text-[#94A3B8] font-medium truncate leading-none">{level.nome}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pontos */}
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-extrabold text-[#112F4E] bg-[#FAF7F2] border border-[#E2E8F0] px-2.5 py-1 rounded-lg">
+                          {item.pontos || 0} pts
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
-      </div>
-    </>
-  );
-}
 
-function PodiumCard({
-  entry,
-  position,
-  config,
-  isCurrentUser,
-}: {
-  entry: LeaderboardEntry;
-  position: number;
-  config: typeof podiumColors[0];
-  isCurrentUser: boolean;
-}) {
-  return (
-    <div className={`flex flex-col items-center ${position === 1 ? "mb-4" : ""}`}>
-      <div className="relative mb-2">
-        <div className={`${config.size} rounded-full overflow-hidden border-4 border-white shadow-lg bg-[#E8F2F8]`}>
-          {entry.foto ? (
-            <img src={entry.foto} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${config.bg} flex items-center justify-center text-white text-2xl font-bold`}>
-              {entry.nome.charAt(0)}
+        {/* Guia de Pontuação (col-span-4) */}
+        <div className="order-1 xl:order-none xl:col-span-4 space-y-6 w-full">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-4">
+            <div>
+              <h3 className="text-sm font-bold text-[#112F4E]">Como Ganhar Pontos?</h3>
+              <p className="text-[11px] text-[#94A3B8] font-light mt-0.5">
+                Suas interações ajudam o app a crescer e a cidade a melhorar! Veja como acumular pontos e subir de ranking:
+              </p>
             </div>
-          )}
-        </div>
-        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md">
-          {config.medal}
-        </span>
-      </div>
-      <p className={`text-xs font-bold text-[#112F4E] mt-2 text-center truncate max-w-[100px] ${isCurrentUser ? "text-[#1a8ccc]" : ""}`}>
-        {entry.nome}
-      </p>
-      <p className="text-[10px] font-semibold" style={{ color: entry.rank.color }}>
-        {entry.rank.icon} {entry.rank.name}
-      </p>
-      <div className="flex items-center gap-1 text-[#F59E0B] mt-0.5">
-        <Flame className="w-3 h-3" />
-        <span className="text-xs font-bold">{entry.xp} XP</span>
-      </div>
-    </div>
-  );
-}
 
-function LeaderboardRow({
-  entry,
-  position,
-  isCurrentUser,
-  isTop3 = false,
-}: {
-  entry: LeaderboardEntry;
-  position: number;
-  isCurrentUser: boolean;
-  isTop3?: boolean;
-}) {
-  return (
-    <div
-      className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${
-        isCurrentUser
-          ? "bg-[#E8F2F8]/50"
-          : "hover:bg-[#FAF7F2]"
-      }`}
-    >
-      {/* Position */}
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-        isTop3
-          ? "bg-[#FEF3C7] text-[#D97706]"
-          : "bg-[#F1F5F9] text-[#94A3B8]"
-      }`}>
-        {position}
-      </div>
-
-      {/* Avatar */}
-      <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm bg-[#E8F2F8]">
-        {entry.foto ? (
-          <img src={entry.foto} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center text-white text-sm font-bold">
-            {entry.nome.charAt(0).toUpperCase()}
+            <div className="space-y-3.5">
+              {regrasPontuacao.map((regra, i) => {
+                const IconComp = regra.icon;
+                return (
+                  <div key={i} className="flex gap-3 items-start">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${regra.bgColor} ${regra.color}`}>
+                      <IconComp className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-bold text-[#112F4E] truncate">{regra.acao}</h4>
+                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${regra.bgColor} ${regra.color} shrink-0`}>
+                          {regra.pontos}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#94A3B8] font-light mt-0.5 leading-relaxed">
+                        {regra.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="border-t border-[#F5F2ED] pt-4 text-center">
+              <span className="text-[10px] text-[#94A3B8] font-light">
+                *Pontuações negativas ocorrem caso você remova um apoio a uma reclamação.
+              </span>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold truncate ${isCurrentUser ? "text-[#1a8ccc]" : "text-[#112F4E]"}`}>
-          {entry.nome}
-          {isCurrentUser && <span className="text-[10px] ml-1.5 text-[#94A3B8] font-normal">(você)</span>}
-        </p>
-        <p className="text-[10px] font-semibold flex items-center gap-1" style={{ color: entry.rank.color }}>
-          {entry.rank.icon} {entry.rank.name}
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="flex items-center gap-1 text-[#94A3B8]" title="Reclamações criadas">
-          <FileText className="w-3 h-3" />
-          <span className="text-[10px] font-semibold">{entry.reclamacoesCount}</span>
-        </div>
-        <div className="flex items-center gap-1 text-[#10B981]" title="Concordos dados">
-          <ThumbsUp className="w-3 h-3" />
-          <span className="text-[10px] font-semibold">{entry.concordosCount}</span>
-        </div>
-        <div className="flex items-center gap-1 text-[#F59E0B]">
-          <Flame className="w-3 h-3" />
-          <span className="text-xs font-bold">{entry.xp}</span>
-        </div>
       </div>
     </div>
   );

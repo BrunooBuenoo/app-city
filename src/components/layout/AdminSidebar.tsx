@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
 import {
   BarChart3,
   ClipboardList,
@@ -32,6 +33,15 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
   const router = useRouter();
   const { user, profile } = useAuth();
   const [isManagementExpanded, setIsManagementExpanded] = useState(true);
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      router.push("/");
+    } catch (error) {
+      console.error("Erro ao deslogar administrador:", error);
+    }
+  };
 
   const mainItems = [
     { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },

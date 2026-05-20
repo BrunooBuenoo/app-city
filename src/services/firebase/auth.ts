@@ -4,8 +4,9 @@ import {
   onAuthStateChanged,
   type User,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { auth, db, googleProvider } from "./config";
+import { calcularNivel } from "@/utils/gamification";
 
 // ----- Auth Operations -----
 
@@ -31,6 +32,9 @@ export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
       genero: "",
       perfilCompleto: shouldBeAdmin ? true : false,
       role: shouldBeAdmin ? "admin" : "usuario", // "usuario" | "admin"
+      pontos: 0,
+      nivel: "Cidadão Observador",
+      interacoesCount: 0,
       criadoEm: serverTimestamp(),
       atualizadoEm: serverTimestamp(),
     });
@@ -66,6 +70,9 @@ export interface UserProfile {
   genero: string;
   perfilCompleto: boolean;
   role: "usuario" | "admin";
+  pontos?: number;
+  nivel?: string;
+  interacoesCount?: number;
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -83,4 +90,42 @@ export async function updateUserProfile(
     { ...data, atualizadoEm: serverTimestamp() },
     { merge: true }
   );
+}
+
+export async function adicionarPontosUsuario(uid: string, quantidade: number): Promise<void> {
+  if (!uid) return;
+  try {
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const pontosAtuais = Math.max(0, (data.pontos ?? 0) + quantidade);
+    const interacoes = (data.interacoesCount ?? 0) + (quantidade > 0 ? 1 : 0);
+    const nivelInfo = calcularNivel(pontosAtuais);
+
+    await setDoc(userRef, {
+      pontos: pontosAtuais,
+      nivel: nivelInfo.nome,
+      interacoesCount: interacoes,
+      atualizadoEm: serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.error("Erro ao adicionar pontos ao usuário:", err);
+  }
+}
+
+export async function obterRankingUsuarios(limiteRanking: number = 20): Promise<UserProfile[]> {
+  try {
+    const q = query(
+      collection(db, "users"),
+      orderBy("pontos", "desc"),
+      limit(limiteRanking)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data() as UserProfile);
+  } catch (err) {
+    console.error("Erro ao obter ranking:", err);
+    return [];
+  }
 }

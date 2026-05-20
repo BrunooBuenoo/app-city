@@ -7,30 +7,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 import { 
   BarChart3, ClipboardList, MapPin, Bell, User, MessageCircle, 
-  LogOut, X, Menu, Settings, HelpCircle 
+  LogOut, X, Menu, Settings, HelpCircle, Trophy
 } from "lucide-react";
 
 export default function TopAppBar() {
   const pathname = usePathname();
-  const { user, isLoggedIn } = useAuth();
+  const { user, profile, isLoggedIn } = useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   let title = "Sac do Marília ao Contrário";
   if (pathname === "/usuario/dashboard") title = "Meu Painel";
   if (pathname === "/usuario/minhas-reclamacoes") title = "Minhas Reclamações";
-  if (pathname === "/reclamacao/nova") title = "Novo Relatório";
+  if (pathname === "/usuario/reclamacao/nova") title = "Novo Relatório";
   if (pathname === "/completar-perfil") title = "Concluir Perfil";
   if (pathname === "/mapa") title = "Mapa";
   if (pathname === "/usuario/perfil") title = "Perfil";
   if (pathname === "/usuario/historico") title = "Histórico de Alertas";
+  if (pathname === "/usuario/ranking") title = "Ranking Cidadão";
 
-  const isInnerPage = ["/reclamacao/nova", "/completar-perfil"].includes(pathname);
+  const isInnerPage = ["/usuario/reclamacao/nova", "/completar-perfil"].includes(pathname);
 
   const menuItems = [
     { href: "/usuario/dashboard", icon: BarChart3, label: "Dashboard" },
+    { href: "/usuario/ranking", icon: Trophy, label: "Ranking Cidadão" },
     { href: "/usuario/minhas-reclamacoes", icon: ClipboardList, label: "Reclamações" },
     { href: "/", icon: MapPin, label: "Mapa Interativo" },
-    { href: "/reclamacao/nova", icon: MessageCircle, label: "Nova Ocorrência" },
+    { href: "/usuario/reclamacao/nova", icon: MessageCircle, label: "Nova Ocorrência" },
     { href: "/usuario/historico", icon: Bell, label: "Histórico" },
     { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];
@@ -75,8 +77,8 @@ export default function TopAppBar() {
           {/* Profile Link */}
           <Link href="/usuario/perfil">
             <button className="w-10 h-10 rounded-xl bg-[#E8F2F8] flex items-center justify-center overflow-hidden border border-[#E2E8F0] hover:border-[#1a8ccc]/30 transition-all cursor-pointer">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+              {profile?.foto || user?.photoURL ? (
+                <img src={profile?.foto || user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="material-symbols-outlined text-[#1a8ccc] text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   account_circle

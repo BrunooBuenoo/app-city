@@ -7,6 +7,8 @@ import {
   FileText, CheckCircle, Clock, Heart, Wrench, Lightbulb, Trash2, Droplets,
   PieChart, Loader2, Plus, Shield, HelpCircle,
   Trophy, Flame, ChevronRight,
+  MoreHorizontal, Filter, ReceiptText, Info,
+  ChevronLeft, School, Bus, TreePine, PawPrint, Activity,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +18,10 @@ import {
   getNextRankProgress,
   buildLeaderboard,
   RANKS,
+  calcularNivel,
 } from "@/utils/gamification";
+import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
+import InsigniaBadge from "@/components/ui/InsigniaBadge";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -25,19 +30,12 @@ const dateFilters = [
   { id: "total", label: "Todo o período" },
 ];
 
-const categoryColors: Record<string, string> = {
-  "Infraestrutura": "#1a8ccc",
-  "Iluminação": "#F59E0B",
-  "Limpeza": "#10B981",
-  "Saneamento": "#8B5CF6",
-  "Segurança": "#6366F1",
-  "Transporte": "#EC4899",
-  "Saúde": "#EF4444",
-  "Outros": "#64748B",
-};
+const categoryColors: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((cat) => [cat.label, cat.color])
+);
 
 export default function UsuarioDashboard() {
-  const { user, isLoggedIn, loading } = useAuth();
+  const { user, profile, isLoggedIn, loading } = useAuth();
   const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
 
@@ -76,13 +74,27 @@ export default function UsuarioDashboard() {
     [allReclamacoes, user]
   );
 
-  const getCategoryIcon = (category: string) => {
-    const clean = (category || "").toLowerCase();
-    if (clean.includes("infra") || clean.includes("obras") || clean.includes("buraco")) return Wrench;
-    if (clean.includes("ilumina") || clean.includes("luz") || clean.includes("poste")) return Lightbulb;
-    if (clean.includes("limp") || clean.includes("lixo")) return Trash2;
-    if (clean.includes("sanea") || clean.includes("esgoto") || clean.includes("água")) return Droplets;
-    if (clean.includes("segur")) return Shield;
+  const categoryIconMap: Record<string, any> = {
+    saude: Activity,
+    transporte: Bus,
+    infraestrutura: Wrench,
+    seguranca: Shield,
+    educacao: School,
+    limpeza: Trash2,
+    meio_ambiente: TreePine,
+    iluminacao: Lightbulb,
+    saneamento: Droplets,
+    bem_estar_animal: PawPrint,
+  };
+
+  const getCategoryIcon = (categoryLabel: string) => {
+    const cleanLabel = (categoryLabel || "").toLowerCase().trim();
+    const cat = CATEGORIES.find(
+      (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
+    );
+    if (cat && categoryIconMap[cat.id]) {
+      return categoryIconMap[cat.id];
+    }
     return HelpCircle;
   };
 
@@ -173,7 +185,7 @@ export default function UsuarioDashboard() {
           <h1 className="text-lg font-semibold text-[#112F4E]">Meu Painel de Cidadão</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/reclamacao/nova">
+          <Link href="/usuario/reclamacao/nova">
             <button className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-[#1a8ccc] text-white rounded-full hover:bg-[#1572a6] transition-colors cursor-pointer shadow-sm">
               <Plus className="w-3.5 h-3.5" />
               Nova Reclamação
@@ -187,51 +199,74 @@ export default function UsuarioDashboard() {
       </header>
 
       <div className="px-4 md:px-6 pb-6 space-y-5">
-        {/* ─── Rank Card ─── */}
-        <div className="mt-4 p-5 rounded-2xl border border-[#E2E8F0] bg-gradient-to-r from-[#E8F2F8] to-white shadow-sm">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: rankInfo.current.gradient }}>
-                  {rankInfo.current.icon}
+        {/* Card de Gamificação Premium */}
+        {(() => {
+          const pontos = profile?.pontos || 0;
+          const nivelInfo = calcularNivel(pontos);
+          return (
+            <div className="p-5 rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden relative mt-4">
+              <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-gradient-to-br from-[#1a8ccc]/10 to-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-5 relative z-10">
+                <div className="flex items-center gap-4 w-full lg:w-auto">
+                  <div className="shrink-0 select-none animate-[bounce_4s_infinite]">
+                    <InsigniaBadge nivelId={nivelInfo.id} size="lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block mb-0.5">
+                      Nível de Cidadania
+                    </span>
+                    <h2 className="text-base font-bold text-[#112F4E] flex items-center gap-1.5 leading-snug">
+                      {nivelInfo.nome}
+                      <span className="px-2 py-0.5 rounded-full bg-[#1a8ccc]/10 text-[#1a8ccc] text-[10px] font-extrabold uppercase">
+                        {pontos} pts
+                      </span>
+                    </h2>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {nivelInfo.pontosRestantes > 0 ? (
+                        <div className="flex items-center gap-1 text-xs text-[#94A3B8] font-light">
+                          <span>Faltam</span>
+                          <strong className="text-[#4A5D70] font-semibold">{nivelInfo.pontosRestantes} pts</strong>
+                          <span>para</span>
+                          <span className="text-[#8B5CF6] font-semibold flex items-center gap-1">
+                            {nivelInfo.proximoNivelNome}
+                            <InsigniaBadge nivelId={calcularNivel(nivelInfo.proximoNivelPontos).id} size="sm" />
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[#10B981] font-semibold text-xs flex items-center gap-1">
+                          Nível Máximo Atingido! Guardião Lendário!
+                          <InsigniaBadge nivelId="lendario" size="sm" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Minha Patente</p>
-                <p className="text-lg font-bold" style={{ color: rankInfo.current.color }}>{rankInfo.current.name}</p>
-                <div className="flex items-center gap-1.5 text-[#F59E0B]">
-                  <Flame className="w-3.5 h-3.5" />
-                  <span className="text-sm font-bold">{userXP} XP</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              {rankInfo.next && (
-                <div className="text-right">
-                  <div className="w-36 h-2 bg-[#E2E8F0] rounded-full overflow-hidden mb-1">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${rankInfo.progress}%`, background: rankInfo.current.gradient }}
+
+                <div className="w-full lg:w-72 space-y-2">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-[#94A3B8] font-semibold uppercase tracking-wider">Progresso do Nível</span>
+                    <span className="text-[#112F4E] font-bold">{nivelInfo.progresso}%</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-full overflow-hidden shadow-inner p-0.5">
+                    <div 
+                      className="h-full rounded-full bg-gradient-to-r from-[#1a8ccc] to-[#8B5CF6] transition-all duration-700 shadow-sm"
+                      style={{ width: `${nivelInfo.progresso}%` }}
                     />
                   </div>
-                  <p className="text-[9px] text-[#94A3B8]">
-                    {rankInfo.xpToNext} XP para {rankInfo.next.name} {rankInfo.next.icon}
-                  </p>
                 </div>
-              )}
-              {userPosition > 0 && (
-                <Link href="/usuario/ranking" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#E2E8F0] hover:bg-[#FAF7F2] transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-1.5">
-                    <Trophy className="w-4 h-4 text-[#F59E0B]" />
-                    <span className="text-sm font-bold text-[#112F4E]">#{userPosition}</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
 
+                <div className="w-full lg:w-auto shrink-0 flex gap-2">
+                  <Link href="/usuario/ranking" className="w-full lg:w-auto">
+                    <button className="w-full flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl border border-[#E2E8F0] text-[#4A5D70] font-semibold text-xs hover:bg-[#FAF7F2] transition-all cursor-pointer active:scale-95">
+                      <span className="material-symbols-outlined text-[15px] text-[#F59E0B]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                      Ver Ranking Global
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* Date Filter */}
         <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar">
           {dateFilters.map((filter) => (

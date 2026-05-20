@@ -18,6 +18,8 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./config";
+import { adicionarPontosUsuario } from "./auth";
+import { RECOMPENSAS } from "@/utils/gamification";
 
 // ----- Types -----
 
@@ -100,6 +102,11 @@ export async function criarReclamacao(
     criadoEm: serverTimestamp(),
   });
 
+  // Atribuição de pontos de gamificação (+10 pontos por criar)
+  if (data.autorId) {
+    await adicionarPontosUsuario(data.autorId, RECOMPENSAS.CRIAR_RECLAMACAO);
+  }
+
   return docRef.id;
 }
 
@@ -168,7 +175,12 @@ export async function atualizarStatus(
   descricao: string,
   userName: string
 ): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, reclamacaoId), {
+  // Buscamos a reclamação atual antes de atualizar para saber se ela já estava resolvida ou se está sendo resolvida agora
+  const recRef = doc(db, COLLECTION, reclamacaoId);
+  const snap = await getDoc(recRef);
+  const reclamacaoAnterior = snap.exists() ? (snap.data() as any) : null;
+
+  await updateDoc(recRef, {
     status: novoStatus,
     atualizadoEm: serverTimestamp(),
   });
@@ -179,6 +191,23 @@ export async function atualizarStatus(
     user: userName,
     criadoEm: serverTimestamp(),
   });
+
+  // Se o novo status for "resolvido" e antes não era "resolvido"
+  if (novoStatus === "resolvido" && reclamacaoAnterior && reclamacaoAnterior.status !== "resolvido") {
+    // 1. Recompensa o criador (+50 pontos)
+    if (reclamacaoAnterior.autorId) {
+      await adicionarPontosUsuario(reclamacaoAnterior.autorId, RECOMPENSAS.CRIADOR_RESOLVIDO);
+    }
+
+    // 2. Recompensa todos os apoiadores (votantes "concordo", +30 pontos)
+    const votantes = reclamacaoAnterior.votantes ?? {};
+    const promessas = Object.entries(votantes).map(async ([uid, voto]) => {
+      if (voto === "concordo") {
+        await adicionarPontosUsuario(uid, RECOMPENSAS.VOTANTE_RESOLVIDO);
+      }
+    });
+    await Promise.all(promessas);
+  }
 }
 
 export async function getTimeline(reclamacaoId: string): Promise<TimelineEvent[]> {
@@ -221,15 +250,23 @@ export async function votar(
 
   const votoAnterior = votantes[userId];
   const tipoAnterior = votoAnterior ? getVotoTipo(votoAnterior) : null;
+  let deltaPontos = 0;
 
   if (tipoAnterior === tipo) {
     // Desfaz o voto
     delete votantes[userId];
-    if (tipo === "concordo") concordos--;
-    else discordos--;
+    if (tipo === "concordo") {
+      concordos--;
+      deltaPontos = -RECOMPENSAS.CONCORDAR;
+    } else {
+      discordos--;
+    }
   } else {
     // Desfaz voto anterior se existir
-    if (tipoAnterior === "concordo") concordos--;
+    if (tipoAnterior === "concordo") {
+      concordos--;
+      deltaPontos -= RECOMPENSAS.CONCORDAR;
+    }
     if (tipoAnterior === "discordo") discordos--;
     // Aplica novo voto (formato rico com nome/foto)
     votantes[userId] = {
@@ -237,11 +274,20 @@ export async function votar(
       nome: userName || "Cidadão",
       foto: userFoto || "",
     };
-    if (tipo === "concordo") concordos++;
-    else discordos++;
+    if (tipo === "concordo") {
+      concordos++;
+      deltaPontos += RECOMPENSAS.CONCORDAR;
+    } else {
+      discordos++;
+    }
   }
 
   await updateDoc(recRef, { votantes, concordos, discordos });
+
+  // Atribuição de pontos (+5/-5 por concordar)
+  if (userId && deltaPontos !== 0) {
+    await adicionarPontosUsuario(userId, deltaPontos);
+  }
 }
 
 // ----- Concordantes -----

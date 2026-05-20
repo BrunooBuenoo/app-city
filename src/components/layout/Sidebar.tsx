@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
 import {
   BarChart3,
   ClipboardList,
@@ -50,6 +51,15 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   );
   const rankInfo = useMemo(() => getNextRankProgress(userXP), [userXP]);
 
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      router.push("/");
+    } catch (error) {
+      console.error("Erro ao deslogar cidadão:", error);
+    }
+  };
+
   const mainItems = [
     { href: "/usuario/dashboard", icon: BarChart3, label: "Dashboard" },
     { href: "/usuario/ranking", icon: Trophy, label: "Ranking" },
@@ -58,7 +68,7 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const featureItems = [
     { href: "/usuario/minhas-reclamacoes", icon: ClipboardList, label: "Reclamações" },
     { href: "/", icon: MapPin, label: "Mapa" },
-    { href: "/reclamacao/nova", icon: MessageCircle, label: "Nova Reclamação" },
+    { href: "/usuario/reclamacao/nova", icon: MessageCircle, label: "Nova Reclamação" },
     { href: "/usuario/historico", icon: BellIcon, label: "Histórico" },
     { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];

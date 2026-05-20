@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Map, MapMarker, MarkerContent, MapControls, useMap } from "@/components/ui/map";
+import { Map, MapMarker, MarkerContent, MapControls, MapPopup, useMap } from "@/components/ui/map";
 import MapNavbar from "@/components/layout/MapNavbar";
 import LoginRequiredModal from "@/components/ui/modal/LoginRequiredModal";
 import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import { onReclamacoesChange, votar, type Reclamacao } from "@/services/firebase";
 import { findClusteredComplaints, getClusterCounts } from "@/utils/clustering";
 import { ThumbsUp, AlertTriangle, TrendingUp } from "lucide-react";
 
@@ -19,6 +19,332 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   resolvido: { label: "Resolvido", color: "#10B981" },
   critico: { label: "Crítico", color: "#EF4444" },
 };
+// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem
+function MapPin3D({ 
+  rec, 
+  pinColor, 
+  cat, 
+  isLoggedIn, 
+  user, 
+  setShowLoginModal,
+  offsetX = 0, // Desvio lateral horizontal
+  offsetY = 0, // Deslocamento vertical dinâmico
+}: { 
+  rec: Reclamacao; 
+  pinColor: string; 
+  cat: any; 
+  isLoggedIn: boolean; 
+  user: any; 
+  setShowLoginModal: (show: boolean) => void;
+  offsetX?: number;
+  offsetY?: number;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const temFoto = rec.fotos && rec.fotos.length > 0 && !imgError;
+  const fotoUrl = temFoto ? rec.fotos[0] : "";
+  const totalConcordos = rec.concordos ?? 0;
+  const userVotouConcordo = user ? (rec.votantes?.[user.uid] === "concordo") : false;
+ 
+  return (
+    <MapMarker longitude={rec.longitude} latitude={rec.latitude}>
+      <MarkerContent>
+        <div className="relative flex flex-col items-center select-none group perspective-[1000px] pb-3">
+          
+          {/* SOMBRA 3D NO CHÃO DO MAPA */}
+          <div 
+            className="absolute bottom-1 w-6 h-1.5 bg-black/35 rounded-full blur-[1.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[2.5px] group-hover:opacity-40" 
+            style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+          />
+          
+          {/* ANEL PULSANTE DE FRENTE PARA O CHÃO */}
+          <div
+            className="absolute bottom-[-2px] w-8 h-8 rounded-full border-2 animate-ping opacity-30"
+            style={{ 
+              borderColor: pinColor, 
+              transform: "rotateX(75deg)", 
+              animationDuration: "2.5s",
+              pointerEvents: "none"
+            }}
+          />
+
+          {/* HASTE DE CONEXÃO RADIAL (PONTILHADA VERMELHA) */}
+          {offsetY > 0 && (() => {
+            const d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+            const graus = Math.atan2(offsetX, offsetY) * (180 / Math.PI);
+            return (
+              <div 
+                className="absolute origin-bottom animate-scale-up"
+                style={{ 
+                  height: `${d - 16}px`,
+                  bottom: "20px",
+                  left: "50%",
+                  borderLeft: "2px dashed #EF4444",
+                  transform: `translateX(-50%) rotate(${graus}deg)`,
+                  opacity: 0.85,
+                  pointerEvents: "none"
+                }}
+              />
+            );
+          })()}
+ 
+          {/* CORPO FLUTUANTE DO PIN (COM INCLINAÇÃO 3D E TRANSLATE NO HOVER + OFFSET RADIAL) */}
+          <div 
+            className="relative flex flex-col items-center transition-all duration-500 ease-out origin-bottom transform-style-3d group-hover:-translate-y-3 group-hover:rotateY(10deg) group-hover:rotateX(10deg)"
+            style={{ 
+              transform: `translate(${offsetX}px, ${-offsetY}px)`,
+            }}
+          >
+            {/* BALÃO / CONTAINER DO CARD 3D */}
+            <Link href={`/reclamacao/${rec.id}`}>
+              <div 
+                className="relative rounded-2xl border-2 bg-white flex items-center justify-center shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all overflow-hidden shrink-0 transform-style-3d"
+                style={{ 
+                  width: "48px",
+                  height: "48px",
+                  borderColor: pinColor,
+                  boxShadow: `0 10px 20px -5px ${pinColor}4D, 0 12px 24px -10px rgba(0,0,0,0.3)`
+                }}
+              >
+                {/* MINIATURA DA FOTO EM 3D OU ÍCONE DA CATEGORIA */}
+                {temFoto ? (
+                  <img 
+                    src={fotoUrl} 
+                    alt={rec.titulo} 
+                    width={48}
+                    height={48}
+                    onError={() => {
+                      console.warn(`Falha ao carregar imagem para a reclamação ${rec.id}. Ativando fallback.`);
+                      setImgError(true);
+                    }}
+                    className="w-full h-full object-cover rounded-xl scale-95 group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full flex items-center justify-center rounded-xl select-none text-white scale-95 group-hover:scale-105 transition-transform duration-300"
+                    style={{ backgroundColor: pinColor }}
+                  >
+                    <span className="material-symbols-outlined text-[24px]">
+                      {cat.icon || "help_outline"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Link>
+
+            {/* CONECTOR (A PONTA DO BALÃO DO PIN QUE APONTA PRO CHÃO) */}
+            <div 
+              className="w-3 h-3 rotate-45 -mt-1.5 border-r border-b bg-white shadow-[2px_2px_2px_rgba(0,0,0,0.05)]"
+              style={{ 
+                borderColor: pinColor,
+                backgroundColor: temFoto ? "#ffffff" : pinColor
+              }}
+            />
+
+            {/* MINI BADGE DE CATEGORIA NO CANTO SUPERIOR ESQUERDO (Para pins com foto para fácil identificação) */}
+            {temFoto && (
+              <div
+                className="absolute -top-3 -left-5 z-20 flex items-center justify-center w-6 h-6 rounded-full border text-white shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d hover:scale-110 transition-transform cursor-pointer"
+                style={{
+                  backgroundColor: pinColor,
+                  borderColor: "#ffffff",
+                  transform: "translateZ(8px)",
+                }}
+                title={`Categoria: ${cat.label}`}
+              >
+                <span className="material-symbols-outlined text-[13px] font-bold">
+                  {cat.icon || "help_outline"}
+                </span>
+              </div>
+            )}
+
+            {/* BOTÃO / PÍLULA DE CONCORDÂNCIA 3D FLUTUANTE */}
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isLoggedIn) {
+                  setShowLoginModal(true);
+                  return;
+                }
+                if (user) {
+                  try {
+                    await votar(rec.id, user.uid, "concordo");
+                  } catch (err) {
+                    console.error("Erro ao votar:", err);
+                  }
+                }
+              }}
+              className="absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] active:scale-90 hover:scale-105 transition-all select-none transform-style-3d cursor-pointer"
+              style={{
+                backgroundColor: userVotouConcordo ? pinColor : "#ffffff",
+                color: userVotouConcordo ? "#ffffff" : "#112F4E",
+                borderColor: pinColor,
+                transform: "translateZ(8px)",
+                boxShadow: userVotouConcordo 
+                  ? `0 4px 10px ${pinColor}66, 0 2px 4px rgba(0,0,0,0.15)`
+                  : `0 4px 8px rgba(0,0,0,0.1)`
+              }}
+            >
+              <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: `"${userVotouConcordo ? 'FILL' : 'FILL'} ${userVotouConcordo ? 1 : 0}"` }}>
+                favorite
+              </span>
+              <span>{totalConcordos}</span>
+            </button>
+
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+// Subcomponente premium para agrupar marcadores idênticos no mesmo local
+function MapMultiPin3D({
+  reclamacoes,
+  isLoggedIn,
+  user,
+  setShowLoginModal,
+}: {
+  reclamacoes: Reclamacao[];
+  isLoggedIn: boolean;
+  user: any;
+  setShowLoginModal: (show: boolean) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Usamos o primeiro como âncora geográfica
+  const ancor = reclamacoes[0];
+  const totalReclamacoes = reclamacoes.length;
+  const pinColor = "#8B5CF6"; // Roxo elegante para aglomerados (clusters) multi-tema
+
+  // Se estiver expandido, renderizamos todos os pins empilhados verticalmente + botão de fechar na base!
+  if (isExpanded) {
+    return (
+      <>
+        {/* Renderiza cada reclamação com um desvio lateral e vertical radial (espalhamento em leque) */}
+        {reclamacoes.map((rec, i) => {
+          const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+          const pinColor = cat.color;
+
+          // Fórmula de dispersão radial (leque) uniforme
+          const minAngle = -50;
+          const maxAngle = 50;
+          const total = reclamacoes.length;
+          
+          let angle = 0;
+          if (total > 1) {
+            angle = minAngle + (i * (maxAngle - minAngle)) / (total - 1);
+          }
+          const rad = angle * (Math.PI / 180);
+          
+          const radius = 80; // Raio de dispersão
+          const baseHeight = 55; // Altura de base para não sobrepor o botão de fechar
+          
+          const offsetX = Math.round(Math.sin(rad) * radius);
+          const offsetY = Math.round(baseHeight + Math.cos(rad) * radius);
+
+          return (
+            <MapPin3D
+              key={`expanded-${rec.id}`}
+              rec={rec}
+              pinColor={pinColor}
+              cat={cat}
+              isLoggedIn={isLoggedIn}
+              user={user}
+              setShowLoginModal={setShowLoginModal}
+              offsetX={offsetX}
+              offsetY={offsetY}
+            />
+          );
+        })}
+
+        {/* Botão de fechar sutil na base geográfica no chão */}
+        <MapMarker longitude={ancor.longitude} latitude={ancor.latitude}>
+          <MarkerContent>
+            <div className="relative flex flex-col items-center">
+              {/* SOMBRA 3D NO CHÃO DO MAPA */}
+              <div 
+                className="absolute bottom-1 w-6 h-1.5 bg-black/35 rounded-full blur-[1.5px] transition-all" 
+                style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+              />
+              <button
+                type="button"
+                onClick={() => setIsExpanded(false)}
+                className="w-8 h-8 rounded-full bg-[#EF4444] border-2 border-white text-white shadow-elevated flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer animate-scale-up z-30"
+                style={{
+                  transform: "translateY(28px) translateZ(10px)",
+                }}
+                title="Recolher relatos"
+              >
+                <span className="material-symbols-outlined text-[16px] font-bold">close</span>
+              </button>
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      </>
+    );
+  }
+
+  // Se estiver fechado (estado inicial), renderiza o MultiPin roxo com a contagem acumulada
+  return (
+    <MapMarker longitude={ancor.longitude} latitude={ancor.latitude}>
+      <MarkerContent>
+        <div 
+          onClick={() => setIsExpanded(true)}
+          className="relative flex flex-col items-center select-none group perspective-[1000px] pb-3"
+          title="Clique para expandir relatos deste local"
+        >
+          {/* SOMBRA 3D NO CHÃO DO MAPA */}
+          <div 
+            className="absolute bottom-1 w-7 h-1.5 bg-black/40 rounded-full blur-[1.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[2.5px] group-hover:opacity-50" 
+            style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+          />
+          
+          {/* ANEL PULSANTE DUPLO VERMELHO DE EMERGÊNCIA */}
+          <div
+            className="absolute bottom-[-2px] w-10 h-10 rounded-full border-2 animate-ping opacity-35"
+            style={{ 
+              borderColor: "#EF4444", 
+              transform: "rotateX(75deg)", 
+              animationDuration: "1.8s",
+              pointerEvents: "none"
+            }}
+          />
+
+          {/* CORPO FLUTUANTE DO PIN MULTIPLO AMPLIADO */}
+          <div 
+            className="relative flex flex-col items-center transition-all duration-300 ease-out origin-bottom transform-style-3d group-hover:-translate-y-3 group-hover:scale-105"
+          >
+            {/* BALÃO EMPILHADO VERMELHO MAIOR */}
+            <div 
+              className="relative rounded-2xl border-2 bg-gradient-to-tr from-[#B91C1C] to-[#EF4444] flex items-center justify-center shadow-lg transition-all overflow-hidden shrink-0"
+              style={{ 
+                width: "54px",
+                height: "54px",
+                borderColor: "#ffffff",
+                boxShadow: `0 10px 22px -4px rgba(239, 68, 68, 0.5), 0 12px 24px -10px rgba(0,0,0,0.35)`
+              }}
+            >
+              <div className="flex flex-col items-center justify-center text-white select-none">
+                <span className="material-symbols-outlined text-[28px] animate-pulse">warning</span>
+              </div>
+            </div>
+
+            {/* CONECTOR VERMELHO */}
+            <div 
+              className="w-3.5 h-3.5 rotate-45 -mt-1.5 border-r border-b bg-[#B91C1C] shadow-[2px_2px_2px_rgba(0,0,0,0.05)] border-white"
+            />
+
+            {/* BADGE DE NÚMERO SUPERIOR DIREITO */}
+            <div className="absolute -top-3 -right-4 z-20 flex items-center justify-center w-6.5 h-6.5 rounded-full bg-[#112F4E] border-2 border-white text-[10px] font-black text-white shadow-md animate-bounce">
+              {totalReclamacoes}
+            </div>
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
 
 // ─── Inner component that has access to map context ───
 function MapContent({
@@ -108,7 +434,7 @@ function MapContent({
 
 export default function Home() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
   const [flyToTarget, setFlyToTarget] = useState<{ lng: number; lat: number; id: string } | null>(null);
@@ -133,7 +459,7 @@ export default function Home() {
 
   const handleFabClick = () => {
     if (isLoggedIn) {
-      router.push("/reclamacao/nova");
+      router.push("/usuario/reclamacao/nova");
     } else {
       setShowLoginModal(true);
     }
@@ -192,15 +518,64 @@ export default function Home() {
       {/* Full-screen Interactive Map */}
       <div className="absolute inset-0 z-0">
         <Map center={[-49.9458, -22.2139]} zoom={14}>
-          <MapContent
-            reclamacoes={reclamacoes}
-            filteredReclamacoes={filteredReclamacoes}
-            clusteredIds={clusteredIds}
-            clusterCounts={clusterCounts}
-            flyToTarget={flyToTarget}
-            setFlyToTarget={setFlyToTarget}
-          />
+          <MapControls position="bottom-right" showZoom showLocate />
+
+          {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
+          {(() => {
+            const getCoordKey = (lat: number, lng: number) => {
+              return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+            };
+
+            const agrupadas: Record<string, Reclamacao[]> = {};
+            filteredReclamacoes.forEach((rec) => {
+              if (!rec.latitude || !rec.longitude) return;
+              const key = getCoordKey(rec.latitude, rec.longitude);
+              if (!agrupadas[key]) agrupadas[key] = [];
+              agrupadas[key].push(rec);
+            });
+
+            return Object.values(agrupadas).map((grupo) => {
+              if (grupo.length === 0) return null;
+              
+              if (grupo.length === 1) {
+                const rec = grupo[0];
+                const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+                const pinColor = cat.color;
+
+                return (
+                  <MapPin3D 
+                    key={rec.id}
+                    rec={rec}
+                    pinColor={pinColor}
+                    cat={cat}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    setShowLoginModal={setShowLoginModal}
+                  />
+                );
+              } else {
+                const ancor = grupo[0];
+                return (
+                  <MapMultiPin3D
+                    key={`group-${ancor.id}`}
+                    reclamacoes={grupo}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    setShowLoginModal={setShowLoginModal}
+                  />
+                );
+              }
+            });
+          })()}
         </Map>
+      </div>
+
+      {/* Faixas de Desfoque Gradual (Glassmorphism de profundidade limitado ao grid max-w-7xl) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[92px] px-3 md:px-4 z-10 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-b from-white/65 via-white/15 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
+      </div>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[230px] md:h-[240px] px-4 z-10 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-t from-white/75 via-white/15 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
       </div>
 
       {/* MapNavbar com propriedades de filtro */}
@@ -252,7 +627,19 @@ export default function Home() {
         </div>
       )}
 
-      {/* Desktop navigation tooltip */}
+      {/* FAB Container para alinhar com a lateral direita (reta do avatar na navbar) */}
+      <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
+        <div className="flex justify-end w-full">
+          <button
+            onClick={handleFabClick}
+            className="w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer pointer-events-auto"
+          >
+            <span className="material-symbols-outlined text-[28px]">add</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Legenda de Navegação do Mapa (Alinhado com a lateral esquerda do grid, na reta do FAB) */}
       <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
         <div className="flex justify-start w-full">
           <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
@@ -278,16 +665,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={handleFabClick}
-        className="absolute bottom-44 md:bottom-36 right-4 z-30 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-[28px]">add</span>
-      </button>
 
       {/* Bottom Cards Carousel — dados reais filtrados */}
-      <div className="absolute bottom-10 md:bottom-12 left-0 right-0 z-20 px-4">
+      <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4">
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
           {filteredReclamacoes.slice(0, 10).map((card) => {
             const cat = getCategoryByLabel(card.categoria);

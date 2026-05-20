@@ -13,7 +13,10 @@ export default function CompletarPerfil() {
   const [telefone, setTelefone] = useState("");
   const [faixaEtaria, setFaixaEtaria] = useState("18-24");
   const [genero, setGenero] = useState("feminino");
+  const [foto, setFoto] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  const avataresDisponiveis = Array.from({ length: 14 }, (_, i) => `/avatares/${i + 2}.png`);
 
   // Redireciona se não logado
   useEffect(() => {
@@ -22,16 +25,18 @@ export default function CompletarPerfil() {
     }
   }, [loading, isLoggedIn, router]);
 
-  // Preenche com dados do Google
+  // Preenche com dados do Google/Firestore
   useEffect(() => {
     if (user) {
       setNome(user.displayName || "");
       setEmail(user.email || "");
+      setFoto(user.photoURL || "");
     }
     if (profile) {
       if (profile.telefone) setTelefone(profile.telefone);
       if (profile.faixaEtaria) setFaixaEtaria(profile.faixaEtaria);
       if (profile.genero) setGenero(profile.genero);
+      if (profile.foto) setFoto(profile.foto);
     }
   }, [user, profile]);
 
@@ -45,8 +50,21 @@ export default function CompletarPerfil() {
         telefone,
         faixaEtaria,
         genero,
+        foto,
         perfilCompleto: true,
       });
+
+      // Tenta sincronizar com o Auth do Firebase
+      try {
+        const { updateProfile } = await import("firebase/auth");
+        const { auth } = await import("@/services/firebase/config");
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { photoURL: foto });
+        }
+      } catch (authErr) {
+        console.error("Erro ao sincronizar avatar no Auth:", authErr);
+      }
+
       await refreshProfile();
       router.push("/usuario/dashboard");
     } catch (err) {
@@ -89,22 +107,48 @@ export default function CompletarPerfil() {
           <h3 className="text-xs font-semibold text-[#94A3B8] mb-4 tracking-widest uppercase">
             SEU AVATAR
           </h3>
-          <div className="flex gap-4 items-center">
-            {user?.photoURL ? (
+          <div className="flex gap-4 items-center mb-6">
+            {foto ? (
               <img
-                src={user.photoURL}
+                src={foto}
                 alt="Avatar"
-                className="w-20 h-20 rounded-full object-cover ring-4 ring-[#1a8ccc] ring-offset-2"
+                className="w-20 h-20 rounded-full object-cover ring-4 ring-[#1a8ccc] ring-offset-2 transition-all duration-300 animate-fade-in"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#E8F2F8] flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-[#E8F2F8] flex items-center justify-center ring-4 ring-[#1a8ccc]/20">
                 <span className="material-symbols-outlined text-[#1a8ccc] text-3xl">person</span>
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-[#112F4E]">{user?.displayName || "Usuário"}</p>
-              <p className="text-xs text-[#94A3B8]">{user?.email}</p>
+              <p className="text-sm font-medium text-[#112F4E]">{nome || "Usuário"}</p>
+              <p className="text-xs text-[#94A3B8]">{email || user?.email}</p>
             </div>
+          </div>
+
+          <p className="text-xs font-medium text-[#4A5D70] mb-3">Escolha um avatar oficial:</p>
+          <div className="flex gap-3 overflow-x-auto pb-3 pt-1 no-scrollbar">
+            {avataresDisponiveis.map((av) => {
+              const isSelected = foto === av;
+              return (
+                <button
+                  key={av}
+                  type="button"
+                  onClick={() => setFoto(av)}
+                  className={`relative w-14 h-14 rounded-full overflow-hidden border-2 shrink-0 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                    isSelected 
+                      ? "border-[#1a8ccc] ring-4 ring-[#1a8ccc]/15 scale-105" 
+                      : "border-transparent hover:border-[#94A3B8]/40"
+                  }`}
+                >
+                  <img src={av} alt="Avatar opção" className="w-full h-full object-cover" />
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-[#1a8ccc]/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white text-[18px] font-bold bg-[#1a8ccc] rounded-full p-0.5 shadow-sm">check</span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </section>
 

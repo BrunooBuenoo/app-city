@@ -28,7 +28,7 @@ const statusMap: Record<string, { label: string; color: string; bgColor: string;
 export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { user, isLoggedIn } = useAuth();
+  const { user, profile, isLoggedIn } = useAuth();
 
   const [reclamacao, setReclamacao] = useState<Reclamacao | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
@@ -109,6 +109,8 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
       console.error("Erro ao finalizar:", err);
     }
   };
+
+
 
   const formatDate = (ts: any) => {
     if (!ts) return "—";
@@ -223,8 +225,14 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
                   <MapMarker latitude={reclamacao.latitude || -22.2139} longitude={reclamacao.longitude || -49.9458}>
                     <MarkerContent>
                       <div className="relative">
-                        <div className="absolute -inset-1.5 rounded-full bg-[#1a8ccc]/35 animate-ping" />
-                        <div className="w-4.5 h-4.5 rounded-full border-3 border-white shadow bg-[#1a8ccc] relative z-10" />
+                        <div 
+                          className="absolute -inset-1.5 rounded-full animate-ping opacity-35" 
+                          style={{ backgroundColor: cat?.color || "#1a8ccc" }}
+                        />
+                        <div 
+                          className="w-4.5 h-4.5 rounded-full border-3 border-white shadow relative z-10" 
+                          style={{ backgroundColor: cat?.color || "#1a8ccc" }}
+                        />
                       </div>
                     </MarkerContent>
                   </MapMarker>
