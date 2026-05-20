@@ -18,6 +18,7 @@ import {
   MoreVertical,
   Copy,
   HelpCircle,
+  Trophy,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -41,6 +42,7 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
 
   const mainItems = [
     { href: "/usuario/dashboard", icon: BarChart3, label: "Dashboard" },
+    { href: "/usuario/ranking", icon: Trophy, label: "Ranking Cidadão" },
   ];
 
   const featureItems = [

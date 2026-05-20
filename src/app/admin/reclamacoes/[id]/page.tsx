@@ -13,6 +13,7 @@ import { getReclamacao, getTimeline, atualizarStatus, type Reclamacao, type Time
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/services/firebase/config";
 import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
+import { getCategoryByLabel } from "@/utils/categories";
 
 const statusList = [
   { id: "aberto", label: "Aberto", color: "#1a8ccc", icon: "inbox" },
@@ -118,6 +119,7 @@ export default function AdminReclamacaoDetalhe({ params }: { params: Promise<{ i
   }
 
   const currentStatusInfo = statusList.find((s) => s.id === currentStatus) || statusList[0];
+  const cat = getCategoryByLabel(reclamacao.categoria);
 
   return (
     <>
@@ -181,8 +183,14 @@ export default function AdminReclamacaoDetalhe({ params }: { params: Promise<{ i
                   <MapMarker latitude={reclamacao.latitude || -22.2139} longitude={reclamacao.longitude || -49.9458}>
                     <MarkerContent>
                       <div className="relative">
-                        <div className="absolute -inset-1.5 rounded-full bg-[#1a8ccc]/35 animate-ping" />
-                        <div className="w-4 h-4 rounded-full border-3 border-white shadow bg-[#1a8ccc] relative z-10" />
+                        <div 
+                          className="absolute -inset-1.5 rounded-full animate-ping opacity-35" 
+                          style={{ backgroundColor: cat?.color || "#1a8ccc" }}
+                        />
+                        <div 
+                          className="w-4 h-4 rounded-full border-3 border-white shadow relative z-10" 
+                          style={{ backgroundColor: cat?.color || "#1a8ccc" }}
+                        />
                       </div>
                     </MarkerContent>
                   </MapMarker>

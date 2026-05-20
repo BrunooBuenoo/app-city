@@ -13,6 +13,8 @@ import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
 import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
+import { calcularNivel } from "@/utils/gamification";
+import InsigniaBadge from "@/components/ui/InsigniaBadge";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -26,7 +28,7 @@ const categoryColors: Record<string, string> = Object.fromEntries(
 );
 
 export default function UsuarioDashboard() {
-  const { user, isLoggedIn, loading } = useAuth();
+  const { user, profile, isLoggedIn, loading } = useAuth();
   const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
 
@@ -202,6 +204,74 @@ export default function UsuarioDashboard() {
       </header>
 
       <div className="px-4 md:px-6 pb-6 space-y-5">
+        {/* Card de Gamificação Premium */}
+        {(() => {
+          const pontos = profile?.pontos || 0;
+          const nivelInfo = calcularNivel(pontos);
+          return (
+            <div className="p-5 rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden relative mt-4">
+              <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-gradient-to-br from-[#1a8ccc]/10 to-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-5 relative z-10">
+                <div className="flex items-center gap-4 w-full lg:w-auto">
+                  <div className="shrink-0 select-none animate-[bounce_4s_infinite]">
+                    <InsigniaBadge nivelId={nivelInfo.id} size="lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block mb-0.5">
+                      Nível de Cidadania
+                    </span>
+                    <h2 className="text-base font-bold text-[#112F4E] flex items-center gap-1.5 leading-snug">
+                      {nivelInfo.nome}
+                      <span className="px-2 py-0.5 rounded-full bg-[#1a8ccc]/10 text-[#1a8ccc] text-[10px] font-extrabold uppercase">
+                        {pontos} pts
+                      </span>
+                    </h2>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {nivelInfo.pontosRestantes > 0 ? (
+                        <div className="flex items-center gap-1 text-xs text-[#94A3B8] font-light">
+                          <span>Faltam</span>
+                          <strong className="text-[#4A5D70] font-semibold">{nivelInfo.pontosRestantes} pts</strong>
+                          <span>para</span>
+                          <span className="text-[#8B5CF6] font-semibold flex items-center gap-1">
+                            {nivelInfo.proximoNivelNome}
+                            <InsigniaBadge nivelId={calcularNivel(nivelInfo.proximoNivelPontos).id} size="sm" />
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[#10B981] font-semibold text-xs flex items-center gap-1">
+                          Nível Máximo Atingido! Guardião Lendário!
+                          <InsigniaBadge nivelId="lendario" size="sm" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full lg:w-72 space-y-2">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-[#94A3B8] font-semibold uppercase tracking-wider">Progresso do Nível</span>
+                    <span className="text-[#112F4E] font-bold">{nivelInfo.progresso}%</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-full overflow-hidden shadow-inner p-0.5">
+                    <div 
+                      className="h-full rounded-full bg-gradient-to-r from-[#1a8ccc] to-[#8B5CF6] transition-all duration-700 shadow-sm"
+                      style={{ width: `${nivelInfo.progresso}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full lg:w-auto shrink-0 flex gap-2">
+                  <Link href="/usuario/ranking" className="w-full lg:w-auto">
+                    <button className="w-full flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl border border-[#E2E8F0] text-[#4A5D70] font-semibold text-xs hover:bg-[#FAF7F2] transition-all cursor-pointer active:scale-95">
+                      <span className="material-symbols-outlined text-[15px] text-[#F59E0B]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                      Ver Ranking Global
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* Date Filter */}
         <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar">
           {dateFilters.map((filter) => (

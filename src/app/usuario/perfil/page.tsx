@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserProfile, updateUserProfile } from "@/services/firebase";
+import { calcularNivel } from "@/utils/gamification";
+import InsigniaBadge from "@/components/ui/InsigniaBadge";
 import {
-  User, Mail, Phone, Calendar, Shield, Camera, Save, Loader2, CheckCircle,
+  User, Mail, Phone, Calendar, Shield, Camera, Save, Loader2, CheckCircle, HelpCircle,
+  PlusCircle, Heart, MessageSquare, Award, Trophy
 } from "lucide-react";
 
 export default function Perfil() {
@@ -13,8 +16,14 @@ export default function Perfil() {
   const [telefone, setTelefone] = useState("");
   const [faixaEtaria, setFaixaEtaria] = useState("");
   const [genero, setGenero] = useState("");
+  const [foto, setFoto] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [editandoAvatar, setEditandoAvatar] = useState(false);
+  const [modalTab, setModalTab] = useState<"regras" | "patentes">("regras");
+
+  const avataresDisponiveis = Array.from({ length: 14 }, (_, i) => `/avatares/${i + 2}.png`);
 
   useEffect(() => {
     if (profile) {
@@ -22,8 +31,9 @@ export default function Perfil() {
       setTelefone(profile.telefone || "");
       setFaixaEtaria(profile.faixaEtaria || "");
       setGenero(profile.genero || "");
+      setFoto(profile.foto || user?.photoURL || "");
     }
-  }, [profile]);
+  }, [profile, user]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -34,8 +44,22 @@ export default function Perfil() {
         telefone,
         faixaEtaria,
         genero,
+        foto,
       });
+
+      // Tenta sincronizar com o Auth do Firebase
+      try {
+        const { updateProfile } = await import("firebase/auth");
+        const { auth } = await import("@/services/firebase/config");
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { photoURL: foto });
+        }
+      } catch (authErr) {
+        console.error("Erro ao sincronizar avatar no Auth:", authErr);
+      }
+
       setSaved(true);
+      setEditandoAvatar(false);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error("Erro ao salvar perfil:", err);
@@ -61,35 +85,127 @@ export default function Perfil() {
       </div>
 
       {/* Avatar Card */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-        <div className="flex items-center gap-5">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-2xl bg-[#E8F2F8] flex items-center justify-center overflow-hidden border-2 border-[#E2E8F0]">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-8 h-8 text-[#1a8ccc]" />
-              )}
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center gap-5 justify-between">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-[#E8F2F8] flex items-center justify-center overflow-hidden border-2 border-[#E2E8F0] transition-all duration-300">
+                {foto ? (
+                  <img src={foto} alt="Avatar" className="w-full h-full object-cover animate-fade-in" />
+                ) : (
+                  <User className="w-8 h-8 text-[#1a8ccc]" />
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-[#112F4E] truncate">{user?.displayName || "Cidadão"}</h2>
-            <p className="text-sm text-[#94A3B8] truncate">{user?.email}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                profile?.role === "admin" ? "bg-[#EDE9FE] text-[#8B5CF6]" : "bg-[#E8F2F8] text-[#1a8ccc]"
-              }`}>
-                <Shield className="w-3 h-3" />
-                {profile?.role === "admin" ? "Administrador" : "Cidadão"}
-              </span>
-              {profile?.perfilCompleto && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D1FAE5] text-[#10B981]">
-                  <CheckCircle className="w-3 h-3" />
-                  Perfil Completo
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-[#112F4E] truncate">{nome || user?.displayName || "Cidadão"}</h2>
+              <p className="text-sm text-[#94A3B8] truncate">{user?.email}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  profile?.role === "admin" ? "bg-[#EDE9FE] text-[#8B5CF6]" : "bg-[#E8F2F8] text-[#1a8ccc]"
+                }`}>
+                  <Shield className="w-3 h-3" />
+                  {profile?.role === "admin" ? "Administrador" : "Cidadão"}
                 </span>
-              )}
+                {profile?.perfilCompleto && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D1FAE5] text-[#10B981]">
+                    <CheckCircle className="w-3 h-3" />
+                    Perfil Completo
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Nível com Insígnia no Canto Superior Direito no Desktop / Fluxo Responsivo */}
+          <div className="md:absolute md:top-6 md:right-6">
+            {(() => {
+              const pontos = profile?.pontos || 0;
+              const levelInfo = calcularNivel(pontos);
+              return (
+                <button 
+                  type="button"
+                  onClick={() => setIsRulesOpen(true)}
+                  className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-extrabold bg-[#FAF7F2] border border-[#E2E8F0] hover:bg-[#FAF7F2]/80 hover:border-[#1a8ccc]/35 hover:scale-102 shadow-md transition-all cursor-pointer select-none active:scale-95"
+                >
+                  <InsigniaBadge nivelId={levelInfo.id} size="lg" />
+                  <div className="text-left leading-tight pr-1.5">
+                    <p className="text-[10px] text-[#94A3B8] font-normal uppercase tracking-wider">Patente Atual</p>
+                    <p className="text-[#112F4E] text-sm font-extrabold">{levelInfo.nome}</p>
+                    <p className="text-[#1a8ccc] font-bold text-xs mt-0.5">{pontos} Pontos</p>
+                  </div>
+                  <HelpCircle className="w-4.5 h-4.5 text-[#94A3B8]/80 shrink-0 self-center" />
+                </button>
+              );
+            })()}
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-[#F5F2ED]">
+          {!editandoAvatar ? (
+            <div className="flex items-center justify-between py-1.5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full overflow-hidden border border-[#E2E8F0] bg-white flex shrink-0">
+                  {foto ? (
+                    <img src={foto} alt="Avatar Escolhido" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-[#94A3B8] m-auto" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#112F4E]">Seu Avatar Oficial</p>
+                  <p className="text-[10px] text-[#94A3B8] font-light">Este avatar é exibido em todas as suas ocorrências e apoios públicos.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditandoAvatar(true)}
+                className="px-3.5 py-2 border border-[#E2E8F0] hover:bg-[#FAF7F2] text-[#1a8ccc] hover:text-[#1572a6] font-bold text-xs rounded-xl transition-all cursor-pointer select-none"
+              >
+                Trocar de avatar
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-[#4A5D70]">Escolha seu novo avatar oficial:</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFoto(profile?.foto || user?.photoURL || "");
+                    setEditandoAvatar(false);
+                  }}
+                  className="text-[11px] font-bold text-[#EF4444] hover:underline cursor-pointer"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 pt-1 no-scrollbar">
+                {avataresDisponiveis.map((av) => {
+                  const isSelected = foto === av;
+                  return (
+                    <button
+                      key={av}
+                      type="button"
+                      onClick={() => setFoto(av)}
+                      className={`relative w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                        isSelected 
+                          ? "border-[#1a8ccc] ring-4 ring-[#1a8ccc]/15 scale-105" 
+                          : "border-transparent hover:border-[#94A3B8]/40"
+                      }`}
+                    >
+                      <img src={av} alt="Avatar opção" className="w-full h-full object-cover" />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-[#1a8ccc]/10 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white text-[16px] font-bold bg-[#1a8ccc] rounded-full p-0.5 shadow-sm">check</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -179,6 +295,138 @@ export default function Perfil() {
           )}
         </div>
       </div>
+
+      {/* Modal de Explicação da Pontuação */}
+      {isRulesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-2xl border border-[#E2E8F0] shadow-xl overflow-hidden animate-scale-up">
+            
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-[#F5F2ED] flex justify-between items-center bg-[#FAF7F2]/50">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4.5 h-4.5 text-[#F59E0B]" />
+                <h3 className="font-bold text-[#112F4E] text-sm">Como funciona o Prestígio?</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsRulesOpen(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#FAF7F2] text-[#94A3B8] hover:text-[#112F4E] transition-colors cursor-pointer"
+              >
+                <HelpCircle className="w-4.5 h-4.5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <p className="text-xs text-[#94A3B8] leading-relaxed font-light">
+                O <strong>Prestígio de Cidadão</strong> é acumulado conforme você colabora para termos uma Marília melhor. Suas interações no app geram pontos e fazem você evoluir de patente!
+              </p>
+
+              {/* Tabs do Modal */}
+              <div className="flex border-b border-[#F5F2ED] pt-1">
+                <button
+                  type="button"
+                  onClick={() => setModalTab("regras")}
+                  className={`flex-1 pb-2.5 text-xs font-bold text-center border-b-2 transition-all cursor-pointer ${
+                    modalTab === "regras" 
+                      ? "border-[#1a8ccc] text-[#1a8ccc]" 
+                      : "border-transparent text-[#94A3B8] hover:text-[#112F4E]"
+                  }`}
+                >
+                  Como ganhar pontos?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("patentes")}
+                  className={`flex-1 pb-2.5 text-xs font-bold text-center border-b-2 transition-all cursor-pointer ${
+                    modalTab === "patentes" 
+                      ? "border-[#1a8ccc] text-[#1a8ccc]" 
+                      : "border-transparent text-[#94A3B8] hover:text-[#112F4E]"
+                  }`}
+                >
+                  Evolução & Patentes
+                </button>
+              </div>
+
+              {/* Tabela de Regras */}
+              {modalTab === "regras" && (
+                <div className="space-y-3 pt-1">
+                  {[
+                    { acao: "Cadastrar Ocorrência Pública", pontos: "+10 pts", desc: "Reportar novos problemas geolocalizados na cidade.", icon: PlusCircle, color: "text-[#1a8ccc]", bg: "bg-[#E8F2F8]" },
+                    { acao: "Apoiar um Relato (Concordar)", pontos: "+5 pts", desc: "Fortalecer o relato de um morador apoiando o problema.", icon: Heart, color: "text-[#EF4444]", bg: "bg-[#FEE2E2]" },
+                    { acao: "Ocorrência que você Apoiou Resolvida", pontos: "+30 pts", desc: "Ganhar bônus supremo quando uma causa que você apoiou for solucionada!", icon: Award, color: "text-[#F59E0B]", bg: "bg-[#FEF3C7]" },
+                    { acao: "Sua Ocorrência Resolvida por Nós", pontos: "+50 pts", desc: "Nossa equipe deve marcar sua reclamação como resolvida para contabilizar.", icon: CheckCircle, color: "text-[#10B981]", bg: "bg-[#D1FAE5]" },
+                  ].map((regra, i) => {
+                    const IconComp = regra.icon;
+                    return (
+                      <div key={i} className="flex gap-3 items-start border-b border-[#FAF7F2] pb-2.5 last:border-b-0 last:pb-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${regra.bg} ${regra.color}`}>
+                          <IconComp className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-xs font-bold text-[#112F4E] truncate">{regra.acao}</h4>
+                            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${regra.bg} ${regra.color} shrink-0`}>
+                              {regra.pontos}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#94A3B8] font-light mt-0.5 leading-relaxed">
+                            {regra.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Lista de Patentes Disponíveis */}
+              {modalTab === "patentes" && (
+                <div className="space-y-3 pt-1">
+                  {[
+                    { nome: "Ovo de Dino", id: "observador", pontos: "0 a 49 pts", desc: "O Dino está no ovo, preparando-se para chocar na nossa cidade.", color: "text-slate-500", bg: "bg-slate-50/70 border-slate-200/50" },
+                    { nome: "Dino Bebê", id: "iniciante", pontos: "50 a 149 pts", desc: "Que fofura! O bebê dinossauro acabou de nascer e dar os primeiros passos.", color: "text-emerald-700", bg: "bg-emerald-50/70 border-emerald-200/50" },
+                    { nome: "Dino Explorador", id: "colaborador", pontos: "150 a 349 pts", desc: "Com um lenço de aventureiro, ele explora e mapeia problemas reais.", color: "text-sky-700", bg: "bg-sky-50/70 border-sky-200/50" },
+                    { nome: "Dino de Bronze", id: "bronze", pontos: "350 a 699 pts", desc: "Veste uma robusta armadura de bronze polido para proteger os bairros.", color: "text-amber-800", bg: "bg-amber-50/70 border-amber-200/50" },
+                    { nome: "Dino de Prata", id: "prata", pontos: "700 a 1199 pts", desc: "Armadura de prata e platina brilhante, consagrado como guardião urbano.", color: "text-zinc-800", bg: "bg-zinc-50/70 border-zinc-200/50" },
+                    { nome: "Dino de Ouro", id: "ouro", pontos: "1200 a 1999 pts", desc: "Coroado com ouro 24k e asas douradas, um líder admirado por todos.", color: "text-yellow-800", bg: "bg-yellow-50/70 border-yellow-200/50" },
+                    { nome: "Titanossauro Lendário", id: "lendario", pontos: "2000+ pts", desc: "O supremo dinossauro de Marília em cristal de obsidiana púrpura celestial!", color: "text-purple-800", bg: "bg-purple-50/70 border-purple-200/50" },
+                  ].map((patente, i) => (
+                    <div key={i} className={`flex gap-3 items-center p-2.5 rounded-xl border ${patente.bg} shadow-[0_1px_2px_rgba(0,0,0,0.01)]`}>
+                      <div className="shrink-0 flex items-center justify-center">
+                        <InsigniaBadge nivelId={patente.id} size="md" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className={`text-xs font-black ${patente.color}`}>{patente.nome}</h4>
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg bg-white border border-[#E2E8F0] ${patente.color} shrink-0`}>
+                            {patente.pontos}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#4A5D70] font-light mt-0.5 leading-normal">
+                          {patente.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3.5 bg-[#FAF7F2]/30 border-t border-[#F5F2ED] flex justify-end">
+              <button 
+                type="button"
+                onClick={() => setIsRulesOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#1a8ccc] hover:bg-[#1572a6] text-white font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+              >
+                Entendi, fechar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

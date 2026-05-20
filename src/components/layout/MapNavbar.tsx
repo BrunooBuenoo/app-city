@@ -30,7 +30,7 @@ export default function MapNavbar({
   selectedStatus,
   setSelectedStatus,
 }: MapNavbarProps) {
-  const { user, isLoggedIn, loading } = useAuth();
+  const { user, profile, isLoggedIn, loading } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -168,9 +168,9 @@ export default function MapNavbar({
                 href="/usuario/dashboard"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[#FAF7F2] transition-all"
               >
-                {user?.photoURL ? (
+                {profile?.foto || user?.photoURL ? (
                   <img
-                    src={user.photoURL}
+                    src={profile?.foto || user.photoURL}
                     alt="Avatar"
                     className="w-8 h-8 rounded-full object-cover border-2 border-[#1a8ccc]"
                   />

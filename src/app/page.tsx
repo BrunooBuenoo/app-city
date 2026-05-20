@@ -237,6 +237,14 @@ export default function Home() {
         </Map>
       </div>
 
+      {/* Faixas de Desfoque Gradual (Glassmorphism de profundidade limitado ao grid max-w-7xl) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[92px] px-3 md:px-4 z-10 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-b from-white/65 via-white/15 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
+      </div>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[230px] md:h-[240px] px-4 z-10 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-t from-white/75 via-white/15 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
+      </div>
+
       {/* MapNavbar com propriedades de filtro */}
       <MapNavbar 
         searchQuery={searchQuery}

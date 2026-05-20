@@ -28,7 +28,7 @@ function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
 
 export default function NovaReclamacao() {
   const router = useRouter();
-  const { user, isLoggedIn, loading } = useAuth();
+  const { user, profile, isLoggedIn, loading } = useAuth();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcat, setSelectedSubcat] = useState<number>(0);
@@ -187,7 +187,7 @@ export default function NovaReclamacao() {
         anonimo,
         autorId: user.uid,
         autorNome: user.displayName || "Anônimo",
-        autorFoto: user.photoURL || "",
+        autorFoto: profile?.foto || user?.photoURL || "",
       });
 
       // 2. Upload de fotos (se houver)
