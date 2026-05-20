@@ -15,10 +15,13 @@ export {
   atualizarStatus,
   getTimeline,
   votar,
+  getConcordantes,
   uploadFotoReclamacao,
   adicionarComentario,
   listarComentarios,
   onComentariosChange,
   type Reclamacao,
   type TimelineEvent,
+  type Concordante,
+  type VotoData,
 } from "./reclamacoes";

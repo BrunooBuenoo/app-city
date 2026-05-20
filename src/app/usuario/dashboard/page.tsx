@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
-  BarChart3, Bell, Calendar, TrendingUp, TrendingDown,
+  BarChart3, Bell, TrendingUp,
   FileText, CheckCircle, Clock, Heart, Wrench, Lightbulb, Trash2, Droplets,
-  MoreHorizontal, Filter, ReceiptText, PieChart, Info,
-  ChevronLeft, ChevronRight, Plus, Shield, HelpCircle, Loader2,
+  PieChart, Loader2, Plus, Shield, HelpCircle,
+  Trophy, Flame, ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import {
+  calculateUserXP,
+  getNextRankProgress,
+  buildLeaderboard,
+  RANKS,
+} from "@/utils/gamification";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -35,18 +41,13 @@ export default function UsuarioDashboard() {
   const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
 
-  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [allReclamacoes, setAllReclamacoes] = useState<Reclamacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Iniciar listener das reclamações do usuário
   useEffect(() => {
-    if (!user) return;
-
     const unsubscribe = onReclamacoesChange(
       (items) => {
-        // Filtrar apenas as reclamações cujo autorId é o do usuário logado
-        const userRecs = items.filter((r) => r.autorId === user.uid);
-        setReclamacoes(userRecs);
+        setAllReclamacoes(items);
         setIsLoading(false);
       },
       (error) => {
@@ -55,17 +56,25 @@ export default function UsuarioDashboard() {
       }
     );
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
-  // Notificação simulada
-  useEffect(() => {
-    if (reclamacoes.length > 0) {
-      const timer = setTimeout(() => {
-        showToast("success", "Atualização no seu painel", "Seus relatórios de ocorrência foram carregados.");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [reclamacoes.length, showToast]);
+  // XP and Rank
+  const userXP = useMemo(
+    () => (user ? calculateUserXP(user.uid, allReclamacoes) : 0),
+    [user, allReclamacoes]
+  );
+  const rankInfo = useMemo(() => getNextRankProgress(userXP), [userXP]);
+  const leaderboard = useMemo(() => buildLeaderboard(allReclamacoes), [allReclamacoes]);
+  const userPosition = useMemo(() => {
+    if (!user) return -1;
+    return leaderboard.findIndex((e) => e.uid === user.uid) + 1;
+  }, [leaderboard, user]);
+
+  // Filter user's own complaints
+  const reclamacoes = useMemo(
+    () => allReclamacoes.filter((r) => user && r.autorId === user.uid),
+    [allReclamacoes, user]
+  );
 
   const getCategoryIcon = (category: string) => {
     const clean = (category || "").toLowerCase();
@@ -77,66 +86,53 @@ export default function UsuarioDashboard() {
     return HelpCircle;
   };
 
-  // Filtro de data
+  // Date filter
   const filteredReclamacoes = reclamacoes.filter((r) => {
     if (!r.criadoEm) return true;
     const date = r.criadoEm.toDate();
     const now = new Date();
-    if (activeFilter === "hoje") {
-      return date.toDateString() === now.toDateString();
-    }
-    if (activeFilter === "mes") {
-      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-    }
+    if (activeFilter === "hoje") return date.toDateString() === now.toDateString();
+    if (activeFilter === "mes") return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     if (activeFilter === "30dias") {
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays <= 30;
     }
-    return true; // "total"
+    return true;
   });
 
-  // Cálculos dinâmicos
+  // Stats
   const totalCount = filteredReclamacoes.length;
   const resolvidoCount = filteredReclamacoes.filter((r) => r.status === "resolvido").length;
   const emAndamentoCount = filteredReclamacoes.filter((r) => r.status === "em_andamento" || r.status === "em_analise").length;
   const totalConcordos = filteredReclamacoes.reduce((acc, r) => acc + (r.concordos || 0), 0);
 
-  // Proporção de categorias
+  // Categories
   const categoryCounts: Record<string, number> = {};
   filteredReclamacoes.forEach((r) => {
     const cat = r.categoria || "Outros";
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
   });
+  const categoriesData = Object.entries(categoryCounts).map(([label, count]) => ({
+    label,
+    count,
+    pct: totalCount ? Math.round((count / totalCount) * 100) : 0,
+    color: categoryColors[label] || "#64748B",
+    Icon: getCategoryIcon(label),
+  })).sort((a, b) => b.count - a.count);
 
-  const categoriesData = Object.entries(categoryCounts).map(([label, count]) => {
-    const pct = totalCount ? Math.round((count / totalCount) * 100) : 0;
-    return {
-      label,
-      count,
-      pct,
-      color: categoryColors[label] || "#64748B",
-      Icon: getCategoryIcon(label),
-    };
-  }).sort((a, b) => b.count - a.count);
-
-  // Atividade Semanal (relação de reclamações criadas nas últimas 4 semanas)
+  // Weekly activity
   const getWeeklyData = () => {
     const counts = [0, 0, 0, 0];
     const now = new Date();
     reclamacoes.forEach((r) => {
       if (!r.criadoEm) return;
       const date = r.criadoEm.toDate();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
       const weekIndex = Math.floor(diffDays / 7);
-      if (weekIndex >= 0 && weekIndex < 4) {
-        counts[3 - weekIndex]++; // 0 para Sem 1, 3 para Sem 4 (mais recente)
-      }
+      if (weekIndex >= 0 && weekIndex < 4) counts[3 - weekIndex]++;
     });
     return counts;
   };
-
   const weeklyCounts = getWeeklyData();
   const maxWeeklyCount = Math.max(...weeklyCounts, 1);
 
@@ -146,7 +142,6 @@ export default function UsuarioDashboard() {
     if (status === "critico") return "#EF4444";
     return "#1a8ccc";
   };
-
   const getStatusLabel = (status: string) => {
     if (status === "resolvido") return "Resolvido";
     if (status === "em_andamento") return "Em Andamento";
@@ -154,7 +149,6 @@ export default function UsuarioDashboard() {
     if (status === "critico") return "Crítico";
     return "Aberto";
   };
-
   const formatDate = (timestamp: any) => {
     if (!timestamp) return "—";
     const date = timestamp.toDate();
@@ -193,8 +187,53 @@ export default function UsuarioDashboard() {
       </header>
 
       <div className="px-4 md:px-6 pb-6 space-y-5">
+        {/* ─── Rank Card ─── */}
+        <div className="mt-4 p-5 rounded-2xl border border-[#E2E8F0] bg-gradient-to-r from-[#E8F2F8] to-white shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: rankInfo.current.gradient }}>
+                  {rankInfo.current.icon}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Minha Patente</p>
+                <p className="text-lg font-bold" style={{ color: rankInfo.current.color }}>{rankInfo.current.name}</p>
+                <div className="flex items-center gap-1.5 text-[#F59E0B]">
+                  <Flame className="w-3.5 h-3.5" />
+                  <span className="text-sm font-bold">{userXP} XP</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              {rankInfo.next && (
+                <div className="text-right">
+                  <div className="w-36 h-2 bg-[#E2E8F0] rounded-full overflow-hidden mb-1">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${rankInfo.progress}%`, background: rankInfo.current.gradient }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-[#94A3B8]">
+                    {rankInfo.xpToNext} XP para {rankInfo.next.name} {rankInfo.next.icon}
+                  </p>
+                </div>
+              )}
+              {userPosition > 0 && (
+                <Link href="/usuario/ranking" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#E2E8F0] hover:bg-[#FAF7F2] transition-colors group cursor-pointer">
+                  <div className="flex items-center gap-1.5">
+                    <Trophy className="w-4 h-4 text-[#F59E0B]" />
+                    <span className="text-sm font-bold text-[#112F4E]">#{userPosition}</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Date Filter */}
-        <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar">
           {dateFilters.map((filter) => (
             <button
               key={filter.id}
@@ -213,10 +252,10 @@ export default function UsuarioDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Minhas Reclamações", value: totalCount, color: "from-blue-50 to-blue-100/50", Icon: FileText, trend: "Cadastradas", up: true },
-            { label: "Resolvidas", value: resolvidoCount, color: "from-green-50 to-green-100/50", Icon: CheckCircle, trend: "Concluídas", up: true },
-            { label: "Em Progresso", value: emAndamentoCount, color: "from-yellow-50 to-yellow-100/50", Icon: Clock, trend: "Acompanhando", up: true },
-            { label: "Apoios Recebidos", value: totalConcordos, color: "from-red-50 to-red-100/50", Icon: Heart, trend: "Concordos", up: true },
+            { label: "Minhas Reclamações", value: totalCount, color: "from-blue-50 to-blue-100/50", Icon: FileText, trend: "Cadastradas" },
+            { label: "Resolvidas", value: resolvidoCount, color: "from-green-50 to-green-100/50", Icon: CheckCircle, trend: "Concluídas" },
+            { label: "Em Progresso", value: emAndamentoCount, color: "from-yellow-50 to-yellow-100/50", Icon: Clock, trend: "Acompanhando" },
+            { label: "Apoios Recebidos", value: totalConcordos, color: "from-red-50 to-red-100/50", Icon: Heart, trend: "Concordos" },
           ].map((stat) => (
             <div key={stat.label} className={`p-3.5 md:p-4 rounded-xl bg-gradient-to-r ${stat.color} border border-[#E2E8F0]/30 shadow-sm`}>
               <div className="flex items-center gap-1.5 mb-1.5">
@@ -231,7 +270,7 @@ export default function UsuarioDashboard() {
           ))}
         </div>
 
-        {/* Categories breakdown and weekly chart grid */}
+        {/* Categories + Weekly grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Categories Card */}
           <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm flex flex-col justify-between">
@@ -248,7 +287,6 @@ export default function UsuarioDashboard() {
                 <p className="text-xs text-[#94A3B8] text-center py-6 font-light">Nenhuma reclamação registrada no período.</p>
               ) : (
                 <>
-                  {/* Dynamic Progress Bar */}
                   <div className="w-full h-3 rounded-full flex overflow-hidden mb-4 border border-[#E2E8F0] bg-[#FAF7F2]">
                     {categoriesData.map((cat, i) => (
                       <div
@@ -259,7 +297,6 @@ export default function UsuarioDashboard() {
                       />
                     ))}
                   </div>
-                  
                   <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                     {categoriesData.map((cat, i) => (
                       <div key={i} className="flex items-center justify-between py-0.5">
@@ -283,7 +320,7 @@ export default function UsuarioDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[#94A3B8]" />
-                  <h3 className="text-sm font-semibold text-[#112F4E]">Frequência de Ocorrências (Semanal)</h3>
+                  <h3 className="text-sm font-semibold text-[#112F4E]">Frequência Semanal</h3>
                 </div>
               </div>
               <div className="h-[140px] flex items-end gap-3 pt-4 px-2">
@@ -317,7 +354,7 @@ export default function UsuarioDashboard() {
         <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
           <div className="p-4 flex items-center justify-between border-b border-[#E2E8F0]">
             <div className="flex items-center gap-2">
-              <ReceiptText className="w-4 h-4 text-[#94A3B8]" />
+              <FileText className="w-4 h-4 text-[#94A3B8]" />
               <h3 className="text-sm font-semibold text-[#112F4E]">Histórico Recente</h3>
             </div>
             <Link href="/usuario/minhas-reclamacoes" className="text-xs font-semibold text-[#1a8ccc] hover:underline">
@@ -327,7 +364,7 @@ export default function UsuarioDashboard() {
           
           {filteredReclamacoes.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#94A3B8] font-light">
-              Nenhuma reclamação ativa. Clique em "Nova Reclamação" para registrar o seu primeiro relato!
+              Nenhuma reclamação ativa. Clique em &quot;Nova Reclamação&quot; para registrar o seu primeiro relato!
             </div>
           ) : (
             <div className="divide-y divide-[#F5F2ED]">

@@ -4,17 +4,18 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, MapPin, Calendar, Clock, ThumbsUp, ThumbsDown,
-  Share2, Flag, MessageCircle, CheckCircle2, User, Loader2,
+  ArrowLeft, MapPin, Calendar, Clock, ThumbsUp,
+  Share2, Flag, CheckCircle2, User, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getReclamacao, getTimeline, votar, atualizarStatus,
-  adicionarComentario, onComentariosChange,
-  type Reclamacao, type TimelineEvent,
+  getConcordantes,
+  type Reclamacao, type TimelineEvent, type Concordante,
 } from "@/services/firebase";
 import { getCategoryByLabel } from "@/utils/categories";
 import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
+import ConcordantesModal from "@/components/ui/modal/ConcordantesModal";
 
 const statusMap: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
   aberto:       { label: "Aberto",       color: "#1a8ccc", bgColor: "#E8F2F8", icon: "add_circle" },
@@ -32,15 +33,13 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
   const [reclamacao, setReclamacao] = useState<Reclamacao | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [voto, setVoto] = useState<"concordo" | "discordo" | null>(null);
+  const [voto, setVoto] = useState<"concordo" | null>(null);
   const [concordos, setConcordos] = useState(0);
-  const [discordos, setDiscordos] = useState(0);
   const [fotoAtiva, setFotoAtiva] = useState(0);
 
-  // Comentários
-  const [comentarios, setComentarios] = useState<any[]>([]);
-  const [novoComentario, setNovoComentario] = useState("");
-  const [enviandoComentario, setEnviandoComentario] = useState(false);
+  // Concordantes modal
+  const [showConcordantes, setShowConcordantes] = useState(false);
+  const [concordantesList, setConcordantesList] = useState<Concordante[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -50,9 +49,13 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
         if (rec) {
           setReclamacao(rec);
           setConcordos(rec.concordos);
-          setDiscordos(rec.discordos);
+          // Extrair concordantes
+          const lista = getConcordantes(rec);
+          setConcordantesList(lista);
           if (user && rec.votantes[user.uid]) {
-            setVoto(rec.votantes[user.uid]);
+            const v = rec.votantes[user.uid];
+            const tipo = typeof v === "string" ? v : (v as any)?.tipo;
+            if (tipo === "concordo") setVoto("concordo");
           }
         }
         const tl = await getTimeline(id);
@@ -66,40 +69,31 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
     load();
   }, [id, user]);
 
-  // Real-time comments listener
-  useEffect(() => {
-    const unsubscribe = onComentariosChange(id, (items) => {
-      setComentarios(items);
-    });
-    return () => unsubscribe();
-  }, [id]);
-
-  const handleVoto = async (tipo: "concordo" | "discordo") => {
+  const handleVoto = async () => {
     if (!isLoggedIn || !user) {
       router.push("/login");
       return;
     }
     const prevVoto = voto;
-    if (voto === tipo) {
+    const prevConcordos = concordos;
+    if (voto === "concordo") {
       setVoto(null);
-      if (tipo === "concordo") setConcordos((v) => v - 1);
-      else setDiscordos((v) => v - 1);
+      setConcordos((v) => v - 1);
     } else {
-      if (voto === "concordo") setConcordos((v) => v - 1);
-      if (voto === "discordo") setDiscordos((v) => v - 1);
-      setVoto(tipo);
-      if (tipo === "concordo") setConcordos((v) => v + 1);
-      else setDiscordos((v) => v + 1);
+      setVoto("concordo");
+      setConcordos((v) => v + 1);
     }
     try {
-      await votar(id, user.uid, tipo);
+      await votar(id, user.uid, "concordo", user.displayName || "Cidadão", user.photoURL || "");
+      // Recarregar concordantes
+      const rec = await getReclamacao(id);
+      if (rec) {
+        setConcordantesList(getConcordantes(rec));
+      }
     } catch (err) {
       console.error("Erro ao votar:", err);
       setVoto(prevVoto);
-      if (reclamacao) {
-        setConcordos(reclamacao.concordos);
-        setDiscordos(reclamacao.discordos);
-      }
+      setConcordos(prevConcordos);
     }
   };
 
@@ -113,26 +107,6 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
       setTimeline(tl);
     } catch (err) {
       console.error("Erro ao finalizar:", err);
-    }
-  };
-
-  const handleEnviarComentario = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoggedIn || !user || !novoComentario.trim()) return;
-    setEnviandoComentario(true);
-    try {
-      await adicionarComentario(
-        id,
-        user.uid,
-        user.displayName || "Cidadão",
-        user.photoURL || "",
-        novoComentario.trim()
-      );
-      setNovoComentario("");
-    } catch (err) {
-      console.error("Erro ao enviar comentário:", err);
-    } finally {
-      setEnviandoComentario(false);
     }
   };
 
@@ -312,75 +286,6 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
                 </div>
               </div>
             </section>
-
-            {/* Seção de Comentários */}
-            <section className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-[#112F4E] flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-[#94A3B8]" />
-                Comentários da Comunidade ({comentarios.length})
-              </h3>
-              
-              {/* Lista de Comentários */}
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                {comentarios.length === 0 ? (
-                  <p className="text-xs text-[#94A3B8] py-6 font-light text-center">
-                    Nenhum comentário ainda. Comece a discussão!
-                  </p>
-                ) : (
-                  comentarios.map((c) => (
-                    <div key={c.id} className="flex gap-3 bg-[#FAF7F2] p-3 rounded-xl border border-[#E2E8F0]/80">
-                      <div className="w-8 h-8 rounded-full bg-[#1a8ccc]/10 flex items-center justify-center shrink-0 overflow-hidden border border-[#E2E8F0]">
-                        {c.autorFoto ? (
-                          <img src={c.autorFoto} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-[#1a8ccc] flex items-center justify-center text-white text-xs font-semibold">
-                            {c.autorNome ? c.autorNome.charAt(0).toUpperCase() : "?"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <span className="text-xs font-bold text-[#112F4E] truncate">{c.autorNome}</span>
-                          <span className="text-[9px] text-[#94A3B8] shrink-0">{formatDate(c.criadoEm)}</span>
-                        </div>
-                        <p className="text-xs text-[#4A5D70] font-light leading-relaxed whitespace-pre-wrap">{c.texto}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Form de Comentário */}
-              <div className="border-t border-[#F5F2ED] pt-4">
-                {isLoggedIn ? (
-                  <form onSubmit={handleEnviarComentario} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Adicione um comentário..."
-                      value={novoComentario}
-                      onChange={(e) => setNovoComentario(e.target.value)}
-                      disabled={enviandoComentario}
-                      className="flex-1 px-3 py-2 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl text-xs text-[#112F4E] placeholder:text-[#94A3B8] outline-none focus:border-[#1a8ccc] transition-all"
-                    />
-                    <button
-                      type="submit"
-                      disabled={enviandoComentario || !novoComentario.trim()}
-                      className="px-4 py-2 bg-[#1a8ccc] hover:bg-[#1572a6] disabled:bg-gray-300 text-white font-semibold text-xs rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer shrink-0"
-                    >
-                      Enviar
-                    </button>
-                  </form>
-                ) : (
-                  <p className="text-xs text-[#94A3B8] text-center font-light py-1.5">
-                    Você precisa{" "}
-                    <Link href="/login" className="text-[#1a8ccc] font-bold hover:underline">
-                      fazer login
-                    </Link>{" "}
-                    para comentar.
-                  </p>
-                )}
-              </div>
-            </section>
           </div>
 
           {/* Right Column (col-span-5) */}
@@ -435,7 +340,7 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
               </div>
             </div>
 
-            {/* Voting / Citizen Validation Section */}
+            {/* Voting / Citizen Validation Section — SOMENTE CONCORDO */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-4">
               <h3 className="text-sm font-semibold text-[#112F4E]">
                 Este problema afeta você também?
@@ -443,36 +348,58 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
               <p className="text-xs text-[#94A3B8]">
                 Votos de apoio ajudam a sinalizar a importância do problema para a prefeitura.
               </p>
-              <div className="flex gap-3">
+              
+              {/* Botão de concordar */}
+              <button
+                onClick={handleVoto}
+                className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.97] cursor-pointer ${
+                  voto === "concordo"
+                    ? "bg-[#10B981] text-white shadow-sm"
+                    : "bg-[#FAF7F2] text-[#4A5D70] border border-[#E2E8F0] hover:border-[#10B981] hover:text-[#10B981]"
+                }`}
+              >
+                <ThumbsUp className="w-4 h-4" />
+                <span>{voto === "concordo" ? "Concordado!" : "Concordar"}</span>
+                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                  voto === "concordo" ? "bg-white/25" : "bg-[#E2E8F0]"
+                }`}>{concordos}</span>
+              </button>
+
+              {/* Quem concordou — clicável estilo Instagram */}
+              {concordos > 0 && (
                 <button
-                  onClick={() => handleVoto("concordo")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs transition-all active:scale-[0.97] cursor-pointer ${
-                    voto === "concordo"
-                      ? "bg-[#10B981] text-white shadow-sm"
-                      : "bg-[#FAF7F2] text-[#4A5D70] border border-[#E2E8F0] hover:border-[#10B981] hover:text-[#10B981]"
-                  }`}
+                  onClick={() => setShowConcordantes(true)}
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl bg-[#FAF7F2] border border-[#E2E8F0] hover:bg-[#F1F5F9] transition-colors cursor-pointer group"
                 >
-                  <ThumbsUp className="w-4 h-4" />
-                  <span>Concordo</span>
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    voto === "concordo" ? "bg-white/25" : "bg-[#E2E8F0]"
-                  }`}>{concordos}</span>
+                  {/* Stack de avatares */}
+                  <div className="flex -space-x-2">
+                    {concordantesList.slice(0, 3).map((c, i) => (
+                      <div
+                        key={c.uid}
+                        className="w-7 h-7 rounded-full border-2 border-white overflow-hidden bg-[#E8F2F8] shadow-sm"
+                        style={{ zIndex: 3 - i }}
+                      >
+                        {c.foto ? (
+                          <img src={c.foto} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center text-white text-[10px] font-bold">
+                            {c.nome.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {concordantesList.length > 3 && (
+                      <div className="w-7 h-7 rounded-full border-2 border-white bg-[#E2E8F0] flex items-center justify-center text-[9px] font-bold text-[#4A5D70]">
+                        +{concordantesList.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-[#4A5D70] group-hover:text-[#112F4E] transition-colors">
+                    <strong className="font-semibold">{concordos}</strong> {concordos === 1 ? "pessoa concordou" : "pessoas concordaram"}
+                  </span>
+                  <span className="material-symbols-outlined text-[14px] text-[#94A3B8] ml-auto">chevron_right</span>
                 </button>
-                <button
-                  onClick={() => handleVoto("discordo")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs transition-all active:scale-[0.97] cursor-pointer ${
-                    voto === "discordo"
-                      ? "bg-[#EF4444] text-white shadow-sm"
-                      : "bg-[#FAF7F2] text-[#4A5D70] border border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444]"
-                  }`}
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                  <span>Discordo</span>
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    voto === "discordo" ? "bg-white/25" : "bg-[#E2E8F0]"
-                  }`}>{discordos}</span>
-                </button>
-              </div>
+              )}
             </div>
 
             {/* Author Close Action */}
@@ -498,22 +425,38 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
         </main>
       </div>
 
-      {/* Bottom sticky bar */}
+      {/* Bottom sticky bar — SOMENTE CONCORDO */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-[#E2E8F0] p-4 shadow-lg">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowConcordantes(true)}
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <div className="flex items-center gap-1.5 text-[#10B981]">
               <ThumbsUp className="w-4 h-4" />
               <span className="text-sm font-bold">{concordos}</span>
             </div>
-            <span className="text-[#E2E8F0]">|</span>
-            <div className="flex items-center gap-1.5 text-[#94A3B8]">
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">{comentarios.length}</span>
-            </div>
-          </div>
+            {concordantesList.length > 0 && (
+              <>
+                <span className="text-[#E2E8F0]">|</span>
+                <div className="flex -space-x-1.5">
+                  {concordantesList.slice(0, 3).map((c) => (
+                    <div key={c.uid} className="w-5 h-5 rounded-full border border-white overflow-hidden bg-[#E8F2F8]">
+                      {c.foto ? (
+                        <img src={c.foto} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-[#1a8ccc] flex items-center justify-center text-white text-[7px] font-bold">
+                          {c.nome.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </button>
           <button
-            onClick={() => handleVoto("concordo")}
+            onClick={handleVoto}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm transition-all active:scale-95 cursor-pointer ${
               voto === "concordo"
                 ? "bg-[#10B981] text-white"
@@ -525,6 +468,13 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
           </button>
         </div>
       </div>
+
+      {/* Modal de Concordantes */}
+      <ConcordantesModal
+        isOpen={showConcordantes}
+        onClose={() => setShowConcordantes(false)}
+        concordantes={concordantesList}
+      />
     </div>
   );
 }

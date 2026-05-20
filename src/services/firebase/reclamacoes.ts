@@ -192,38 +192,90 @@ export async function getTimeline(reclamacaoId: string): Promise<TimelineEvent[]
 
 // ----- Votação -----
 
+/** Tipo do voto armazenado (suporta formato legado string e novo objeto) */
+export type VotoData =
+  | string // legado: "concordo" | "discordo"
+  | { tipo: "concordo" | "discordo"; nome: string; foto: string };
+
+/** Extrai o tipo do voto, seja formato legado ou novo */
+function getVotoTipo(voto: VotoData): string {
+  if (typeof voto === "string") return voto;
+  return voto.tipo;
+}
+
 export async function votar(
   reclamacaoId: string,
   userId: string,
-  tipo: "concordo" | "discordo"
+  tipo: "concordo" | "discordo",
+  userName?: string,
+  userFoto?: string
 ): Promise<void> {
   const recRef = doc(db, COLLECTION, reclamacaoId);
   const snap = await getDoc(recRef);
   if (!snap.exists()) return;
 
   const data = snap.data();
-  const votantes: Record<string, string> = data.votantes ?? {};
+  const votantes: Record<string, VotoData> = data.votantes ?? {};
   let concordos: number = data.concordos ?? 0;
   let discordos: number = data.discordos ?? 0;
 
   const votoAnterior = votantes[userId];
+  const tipoAnterior = votoAnterior ? getVotoTipo(votoAnterior) : null;
 
-  if (votoAnterior === tipo) {
+  if (tipoAnterior === tipo) {
     // Desfaz o voto
     delete votantes[userId];
     if (tipo === "concordo") concordos--;
     else discordos--;
   } else {
     // Desfaz voto anterior se existir
-    if (votoAnterior === "concordo") concordos--;
-    if (votoAnterior === "discordo") discordos--;
-    // Aplica novo voto
-    votantes[userId] = tipo;
+    if (tipoAnterior === "concordo") concordos--;
+    if (tipoAnterior === "discordo") discordos--;
+    // Aplica novo voto (formato rico com nome/foto)
+    votantes[userId] = {
+      tipo,
+      nome: userName || "Cidadão",
+      foto: userFoto || "",
+    };
     if (tipo === "concordo") concordos++;
     else discordos++;
   }
 
   await updateDoc(recRef, { votantes, concordos, discordos });
+}
+
+// ----- Concordantes -----
+
+export interface Concordante {
+  uid: string;
+  nome: string;
+  foto: string;
+}
+
+/**
+ * Retorna a lista de pessoas que concordaram com uma reclamação.
+ * Suporta formato legado (string) e novo (objeto com nome/foto).
+ */
+export function getConcordantes(reclamacao: Reclamacao): Concordante[] {
+  const votantes = reclamacao.votantes ?? {};
+  const lista: Concordante[] = [];
+
+  for (const [uid, voto] of Object.entries(votantes)) {
+    const tipo = typeof voto === "string" ? voto : (voto as any)?.tipo;
+    if (tipo !== "concordo") continue;
+
+    if (typeof voto === "object" && voto !== null) {
+      lista.push({
+        uid,
+        nome: (voto as any).nome || "Cidadão",
+        foto: (voto as any).foto || "",
+      });
+    } else {
+      lista.push({ uid, nome: "Cidadão", foto: "" });
+    }
+  }
+
+  return lista;
 }
 
 // ----- Upload de Fotos -----
