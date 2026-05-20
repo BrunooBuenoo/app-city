@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Menu, X, LogIn, Info, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
+import { CATEGORIES } from "@/utils/categories";
 
 interface MapNavbarProps {
   searchQuery: string;
@@ -91,8 +92,8 @@ export default function MapNavbar({
   };
 
   return (
-    <nav className="absolute top-0 left-0 right-0 z-30">
-      <div className="p-3 md:p-4">
+    <nav className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 p-3 md:p-4">
+      <div>
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3">
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center gap-2">
@@ -217,12 +218,9 @@ export default function MapNavbar({
                 className="w-full p-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl text-xs text-[#112F4E] outline-none"
               >
                 <option value="">Todas as Categorias</option>
-                <option value="Infraestrutura">Infraestrutura</option>
-                <option value="Iluminação">Iluminação</option>
-                <option value="Limpeza">Limpeza</option>
-                <option value="Saneamento">Saneamento</option>
-                <option value="Segurança">Segurança</option>
-                <option value="Saúde">Saúde</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.label}>{cat.label}</option>
+                ))}
               </select>
             </div>
             <div>

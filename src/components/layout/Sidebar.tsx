@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOutUser } from "@/services/firebase";
 import {
   BarChart3,
   ClipboardList,
@@ -26,7 +27,17 @@ interface SidebarProps {
 
 export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isFeaturesExpanded, setIsFeaturesExpanded] = useState(true);
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      router.push("/");
+    } catch (error) {
+      console.error("Erro ao deslogar cidadão:", error);
+    }
+  };
 
   const mainItems = [
     { href: "/usuario/dashboard", icon: BarChart3, label: "Dashboard" },
@@ -35,7 +46,7 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const featureItems = [
     { href: "/usuario/minhas-reclamacoes", icon: ClipboardList, label: "Reclamações" },
     { href: "/", icon: MapPin, label: "Mapa" },
-    { href: "/reclamacao/nova", icon: MessageCircle, label: "Nova Reclamação" },
+    { href: "/usuario/reclamacao/nova", icon: MessageCircle, label: "Nova Reclamação" },
     { href: "/usuario/historico", icon: BellIcon, label: "Histórico" },
     { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];
@@ -125,10 +136,13 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
           {isExpanded && <span className="text-sm font-medium">Ajuda</span>}
         </button>
 
-        <Link href="/" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1 cursor-pointer text-left w-full"
+        >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {isExpanded && <span className="text-sm font-medium">Sair</span>}
-        </Link>
+        </button>
 
         <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${isExpanded ? "justify-between" : "justify-center"}`}>
           <div className="flex items-center gap-3">

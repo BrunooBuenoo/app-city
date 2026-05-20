@@ -8,7 +8,7 @@ import MapNavbar from "@/components/layout/MapNavbar";
 import LoginRequiredModal from "@/components/ui/modal/LoginRequiredModal";
 import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import { onReclamacoesChange, votar, type Reclamacao } from "@/services/firebase";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   aberto: { label: "Aberto", color: "#1a8ccc" },
@@ -18,9 +18,145 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   critico: { label: "Crítico", color: "#EF4444" },
 };
 
+// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem
+function MapPin3D({ 
+  rec, 
+  pinColor, 
+  cat, 
+  isLoggedIn, 
+  user, 
+  setShowLoginModal 
+}: { 
+  rec: Reclamacao; 
+  pinColor: string; 
+  cat: any; 
+  isLoggedIn: boolean; 
+  user: any; 
+  setShowLoginModal: (show: boolean) => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const temFoto = rec.fotos && rec.fotos.length > 0 && !imgError;
+  const fotoUrl = temFoto ? rec.fotos[0] : "";
+  const totalConcordos = rec.concordos ?? 0;
+  const userVotouConcordo = user ? (rec.votantes?.[user.uid] === "concordo") : false;
+
+  return (
+    <MapMarker longitude={rec.longitude} latitude={rec.latitude}>
+      <MarkerContent>
+        <div className="relative flex flex-col items-center select-none group perspective-[1000px] pb-3">
+          
+          {/* SOMBRA 3D NO CHÃO DO MAPA */}
+          <div 
+            className="absolute bottom-1 w-6 h-1.5 bg-black/35 rounded-full blur-[1.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[2.5px] group-hover:opacity-40" 
+            style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+          />
+          
+          {/* ANEL PULSANTE DE FRENTE PARA O CHÃO */}
+          <div
+            className="absolute bottom-[-2px] w-8 h-8 rounded-full border-2 animate-ping opacity-30"
+            style={{ 
+              borderColor: pinColor, 
+              transform: "rotateX(75deg)", 
+              animationDuration: "2.5s",
+              pointerEvents: "none"
+            }}
+          />
+
+          {/* CORPO FLUTUANTE DO PIN (COM INCLINAÇÃO 3D E TRANSLATE NO HOVER) */}
+          <div 
+            className="relative flex flex-col items-center transition-all duration-300 ease-out origin-bottom transform-style-3d group-hover:-translate-y-3 group-hover:rotateY(10deg) group-hover:rotateX(10deg)"
+            style={{ 
+              transform: "translateZ(0px)",
+            }}
+          >
+            {/* BALÃO / CONTAINER DO CARD 3D */}
+            <Link href={`/reclamacao/${rec.id}`}>
+              <div 
+                className="relative rounded-2xl border-2 bg-white flex items-center justify-center shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all overflow-hidden shrink-0 transform-style-3d"
+                style={{ 
+                  width: "48px",
+                  height: "48px",
+                  borderColor: pinColor,
+                  boxShadow: `0 10px 20px -5px ${pinColor}4D, 0 12px 24px -10px rgba(0,0,0,0.3)`
+                }}
+              >
+                {/* MINIATURA DA FOTO EM 3D OU ÍCONE DA CATEGORIA */}
+                {temFoto ? (
+                  <img 
+                    src={fotoUrl} 
+                    alt={rec.titulo} 
+                    width={48}
+                    height={48}
+                    onError={() => {
+                      console.warn(`Falha ao carregar imagem para a reclamação ${rec.id}. Ativando fallback.`);
+                      setImgError(true);
+                    }}
+                    className="w-full h-full object-cover rounded-xl scale-95 group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full flex items-center justify-center rounded-xl font-bold text-lg select-none text-white scale-95 group-hover:scale-105 transition-transform duration-300"
+                    style={{ backgroundColor: pinColor }}
+                  >
+                    {cat.label ? cat.label.charAt(0) : rec.categoria.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </Link>
+
+            {/* CONECTOR (A PONTA DO BALÃO DO PIN QUE APONTA PRO CHÃO) */}
+            <div 
+              className="w-3 h-3 rotate-45 -mt-1.5 border-r border-b bg-white shadow-[2px_2px_2px_rgba(0,0,0,0.05)]"
+              style={{ 
+                borderColor: pinColor,
+                backgroundColor: temFoto ? "#ffffff" : pinColor
+              }}
+            />
+
+            {/* BOTÃO / PÍLULA DE CONCORDÂNCIA 3D FLUTUANTE */}
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isLoggedIn) {
+                  setShowLoginModal(true);
+                  return;
+                }
+                if (user) {
+                  try {
+                    await votar(rec.id, user.uid, "concordo");
+                  } catch (err) {
+                    console.error("Erro ao votar:", err);
+                  }
+                }
+              }}
+              className="absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] active:scale-90 hover:scale-105 transition-all select-none transform-style-3d cursor-pointer"
+              style={{
+                backgroundColor: userVotouConcordo ? pinColor : "#ffffff",
+                color: userVotouConcordo ? "#ffffff" : "#112F4E",
+                borderColor: pinColor,
+                transform: "translateZ(8px)",
+                boxShadow: userVotouConcordo 
+                  ? `0 4px 10px ${pinColor}66, 0 2px 4px rgba(0,0,0,0.15)`
+                  : `0 4px 8px rgba(0,0,0,0.1)`
+              }}
+            >
+              <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: `"${userVotouConcordo ? 'FILL' : 'FILL'} ${userVotouConcordo ? 1 : 0}"` }}>
+                favorite
+              </span>
+              <span>{totalConcordos}</span>
+            </button>
+
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
 
@@ -44,7 +180,7 @@ export default function Home() {
 
   const handleFabClick = () => {
     if (isLoggedIn) {
-      router.push("/reclamacao/nova");
+      router.push("/usuario/reclamacao/nova");
     } else {
       setShowLoginModal(true);
     }
@@ -87,22 +223,15 @@ export default function Home() {
             const pinColor = cat.color;
 
             return (
-              <MapMarker key={rec.id} longitude={rec.longitude} latitude={rec.latitude}>
-                <MarkerContent>
-                  <Link href={`/reclamacao/${rec.id}`}>
-                    <div className="relative group cursor-pointer">
-                      <div
-                        className="absolute -inset-3 rounded-full animate-ping opacity-20"
-                        style={{ backgroundColor: pinColor, animationDuration: "2.5s" }}
-                      />
-                      <div
-                        className="w-4 h-4 rounded-full border-[3px] border-white shadow-lg relative z-10 group-hover:scale-125 transition-transform"
-                        style={{ backgroundColor: pinColor }}
-                      />
-                    </div>
-                  </Link>
-                </MarkerContent>
-              </MapMarker>
+              <MapPin3D 
+                key={rec.id}
+                rec={rec}
+                pinColor={pinColor}
+                cat={cat}
+                isLoggedIn={isLoggedIn}
+                user={user}
+                setShowLoginModal={setShowLoginModal}
+              />
             );
           })}
         </Map>
@@ -118,16 +247,20 @@ export default function Home() {
         setSelectedStatus={setSelectedStatus}
       />
 
-      {/* FAB */}
-      <button
-        onClick={handleFabClick}
-        className="absolute bottom-44 md:bottom-36 right-4 z-30 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-[28px]">add</span>
-      </button>
+      {/* FAB Container para alinhar com a lateral direita (reta do avatar na navbar) */}
+      <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
+        <div className="flex justify-end w-full">
+          <button
+            onClick={handleFabClick}
+            className="w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer pointer-events-auto"
+          >
+            <span className="material-symbols-outlined text-[28px]">add</span>
+          </button>
+        </div>
+      </div>
 
       {/* Bottom Cards Carousel — dados reais filtrados */}
-      <div className="absolute bottom-10 md:bottom-12 left-0 right-0 z-20 px-4">
+      <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4">
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
           {filteredReclamacoes.slice(0, 10).map((card) => {
             const cat = getCategoryByLabel(card.categoria);

@@ -7,22 +7,31 @@ import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
 import {
   Wrench, Lightbulb, Trash2, Droplets, Heart, HelpCircle, Shield, Plus,
-  MapPin, Calendar, ThumbsUp, ChevronRight, Loader2
+  MapPin, Calendar, ThumbsUp, ChevronRight, Loader2,
+  School, Bus, TreePine, PawPrint, Activity
 } from "lucide-react";
+import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
 
 const categoryIconMap: Record<string, any> = {
+  saude: Activity,
+  transporte: Bus,
   infraestrutura: Wrench,
-  iluminação: Lightbulb,
+  seguranca: Shield,
+  educacao: School,
   limpeza: Trash2,
+  meio_ambiente: TreePine,
+  iluminacao: Lightbulb,
   saneamento: Droplets,
-  saúde: Heart,
-  segurança: Shield,
+  bem_estar_animal: PawPrint,
 };
 
-const getCategoryIcon = (category: string) => {
-  const clean = (category || "").toLowerCase();
-  for (const [key, icon] of Object.entries(categoryIconMap)) {
-    if (clean.includes(key)) return icon;
+const getCategoryIcon = (categoryLabel: string) => {
+  const cleanLabel = (categoryLabel || "").toLowerCase().trim();
+  const cat = CATEGORIES.find(
+    (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
+  );
+  if (cat && categoryIconMap[cat.id]) {
+    return categoryIconMap[cat.id];
   }
   return HelpCircle;
 };
@@ -121,7 +130,7 @@ export default function MinhasReclamacoes() {
           <div className="bg-white p-8 rounded-2xl border border-dashed border-[#E2E8F0] text-center space-y-3">
             <HelpCircle className="w-12 h-12 text-[#94A3B8] mx-auto opacity-70" />
             <p className="text-sm text-[#4A5D70] font-light">Você ainda não registrou nenhuma reclamação.</p>
-            <Link href="/reclamacao/nova" className="inline-block px-4 py-2 bg-[#1a8ccc] text-white font-semibold text-xs rounded-xl hover:bg-[#1572a6] transition-colors shadow-sm">
+            <Link href="/usuario/reclamacao/nova" className="inline-block px-4 py-2 bg-[#1a8ccc] text-white font-semibold text-xs rounded-xl hover:bg-[#1572a6] transition-colors shadow-sm">
               Criar Primeira Reclamação
             </Link>
           </div>
@@ -130,18 +139,30 @@ export default function MinhasReclamacoes() {
             {reclamacoes.map((c) => {
               const Icon = getCategoryIcon(c.categoria);
               const meta = statusMeta[c.status] || { label: c.status, bg: "bg-[#FAF7F2]", text: "text-[#4A5D70]" };
+              const cat = getCategoryByLabel(c.categoria);
               return (
                 <div key={c.id} className="bg-white p-5 rounded-2xl shadow-sm border border-[#E2E8F0] flex flex-col justify-between gap-4 hover:shadow-md transition-all hover:-translate-y-0.5">
                   <div>
                     {/* Top Row */}
                     <div className="flex justify-between items-start gap-2 mb-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#E2E8F0]/80 flex items-center justify-center shrink-0">
-                          <Icon className="w-4.5 h-4.5 text-[#4A5D70]" />
+                        <div 
+                          className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#E2E8F0]/80 flex items-center justify-center shrink-0"
+                          style={cat ? { backgroundColor: cat.bgLight, borderColor: "transparent" } : undefined}
+                        >
+                          <Icon 
+                            className="w-4.5 h-4.5 text-[#4A5D70]" 
+                            style={cat ? { color: cat.color } : undefined}
+                          />
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-sm font-bold text-[#112F4E] truncate" title={c.titulo}>{c.titulo}</h4>
-                          <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold">{c.categoria}</p>
+                          <p 
+                            className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold"
+                            style={cat ? { color: cat.color } : undefined}
+                          >
+                            {cat ? cat.label : c.categoria}
+                          </p>
                         </div>
                       </div>
                       <span className={`px-2.5 py-1 ${meta.bg} ${meta.text} text-[10px] font-bold rounded-full shrink-0`}>
@@ -181,7 +202,7 @@ export default function MinhasReclamacoes() {
       </section>
 
       {/* FAB */}
-      <Link href="/reclamacao/nova">
+      <Link href="/usuario/reclamacao/nova">
         <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 cursor-pointer">
           <Plus className="w-7 h-7" />
         </button>

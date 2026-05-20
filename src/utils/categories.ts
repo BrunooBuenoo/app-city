@@ -10,15 +10,16 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: "saude",          label: "Saúde",          color: "#EF4444", bgLight: "#FEE2E2", icon: "medical_services" },
-  { id: "transporte",     label: "Transporte",     color: "#F59E0B", bgLight: "#FEF3C7", icon: "directions_bus" },
-  { id: "infraestrutura", label: "Infraestrutura", color: "#1a8ccc", bgLight: "#E8F2F8", icon: "construction" },
-  { id: "seguranca",      label: "Segurança",      color: "#8B5CF6", bgLight: "#EDE9FE", icon: "security" },
-  { id: "educacao",       label: "Educação",       color: "#3B82F6", bgLight: "#DBEAFE", icon: "school" },
-  { id: "limpeza",        label: "Limpeza",        color: "#10B981", bgLight: "#D1FAE5", icon: "delete" },
-  { id: "meio_ambiente",  label: "Meio Ambiente",  color: "#059669", bgLight: "#A7F3D0", icon: "eco" },
-  { id: "iluminacao",     label: "Iluminação",     color: "#D97706", bgLight: "#FDE68A", icon: "lightbulb" },
-  { id: "saneamento",     label: "Saneamento",     color: "#0891B2", bgLight: "#CFFAFE", icon: "water_drop" },
+  { id: "saude",            label: "Saúde",              color: "#EF4444", bgLight: "#FEE2E2", icon: "medical_services" },
+  { id: "transporte",       label: "Transporte",         color: "#3B82F6", bgLight: "#EFF6FF", icon: "directions_bus" },
+  { id: "infraestrutura",   label: "Infraestrutura",     color: "#F59E0B", bgLight: "#FEF3C7", icon: "construction" },
+  { id: "seguranca",        label: "Segurança",          color: "#1E3A8A", bgLight: "#E0E7FF", icon: "security" },
+  { id: "educacao",         label: "Educação",           color: "#8B5CF6", bgLight: "#F5F3FF", icon: "school" },
+  { id: "limpeza",          label: "Limpeza Urbana",     color: "#10B981", bgLight: "#D1FAE5", icon: "delete" },
+  { id: "meio_ambiente",    label: "Meio Ambiente",      color: "#22C55E", bgLight: "#E8F5E9", icon: "eco" },
+  { id: "iluminacao",       label: "Iluminação Pública", color: "#FACC15", bgLight: "#FEF9C3", icon: "lightbulb" },
+  { id: "saneamento",       label: "Saneamento",         color: "#06B6D4", bgLight: "#E0F7FA", icon: "water_drop" },
+  { id: "bem_estar_animal", label: "Bem-estar Animal",   color: "#EC4899", bgLight: "#FCE7F3", icon: "pets" },
 ];
 
 export const CATEGORY_MAP = Object.fromEntries(
@@ -26,7 +27,17 @@ export const CATEGORY_MAP = Object.fromEntries(
 );
 
 export function getCategoryByLabel(label: string): Category | undefined {
+  if (!label) return undefined;
+  
+  // Normalização para comparar de forma mais flexível
+  const normalizedLabel = label.toLowerCase().trim();
+  
   return CATEGORIES.find(
-    (cat) => cat.label.toLowerCase() === label.toLowerCase()
+    (cat) => 
+      cat.label.toLowerCase() === normalizedLabel || 
+      cat.id.toLowerCase() === normalizedLabel ||
+      // Casos específicos de mapeamento
+      (normalizedLabel === "limpeza" && cat.id === "limpeza") ||
+      (normalizedLabel === "iluminação" && cat.id === "iluminacao")
   );
 }

@@ -7,10 +7,12 @@ import {
   FileText, CheckCircle, Clock, Heart, Wrench, Lightbulb, Trash2, Droplets,
   MoreHorizontal, Filter, ReceiptText, PieChart, Info,
   ChevronLeft, ChevronRight, Plus, Shield, HelpCircle, Loader2,
+  School, Bus, TreePine, PawPrint, Activity,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -19,16 +21,9 @@ const dateFilters = [
   { id: "total", label: "Todo o período" },
 ];
 
-const categoryColors: Record<string, string> = {
-  "Infraestrutura": "#1a8ccc",
-  "Iluminação": "#F59E0B",
-  "Limpeza": "#10B981",
-  "Saneamento": "#8B5CF6",
-  "Segurança": "#6366F1",
-  "Transporte": "#EC4899",
-  "Saúde": "#EF4444",
-  "Outros": "#64748B",
-};
+const categoryColors: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((cat) => [cat.label, cat.color])
+);
 
 export default function UsuarioDashboard() {
   const { user, isLoggedIn, loading } = useAuth();
@@ -67,13 +62,27 @@ export default function UsuarioDashboard() {
     }
   }, [reclamacoes.length, showToast]);
 
-  const getCategoryIcon = (category: string) => {
-    const clean = (category || "").toLowerCase();
-    if (clean.includes("infra") || clean.includes("obras") || clean.includes("buraco")) return Wrench;
-    if (clean.includes("ilumina") || clean.includes("luz") || clean.includes("poste")) return Lightbulb;
-    if (clean.includes("limp") || clean.includes("lixo")) return Trash2;
-    if (clean.includes("sanea") || clean.includes("esgoto") || clean.includes("água")) return Droplets;
-    if (clean.includes("segur")) return Shield;
+  const categoryIconMap: Record<string, any> = {
+    saude: Activity,
+    transporte: Bus,
+    infraestrutura: Wrench,
+    seguranca: Shield,
+    educacao: School,
+    limpeza: Trash2,
+    meio_ambiente: TreePine,
+    iluminacao: Lightbulb,
+    saneamento: Droplets,
+    bem_estar_animal: PawPrint,
+  };
+
+  const getCategoryIcon = (categoryLabel: string) => {
+    const cleanLabel = (categoryLabel || "").toLowerCase().trim();
+    const cat = CATEGORIES.find(
+      (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
+    );
+    if (cat && categoryIconMap[cat.id]) {
+      return categoryIconMap[cat.id];
+    }
     return HelpCircle;
   };
 
@@ -179,7 +188,7 @@ export default function UsuarioDashboard() {
           <h1 className="text-lg font-semibold text-[#112F4E]">Meu Painel de Cidadão</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/reclamacao/nova">
+          <Link href="/usuario/reclamacao/nova">
             <button className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-[#1a8ccc] text-white rounded-full hover:bg-[#1572a6] transition-colors cursor-pointer shadow-sm">
               <Plus className="w-3.5 h-3.5" />
               Nova Reclamação

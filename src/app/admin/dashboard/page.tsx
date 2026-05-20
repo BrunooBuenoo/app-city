@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -110,28 +111,22 @@ export default function AdminDashboard() {
   // Distribuição por categoria
   const categoryCounts: Record<string, number> = {};
   filteredReclamacoes.forEach((r) => {
-    const cat = r.categoria || "Outros";
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    const matched = getCategoryByLabel(r.categoria);
+    const catLabel = matched ? matched.label : "Outros";
+    categoryCounts[catLabel] = (categoryCounts[catLabel] || 0) + 1;
   });
 
-  const categoryOptions = [
-    { label: "Infraestrutura", color: "#1a8ccc" },
-    { label: "Iluminação", color: "#F59E0B" },
-    { label: "Limpeza", color: "#10B981" },
-    { label: "Saneamento", color: "#8B5CF6" },
-    { label: "Segurança", color: "#6366F1" },
-    { label: "Transporte", color: "#EC4899" },
-    { label: "Saúde", color: "#EF4444" },
-    { label: "Outros", color: "#64748B" },
-  ];
-
-  const categoryDistribution = categoryOptions
-    .map((opt) => {
-      const count = categoryCounts[opt.label] || 0;
-      const pct = totalCount ? Math.round((count / totalCount) * 100) : 0;
-      return { ...opt, count, pct };
-    })
-    .filter((c) => c.count > 0 || ["Infraestrutura", "Iluminação", "Limpeza", "Saneamento"].includes(c.label))
+  const categoryDistribution = CATEGORIES.map((cat) => {
+    const count = categoryCounts[cat.label] || 0;
+    const pct = totalCount ? Math.round((count / totalCount) * 100) : 0;
+    return {
+      label: cat.label,
+      color: cat.color,
+      count,
+      pct,
+    };
+  })
+    .filter((c) => c.count > 0 || ["Infraestrutura", "Iluminação Pública", "Limpeza Urbana", "Saneamento"].includes(c.label))
     .sort((a, b) => b.count - a.count);
 
   // Calendário interativo
@@ -169,20 +164,15 @@ export default function AdminDashboard() {
 
   // Helper para categoria
   const getCatDetails = (categoria: string) => {
-    const clean = (categoria || "").toLowerCase();
-    if (clean.includes("infra") || clean.includes("obras") || clean.includes("buraco")) {
-      return { letter: "I", bg: "bg-blue-50", color: "text-[#1a8ccc]" };
+    const cat = getCategoryByLabel(categoria);
+    if (cat) {
+      return {
+        letter: cat.label.charAt(0),
+        color: cat.color,
+        bgLight: cat.bgLight,
+      };
     }
-    if (clean.includes("ilumina") || clean.includes("luz") || clean.includes("poste")) {
-      return { letter: "L", bg: "bg-amber-50", color: "text-[#F59E0B]" };
-    }
-    if (clean.includes("limp") || clean.includes("coleta") || clean.includes("lixo")) {
-      return { letter: "P", bg: "bg-green-50", color: "text-[#10B981]" };
-    }
-    if (clean.includes("sanea") || clean.includes("esgoto") || clean.includes("água")) {
-      return { letter: "S", bg: "bg-purple-50", color: "text-[#8B5CF6]" };
-    }
-    return { letter: "R", bg: "bg-slate-50", color: "text-[#64748B]" };
+    return { letter: "O", color: "#64748B", bgLight: "#F1F5F9" };
   };
 
   // Helper para status
@@ -485,7 +475,10 @@ export default function AdminDashboard() {
                       onClick={() => router.push(`/admin/reclamacoes/${row.id}`)}
                       className="p-4 flex items-center gap-3 active:bg-[#FAF7F2] transition-colors"
                     >
-                      <div className={`w-9 h-9 ${cat.bg} ${cat.color} rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-sm border border-[#E2E8F0]/30`}>
+                      <div 
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-sm border border-[#E2E8F0]/30"
+                        style={{ backgroundColor: cat.bgLight, color: cat.color }}
+                      >
                         {cat.letter}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -525,7 +518,10 @@ export default function AdminDashboard() {
                         >
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 ${cat.bg} ${cat.color} rounded-lg flex items-center justify-center text-xs font-bold border border-[#E2E8F0]/40 group-hover:scale-105 transition-transform`}>
+                              <div 
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-[#E2E8F0]/40 group-hover:scale-105 transition-transform"
+                                style={{ backgroundColor: cat.bgLight, color: cat.color }}
+                              >
                                 {cat.letter}
                               </div>
                               <div>

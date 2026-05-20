@@ -18,19 +18,19 @@ export default function TopAppBar() {
   let title = "Sac do Marília ao Contrário";
   if (pathname === "/usuario/dashboard") title = "Meu Painel";
   if (pathname === "/usuario/minhas-reclamacoes") title = "Minhas Reclamações";
-  if (pathname === "/reclamacao/nova") title = "Novo Relatório";
+  if (pathname === "/usuario/reclamacao/nova") title = "Novo Relatório";
   if (pathname === "/completar-perfil") title = "Concluir Perfil";
   if (pathname === "/mapa") title = "Mapa";
   if (pathname === "/usuario/perfil") title = "Perfil";
   if (pathname === "/usuario/historico") title = "Histórico de Alertas";
 
-  const isInnerPage = ["/reclamacao/nova", "/completar-perfil"].includes(pathname);
+  const isInnerPage = ["/usuario/reclamacao/nova", "/completar-perfil"].includes(pathname);
 
   const menuItems = [
     { href: "/usuario/dashboard", icon: BarChart3, label: "Dashboard" },
     { href: "/usuario/minhas-reclamacoes", icon: ClipboardList, label: "Reclamações" },
     { href: "/", icon: MapPin, label: "Mapa Interativo" },
-    { href: "/reclamacao/nova", icon: MessageCircle, label: "Nova Ocorrência" },
+    { href: "/usuario/reclamacao/nova", icon: MessageCircle, label: "Nova Ocorrência" },
     { href: "/usuario/historico", icon: Bell, label: "Histórico" },
     { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];

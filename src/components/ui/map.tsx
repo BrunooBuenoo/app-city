@@ -26,7 +26,7 @@ type MapContextValue = {
 
 const MapContext = createContext<MapContextValue | null>(null);
 
-function useMap() {
+export function useMap() {
   const context = useContext(MapContext);
   if (!context) {
     throw new Error("useMap must be used within a Map component");

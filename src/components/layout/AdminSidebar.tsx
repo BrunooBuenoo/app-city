@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOutUser } from "@/services/firebase";
 import {
   BarChart3,
   ClipboardList,
@@ -26,7 +27,17 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isManagementExpanded, setIsManagementExpanded] = useState(true);
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      router.push("/");
+    } catch (error) {
+      console.error("Erro ao deslogar administrador:", error);
+    }
+  };
 
   const mainItems = [
     { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },
@@ -128,13 +139,13 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
           {isExpanded && <span className="text-sm font-medium">Suporte</span>}
         </button>
 
-        <Link
-          href="/"
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1"
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-[#4A5D70] hover:bg-black/5 mb-1 cursor-pointer text-left w-full"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {isExpanded && <span className="text-sm font-medium">Sair</span>}
-        </Link>
+        </button>
 
         <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${isExpanded ? "justify-between" : "justify-center"}`}>
           <div className="flex items-center gap-3">
