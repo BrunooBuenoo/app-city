@@ -19,7 +19,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   resolvido: { label: "Resolvido", color: "#10B981" },
   critico: { label: "Crítico", color: "#EF4444" },
 };
-// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem
+// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem (Atualizado para trigger de deploy)
 function MapPin3D({ 
   rec, 
   pinColor, 
