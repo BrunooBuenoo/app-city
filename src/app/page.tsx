@@ -489,7 +489,7 @@ export default function Home() {
       {/* Legenda de Navegação do Mapa (Alinhado com a lateral esquerda do grid, na reta do FAB) */}
       <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
         <div className="flex justify-start w-full">
-          <div className="pointer-events-auto flex flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
+          <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
             <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9]">
               <span className="material-symbols-outlined text-[12px] text-[#1a8ccc] font-bold">mouse</span>
               <span className="text-[9px] font-black text-[#112F4E] uppercase tracking-widest">Navegação</span>
