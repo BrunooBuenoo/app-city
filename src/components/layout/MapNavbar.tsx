@@ -26,6 +26,8 @@ export interface AddressSuggestion {
   lon: string;
   geojson?: any;
   boundingbox?: string[];
+  osm_type?: string;
+  osm_id?: number;
 }
 
 export default function MapNavbar({
