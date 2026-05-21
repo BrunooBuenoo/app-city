@@ -250,11 +250,10 @@ export default function MapNavbar({
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="w-full p-2.5 bg-[#FAF7F2] dark:bg-zinc-800 border border-[#E2E8F0] dark:border-zinc-700 rounded-xl text-xs text-[#112F4E] dark:text-zinc-200 outline-none"
               >
-                <option value="">Todos os Status</option>
+                <option value="">Todos os Status (Abertos)</option>
                 <option value="aberto">Aberto</option>
                 <option value="em_analise">Em Análise</option>
                 <option value="em_andamento">Em Progresso</option>
-                <option value="resolvido">Resolvido</option>
                 <option value="critico">Crítico</option>
               </select>
             </div>
@@ -263,16 +262,16 @@ export default function MapNavbar({
 
         {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 p-3 flex flex-col gap-1">
+          <div className="mt-2 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 p-3 flex flex-col gap-1">
             <div className="flex justify-between items-center px-4 py-3 mb-1">
-              <span className="text-sm font-medium text-[#4A5D70]">Tema do Mapa</span>
+              <span className="text-sm font-medium text-[#4A5D70] dark:text-zinc-300">Tema do Mapa</span>
               <ThemeToggle />
             </div>
             
             <Link
               href="/sobre"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#4A5D70] hover:bg-[#FAF7F2] rounded-xl transition-colors"
+              className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#4A5D70] dark:text-zinc-300 hover:bg-[#FAF7F2] dark:hover:bg-zinc-800 rounded-xl transition-colors"
             >
               <Info className="w-4 h-4" />
               Conhecer o SAC
@@ -283,14 +282,14 @@ export default function MapNavbar({
                 <Link
                   href="/usuario/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#4A5D70] hover:bg-[#FAF7F2] rounded-xl transition-colors"
+                  className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#4A5D70] dark:text-zinc-300 hover:bg-[#FAF7F2] dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
                   <User className="w-4 h-4" />
                   Meu Painel
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#EF4444] hover:bg-[#FEE2E2] rounded-xl transition-colors w-full text-left"
+                  className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#EF4444] dark:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-950/30 rounded-xl transition-colors w-full text-left"
                 >
                   <LogOut className="w-4 h-4" />
                   Sair
@@ -300,7 +299,7 @@ export default function MapNavbar({
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-white bg-[#1a8ccc] hover:bg-[#1572a6] rounded-xl transition-colors"
+                className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#1a8ccc] dark:text-[#38bdf8] hover:bg-[#E8F2F8] dark:hover:bg-[#38bdf8]/10 rounded-xl transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 Fazer Login

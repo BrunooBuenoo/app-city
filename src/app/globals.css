@@ -68,3 +68,16 @@
 .badge-critical {
   @apply bg-[#FEE2E2] text-[#991B1B];
 }
+
+/* ─── MapLibre Popup Overrides ─── */
+.maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none !important;
+}

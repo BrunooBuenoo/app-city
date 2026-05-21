@@ -194,6 +194,7 @@ function MapMarker({
     markerElementRef.current = container;
 
     const marker = new MapLibreGL.Marker({
+      anchor: "bottom",
       ...markerOptions,
       element: container,
       draggable,
