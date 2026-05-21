@@ -888,7 +888,7 @@ export default function Home() {
 
   return (
     <ClimaProvider>
-      <div className="relative w-screen h-screen overflow-hidden">
+      <div className="relative w-screen h-[100dvh] overflow-hidden">
         {/* Full-screen Interactive Map */}
         <div className="absolute inset-0 z-0">
           {initialViewport ? (
