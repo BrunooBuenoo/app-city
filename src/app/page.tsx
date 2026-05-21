@@ -705,6 +705,85 @@ function SimpleMapPin({
   );
 }
 
+// COMPONENTE PARA DESTACAR A RUA (WAZE-LIKE) E MOVER O MAPA
+function MapHighlight({ geojson, bbox }: { geojson?: any; bbox?: string[] }) {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded || !geojson) return;
+
+    const sourceId = "highlight-source";
+    const fillLayerId = "highlight-layer-fill";
+    const lineLayerId = "highlight-layer-line";
+    const circleLayerId = "highlight-layer-circle";
+
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: "geojson",
+        data: geojson,
+      });
+    } else {
+      (map.getSource(sourceId) as any).setData(geojson);
+    }
+
+    if (!map.getLayer(fillLayerId)) {
+      map.addLayer({
+        id: fillLayerId,
+        type: "fill",
+        source: sourceId,
+        filter: ["==", "$type", "Polygon"],
+        paint: {
+          "fill-color": "#8B5CF6", // Waze-like purple/blue
+          "fill-opacity": 0.2,
+        },
+      });
+    }
+
+    if (!map.getLayer(lineLayerId)) {
+      map.addLayer({
+        id: lineLayerId,
+        type: "line",
+        source: sourceId,
+        filter: ["!=", "$type", "Point"],
+        paint: {
+          "line-color": "#8B5CF6",
+          "line-width": 6,
+          "line-opacity": 0.8,
+        },
+      });
+    }
+
+    if (!map.getLayer(circleLayerId)) {
+      map.addLayer({
+        id: circleLayerId,
+        type: "circle",
+        source: sourceId,
+        filter: ["==", "$type", "Point"],
+        paint: {
+          "circle-radius": 10,
+          "circle-color": "#8B5CF6",
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-opacity": 0.8,
+        },
+      });
+    }
+
+    if (bbox) {
+      map.fitBounds([
+        [parseFloat(bbox[2]), parseFloat(bbox[0])], // [minLng, minLat]
+        [parseFloat(bbox[3]), parseFloat(bbox[1])], // [maxLng, maxLat]
+      ], { padding: 50, duration: 2000 });
+    }
+
+    return () => {
+      // Limpeza opcional se necessário, mas mantemos enquanto selecionado
+    };
+  }, [map, isLoaded, geojson, bbox]);
+
+  return null;
+}
+
 export default function Home() {
   const router = useRouter();
   const { isLoggedIn, user } = useAuth();
@@ -728,6 +807,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [highlightedAddress, setHighlightedAddress] = useState<any>(null);
 
   // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
   useEffect(() => {
@@ -796,13 +876,6 @@ export default function Home() {
     return reclamacoes.filter((rec) => {
       if (rec.status === "resolvido") return false; // Oculta problemas resolvidos do mapa
       
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const titleMatch = (rec.titulo || "").toLowerCase().includes(q);
-        const descMatch = (rec.descricao || "").toLowerCase().includes(q);
-        const addrMatch = (rec.endereco || "").toLowerCase().includes(q);
-        if (!titleMatch && !descMatch && !addrMatch) return false;
-      }
       if (selectedCategory) {
         const cleanRecCat = (rec.categoria || "").toLowerCase();
         const cleanSelCat = selectedCategory.toLowerCase();
@@ -813,7 +886,7 @@ export default function Home() {
       }
       return true;
     });
-  }, [reclamacoes, searchQuery, selectedCategory, selectedStatus]);
+  }, [reclamacoes, selectedCategory, selectedStatus]);
 
   // Clustering
   const clusteredIds = useMemo(
@@ -951,6 +1024,13 @@ export default function Home() {
                   }
                 });
               })()}
+
+              {highlightedAddress && highlightedAddress.geojson && (
+                <MapHighlight 
+                  geojson={highlightedAddress.geojson} 
+                  bbox={highlightedAddress.boundingbox} 
+                />
+              )}
             </Map>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-all duration-300">
@@ -987,6 +1067,7 @@ export default function Home() {
           setSelectedStatus={setSelectedStatus}
           onFiltersToggle={setFiltersOpen}
           onMobileMenuToggle={setMobileMenuOpen}
+          onAddressSelect={setHighlightedAddress}
         />
 
         {/* ─── Top 3 Popular Complaints Pills ─── */}

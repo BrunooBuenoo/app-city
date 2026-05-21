@@ -17,12 +17,15 @@ interface MapNavbarProps {
   setSelectedStatus: (status: string) => void;
   onFiltersToggle?: (open: boolean) => void;
   onMobileMenuToggle?: (open: boolean) => void;
+  onAddressSelect?: (suggestion: AddressSuggestion) => void;
 }
 
-interface AddressSuggestion {
+export interface AddressSuggestion {
   display_name: string;
   lat: string;
   lon: string;
+  geojson?: any;
+  boundingbox?: string[];
 }
 
 export default function MapNavbar({
@@ -34,6 +37,7 @@ export default function MapNavbar({
   setSelectedStatus,
   onFiltersToggle,
   onMobileMenuToggle,
+  onAddressSelect,
 }: MapNavbarProps) {
   const { user, profile, isLoggedIn, loading } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -54,10 +58,15 @@ export default function MapNavbar({
   }, [mobileMenuOpen, onMobileMenuToggle]);
 
   // Address autocomplete
+  const [inputValue, setInputValue] = useState(searchQuery);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
 
   const handleSignOut = async () => {
     await signOutUser();
@@ -68,7 +77,7 @@ export default function MapNavbar({
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-    if (searchQuery.length < 3) {
+    if (inputValue.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -77,7 +86,7 @@ export default function MapNavbar({
     debounceTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery + " Marília SP")}&limit=5&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputValue + " Marília SP")}&limit=5&addressdetails=1`,
           { headers: { "Accept-Language": "pt-BR" } }
         );
         const data: AddressSuggestion[] = await res.json();
@@ -86,12 +95,12 @@ export default function MapNavbar({
       } catch (err) {
         console.error("Erro ao buscar sugestões:", err);
       }
-    }, 500);
+    }, 400);
 
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [searchQuery]);
+  }, [inputValue]);
 
   // Close suggestions on click outside
   useEffect(() => {
@@ -104,9 +113,31 @@ export default function MapNavbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectSuggestion = (s: AddressSuggestion) => {
+  const handleSelectSuggestion = async (s: AddressSuggestion) => {
+    setInputValue(s.display_name);
     setSearchQuery(s.display_name);
     setShowSuggestions(false);
+    
+    if (onAddressSelect) {
+      onAddressSelect(s); // Otimista (voa para o local sem geometria ainda)
+      
+      // Busca a geometria detalhada do polígono para desenhar a rua
+      if (s.osm_type && s.osm_id) {
+        try {
+          const typeChar = s.osm_type.charAt(0).toUpperCase();
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/lookup?format=json&osm_ids=${typeChar}${s.osm_id}&polygon_geojson=1`,
+            { headers: { "Accept-Language": "pt-BR" } }
+          );
+          const data = await res.json();
+          if (data && data.length > 0 && data[0].geojson) {
+            onAddressSelect({ ...s, geojson: data[0].geojson });
+          }
+        } catch (err) {
+          console.error("Erro ao buscar geojson do endereço:", err);
+        }
+      }
+    }
   };
 
   return (
@@ -128,9 +159,21 @@ export default function MapNavbar({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
             <input
               type="text"
-              placeholder="Buscar endereço ou reclamação..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar endereço..."
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                if (e.target.value === '') {
+                  setSearchQuery('');
+                  if (onAddressSelect) onAddressSelect(null as any);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setSearchQuery(inputValue);
+                  setShowSuggestions(false);
+                }
+              }}
               onFocus={() => {
                 setSearchFocused(true);
                 if (suggestions.length > 0) setShowSuggestions(true);
