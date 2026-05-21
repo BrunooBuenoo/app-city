@@ -656,18 +656,18 @@ export default function Home() {
             <button
               onClick={() => setShowTopPills(!showTopPills)}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2.5 rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
+                "flex items-center gap-2 px-4 py-2.5 rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
                 showTopPills
-                  ? "bg-amber-500 border-amber-400 text-white shadow-[0_4px_14px_rgba(245,158,11,0.35)]"
-                  : "bg-white/95 backdrop-blur-xl border-slate-200 text-[#112F4E] hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(17,47,78,0.08)]"
+                  ? "bg-amber-500 border-amber-400 text-white hover:bg-amber-600 hover:border-amber-500 shadow-[0_4px_14px_rgba(245,158,11,0.4)]"
+                  : "bg-white/95 backdrop-blur-xl border-slate-200 text-[#112F4E] hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] hover:-translate-y-0.5"
               )}
               title={showTopPills ? "Recolher relatos em alta" : "Mostrar relatos em alta"}
             >
               <div className={cn("relative transition-transform duration-500", showTopPills && "scale-110")}>
-                <TrendingUp className={cn("w-4 h-4 transition-colors", showTopPills ? "text-white" : "text-amber-500 group-hover:animate-bounce")} />
+                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-amber-500 group-hover:animate-bounce")} />
               </div>
               <span className="text-xs font-bold tracking-wide uppercase select-none">
-                {showTopPills ? "Em Alta" : "Mais Votados"}
+                {showTopPills ? "Em Alta Ativo" : "Em Alta"}
               </span>
             </button>
           </div>
@@ -679,7 +679,14 @@ export default function Home() {
         </div>
 
         {/* FAB Container para alinhar com a lateral direita (reta do avatar na navbar) */}
-        <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
+        <div
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)",
+            showBottomCarousel
+              ? "bottom-[240px] md:bottom-[245px]"
+              : "bottom-[100px] md:bottom-[110px]"
+          )}
+        >
           <div className="flex justify-end w-full">
             <button
               onClick={handleFabClick}
@@ -691,7 +698,14 @@ export default function Home() {
         </div>
 
         {/* Legenda de Navegação do Mapa (Alinhado com a lateral esquerda do grid, na reta do FAB) */}
-        <div className="absolute bottom-[240px] md:bottom-[245px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none">
+        <div
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-30 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)",
+            showBottomCarousel
+              ? "bottom-[240px] md:bottom-[245px]"
+              : "bottom-[100px] md:bottom-[110px]"
+          )}
+        >
           <div className="flex justify-start w-full">
             <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
               <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9]">
@@ -808,9 +822,10 @@ export default function Home() {
           <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-in slide-in-from-bottom-6 duration-500 cubic-bezier(0.16, 1, 0.3, 1)">
             <button
               onClick={() => setShowBottomCarousel(true)}
-              className="pointer-events-auto flex items-center gap-1.5 px-4.5 py-2.5 bg-[#112F4E] hover:bg-[#1a3d61] text-white shadow-[0_10px_25px_rgba(17,47,78,0.2)] hover:shadow-[0_12px_30px_rgba(17,47,78,0.25)] rounded-full text-[10.5px] font-black active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase border border-slate-700/30"
+              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-md hover:bg-white border border-slate-200 shadow-[0_6px_20px_rgba(17,47,78,0.08)] rounded-full text-[10.5px] font-bold text-[#112F4E] hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
             >
-              <span>^ Últimas reclamações ({filteredReclamacoes.length})</span>
+              <span className="material-symbols-outlined text-[14px] font-bold">expand_less</span>
+              <span>Últimas reclamações ({filteredReclamacoes.length})</span>
             </button>
           </div>
         )}

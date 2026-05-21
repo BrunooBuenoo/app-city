@@ -34,13 +34,16 @@ export default function OverlayTempestade() {
       width: number;
     }
 
+    const slant = -4.5; // Vento muito forte e inclinado
+    const margin = Math.abs(slant) * 80; // Margem de compensação de vento lateral para cobertura total da tela
+
     // Aumentamos drasticamente a densidade para uma tempestade avassaladora
     const dropCount = Math.min(Math.floor((width * height) / 1800), 500); 
     const drops: HeavyDrop[] = [];
 
     for (let i = 0; i < dropCount; i++) {
       drops.push({
-        x: Math.random() * width,
+        x: Math.random() * (width + margin * 2) - margin, // Gera gotas cobrindo também as margens laterais externas
         y: Math.random() * height - height,
         length: 22 + Math.random() * 24, // Traços longos e dinâmicos
         speed: 18 + Math.random() * 10,   // Queda ultra-rápida
@@ -48,8 +51,6 @@ export default function OverlayTempestade() {
         width: 1.5 + Math.random() * 1.5, // Espessura grossa de chuva pesada
       });
     }
-
-    const slant = -4.5; // Vento muito forte e inclinado
 
     // Controle dos relâmpagos (flashes mais frequentes e potentes: a cada 2 a 5.5 segundos)
     let flashOpacity = 0;
@@ -76,7 +77,7 @@ export default function OverlayTempestade() {
 
         if (d.y > height) {
           d.y = -d.length;
-          d.x = Math.random() * (width + Math.abs(slant)) - slant;
+          d.x = Math.random() * (width + margin * 2) - margin; // Preenche perfeitamente de borda a borda considerando o desvio lateral
           d.speed = 18 + Math.random() * 10;
         }
       }

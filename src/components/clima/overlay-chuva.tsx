@@ -34,6 +34,9 @@ export default function OverlayChuva() {
       width: number;
     }
 
+    const slant = -2.0; // Inclinação elegante da chuva caindo no vento
+    const margin = Math.abs(slant) * 80; // Margem de compensação de vento lateral para cobertura total da tela
+
     // Aumentamos a densidade de gotas para ficar bem visível no mapa claro/escuro
     const dropCount = Math.min(Math.floor((width * height) / 3500), 280); 
     const drops: Drop[] = [];
@@ -41,7 +44,7 @@ export default function OverlayChuva() {
     // Inicializar gotas
     for (let i = 0; i < dropCount; i++) {
       drops.push({
-        x: Math.random() * width,
+        x: Math.random() * (width + margin * 2) - margin, // Gera gotas cobrindo também as margens laterais externas
         y: Math.random() * height - height,
         length: 16 + Math.random() * 18, // Gotas mais longas e visíveis
         speed: 12 + Math.random() * 6,   // Velocidade fluida
@@ -49,8 +52,6 @@ export default function OverlayChuva() {
         width: 1.2 + Math.random() * 0.8, // Espessura um pouco maior
       });
     }
-
-    const slant = -2.0; // Inclinação elegante da chuva caindo no vento
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
@@ -75,7 +76,7 @@ export default function OverlayChuva() {
         // Resetar gota quando sai da tela
         if (d.y > height) {
           d.y = -d.length;
-          d.x = Math.random() * (width + Math.abs(slant)) - slant;
+          d.x = Math.random() * (width + margin * 2) - margin; // Preenche de borda a borda considerando o desvio lateral
           d.speed = 12 + Math.random() * 6;
         }
       }

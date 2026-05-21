@@ -30,27 +30,64 @@ export function ClimaProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [forcedCondition, setForcedCondition] = useState<WeatherData["condition"] | undefined>(undefined);
+  
+  // Cache exclusivo do Clima Real
+  const [realWeather, setRealWeather] = useState<WeatherData | null>(null);
+  const [realLastFetched, setRealLastFetched] = useState<number | null>(null);
 
-  const fetchWeather = useCallback(async (forcedCond?: WeatherData["condition"]) => {
+  const fetchWeather = useCallback(async (forcedCond?: WeatherData["condition"], force = false) => {
+    const CACHE_DURATION_CLIENT = 5 * 60 * 1000; // 5 minutos de cache local no navegador
+    
+    // Se for clima simulado (forcedCond está definido)
+    if (forcedCond) {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchCurrentWeather(forcedCond);
+        setWeather(data);
+      } catch (err) {
+        console.error("[ClimaProvider] Erro ao carregar clima simulado:", err);
+        setError("Não foi possível carregar o clima simulado.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Se for clima real (forcedCond não definido)
+    const cacheValido = 
+      !force && 
+      realWeather && 
+      realLastFetched && 
+      (Date.now() - realLastFetched < CACHE_DURATION_CLIENT);
+
+    if (cacheValido) {
+      // Recupera o clima real do cache sem fazer nova requisição HTTP!
+      setWeather(realWeather);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchCurrentWeather(forcedCond);
+      const data = await fetchCurrentWeather(undefined);
       setWeather(data);
+      setRealWeather(data);
+      setRealLastFetched(Date.now());
     } catch (err) {
-      console.error("[ClimaProvider] Erro ao carregar clima:", err);
-      setError("Não foi possível carregar os dados climáticos.");
+      console.error("[ClimaProvider] Erro ao carregar clima real:", err);
+      setError("Não foi possível carregar os dados climáticos reais.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [realWeather, realLastFetched]);
 
   const toggleActive = useCallback(() => {
     setIsActive((prev) => !prev);
   }, []);
 
   const refreshWeather = useCallback(async () => {
-    await fetchWeather(forcedCondition);
+    await fetchWeather(forcedCondition, true); // Força a atualização passando o flag true
   }, [forcedCondition, fetchWeather]);
 
   // Recarrega clima ao ativar ou ao mudar o clima forçado de testes

@@ -70,7 +70,20 @@ export default function CardClima() {
         
         {/* Botão sutil de controle demo */}
         <button
-          onClick={() => setShowSimulator(!showSimulator)}
+          onClick={() => {
+            const nextShow = !showSimulator;
+            setShowSimulator(nextShow);
+            
+            if (nextShow) {
+              // Ao abrir o simulador, se não houver condição forçada já selecionada, ativa 'sol' por padrão
+              if (!forcedCondition) {
+                setForcedCondition("sol");
+              }
+            } else {
+              // Ao fechar o simulador, volta imediatamente para o tempo real
+              setForcedCondition(undefined);
+            }
+          }}
           className={cn(
             "p-1 rounded-md transition-all cursor-pointer hover:bg-slate-100/80 active:scale-90",
             showSimulator ? "text-[#112F4E] bg-slate-100" : "text-slate-400 hover:text-slate-600"
