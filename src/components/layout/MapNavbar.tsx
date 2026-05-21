@@ -14,6 +14,8 @@ interface MapNavbarProps {
   setSelectedCategory: (category: string) => void;
   selectedStatus: string;
   setSelectedStatus: (status: string) => void;
+  onFiltersToggle?: (open: boolean) => void;
+  onMobileMenuToggle?: (open: boolean) => void;
 }
 
 interface AddressSuggestion {
@@ -29,11 +31,26 @@ export default function MapNavbar({
   setSelectedCategory,
   selectedStatus,
   setSelectedStatus,
+  onFiltersToggle,
+  onMobileMenuToggle,
 }: MapNavbarProps) {
   const { user, profile, isLoggedIn, loading } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sincronizar estados com o componente pai por meio de callbacks reativos
+  useEffect(() => {
+    if (onFiltersToggle) {
+      onFiltersToggle(showFilters);
+    }
+  }, [showFilters, onFiltersToggle]);
+
+  useEffect(() => {
+    if (onMobileMenuToggle) {
+      onMobileMenuToggle(mobileMenuOpen);
+    }
+  }, [mobileMenuOpen, onMobileMenuToggle]);
 
   // Address autocomplete
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);

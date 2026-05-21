@@ -10,7 +10,7 @@ import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, votar, type Reclamacao } from "@/services/firebase";
 import { findClusteredComplaints, getClusterCounts } from "@/utils/clustering";
-import { ThumbsUp, AlertTriangle, TrendingUp } from "lucide-react";
+import { ThumbsUp, AlertTriangle, TrendingUp, Loader2 } from "lucide-react";
 import CamadaClimatica from "@/components/clima/camada-climatica";
 import BotaoClima from "@/components/clima/botao-clima";
 import { ClimaProvider } from "@/contexts/ClimaContext";
@@ -33,6 +33,7 @@ function MapPin3D({
   setShowLoginModal,
   offsetX = 0, // Desvio lateral horizontal
   offsetY = 0, // Deslocamento vertical dinâmico
+  isHot = false, // Se o pin pertence ao Top 3 e está "Em Alta"
 }: {
   rec: Reclamacao;
   pinColor: string;
@@ -42,12 +43,19 @@ function MapPin3D({
   setShowLoginModal: (show: boolean) => void;
   offsetX?: number;
   offsetY?: number;
+  isHot?: boolean;
 }) {
   const [imgError, setImgError] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; scale: number; rot: number; delay: number }[]>([]);
+  const [isElasticActive, setIsElasticActive] = useState(false);
+
   const temFoto = rec.fotos && rec.fotos.length > 0 && !imgError;
   const fotoUrl = temFoto ? rec.fotos[0] : "";
   const totalConcordos = rec.concordos ?? 0;
-  const userVotouConcordo = user ? (rec.votantes?.[user.uid] === "concordo") : false;
+  const userVotoObj = user ? rec.votantes?.[user.uid] : null;
+  const userVotouConcordo = userVotoObj
+    ? (typeof userVotoObj === "string" ? userVotoObj === "concordo" : (userVotoObj as any)?.tipo === "concordo")
+    : false;
 
   return (
     <MapMarker longitude={rec.longitude} latitude={rec.latitude}>
@@ -70,6 +78,29 @@ function MapPin3D({
               pointerEvents: "none"
             }}
           />
+
+          {/* ANÉIS DE CALOR DOURADOS / ÂMBAR PULSANTES (Top 3) */}
+          {isHot && (
+            <>
+              <div
+                className="absolute bottom-[-2px] w-12 h-12 rounded-full border-2 border-amber-500 animate-ping opacity-75"
+                style={{
+                  transform: "rotateX(75deg)",
+                  animationDuration: "2s",
+                  pointerEvents: "none",
+                }}
+              />
+              <div
+                className="absolute bottom-[-2px] w-12 h-12 rounded-full border-2 border-orange-400 animate-ping opacity-45"
+                style={{
+                  transform: "rotateX(75deg)",
+                  animationDuration: "2s",
+                  animationDelay: "0.8s",
+                  pointerEvents: "none",
+                }}
+              />
+            </>
+          )}
 
           {/* HASTE DE CONEXÃO RADIAL (PONTILHADA VERMELHA) */}
           {offsetY > 0 && (() => {
@@ -171,6 +202,23 @@ function MapPin3D({
                   return;
                 }
                 if (user) {
+                  // Disparar animação elástica e partículas
+                  setIsElasticActive(true);
+                  setTimeout(() => setIsElasticActive(false), 600);
+
+                  const newParticles = Array.from({ length: 6 }).map((_, i) => ({
+                    id: Math.random(),
+                    x: (Math.random() - 0.5) * 36,
+                    y: -15 - Math.random() * 15,
+                    scale: 0.6 + Math.random() * 0.6,
+                    rot: Math.round((Math.random() - 0.5) * 60),
+                    delay: i * 60,
+                  }));
+                  setParticles((prev) => [...prev, ...newParticles]);
+                  setTimeout(() => {
+                    setParticles((prev) => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+                  }, 1200);
+
                   try {
                     await votar(rec.id, user.uid, "concordo");
                   } catch (err) {
@@ -178,21 +226,53 @@ function MapPin3D({
                   }
                 }
               }}
-              className="absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] active:scale-90 hover:scale-105 transition-all select-none transform-style-3d cursor-pointer"
+              className={cn(
+                "absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d cursor-pointer",
+                isElasticActive && "animate-elastic",
+                isHot && "animate-pulse"
+              )}
               style={{
-                backgroundColor: userVotouConcordo ? pinColor : "#ffffff",
-                color: userVotouConcordo ? "#ffffff" : "#112F4E",
-                borderColor: pinColor,
+                backgroundColor: userVotouConcordo ? `${pinColor}12` : (isHot ? "#FFFBEB" : "#ffffff"),
+                color: userVotouConcordo ? pinColor : (isHot ? "#D97706" : "#112F4E"),
+                borderColor: pinColor, // Contorno segue sempre a cor da reclamação
                 transform: "translateZ(8px)",
                 boxShadow: userVotouConcordo
-                  ? `0 4px 10px ${pinColor}66, 0 2px 4px rgba(0,0,0,0.15)`
-                  : `0 4px 8px rgba(0,0,0,0.1)`
+                  ? `0 4px 10px ${pinColor}33, 0 2px 4px rgba(0,0,0,0.1)`
+                  : (isHot 
+                      ? `0 0 12px rgba(245,158,11,0.3), 0 4px 8px rgba(245,158,11,0.15)`
+                      : `0 4px 8px rgba(0,0,0,0.1)`)
               }}
             >
-              <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: `"${userVotouConcordo ? 'FILL' : 'FILL'} ${userVotouConcordo ? 1 : 0}"` }}>
-                favorite
-              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={userVotouConcordo ? pinColor : "none"}
+                stroke={pinColor}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-2.5 h-2.5 transition-colors duration-300"
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
               <span>{totalConcordos}</span>
+
+              {/* Renderização de Partículas de Corações */}
+              {particles.map((p) => (
+                <span
+                  key={p.id}
+                  className="absolute text-[12px] text-red-500 pointer-events-none select-none animate-float-heart"
+                  style={{
+                    left: `calc(50% + ${p.x}px)`,
+                    top: `${p.y}px`,
+                    transform: `scale(${p.scale}) rotate(${p.rot}deg)`,
+                    animationDelay: `${p.delay}ms`,
+                    zIndex: 50,
+                  }}
+                >
+                  ❤️
+                </span>
+              ))}
             </button>
 
           </div>
@@ -208,11 +288,13 @@ function MapMultiPin3D({
   isLoggedIn,
   user,
   setShowLoginModal,
+  topReclamacoesIds,
 }: {
   reclamacoes: Reclamacao[];
   isLoggedIn: boolean;
   user: any;
   setShowLoginModal: (show: boolean) => void;
+  topReclamacoesIds?: Set<string>;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -258,6 +340,7 @@ function MapMultiPin3D({
               setShowLoginModal={setShowLoginModal}
               offsetX={offsetX}
               offsetY={offsetY}
+              isHot={topReclamacoesIds?.has(rec.id)}
             />
           );
         })}
@@ -348,6 +431,43 @@ function MapMultiPin3D({
       </MarkerContent>
     </MapMarker>
   );
+}
+
+// Subcomponente dedicado a salvar o estado de visualização do mapa (viewport) no localStorage
+function MapViewportPersistence() {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    // Salvar estado de posicionamento sempre que o mapa parar de mover, girar ou inclinar
+    const handleMoveEnd = () => {
+      try {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const bearing = map.getBearing();
+        const pitch = map.getPitch();
+
+        const viewport = {
+          center: [center.lng, center.lat],
+          zoom,
+          bearing,
+          pitch,
+        };
+
+        localStorage.setItem("appmarilia:map_viewport", JSON.stringify(viewport));
+      } catch (err) {
+        console.error("[MapViewportPersistence] Erro ao salvar viewport:", err);
+      }
+    };
+
+    map.on("moveend", handleMoveEnd);
+    return () => {
+      map.off("moveend", handleMoveEnd);
+    };
+  }, [map, isLoaded]);
+
+  return null;
 }
 
 // ─── Inner component that has access to map context ───
@@ -442,14 +562,63 @@ export default function Home() {
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
   const [flyToTarget, setFlyToTarget] = useState<{ lng: number; lat: number; id: string } | null>(null);
 
+  // Viewport inicial persistida no cliente para evitar erros de hidratação (SSR) e saltos visuais
+  const [initialViewport, setInitialViewport] = useState<{
+    center: [number, number];
+    zoom: number;
+    bearing: number;
+    pitch: number;
+  } | null>(null);
+
   // Estados para recolher/expandir seções (foco no mapa no mobile)
-  const [showTopPills, setShowTopPills] = useState(true);
-  const [showBottomCarousel, setShowBottomCarousel] = useState(true);
+  const [showTopPills, setShowTopPills] = useState(false);
+  const [showBottomCarousel, setShowBottomCarousel] = useState(false);
 
   // Filtros
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
+  // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("appmarilia:map_viewport");
+    if (saved) {
+      try {
+        const viewport = JSON.parse(saved);
+        const [lng, lat] = viewport.center;
+
+        // Bounding Box amplo ao redor de Marília, SP (~45 km de raio)
+        const minLat = -22.40;
+        const maxLat = -22.00;
+        const minLng = -50.20;
+        const maxLng = -49.70;
+
+        const dentroDeMarilia = lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+
+        if (dentroDeMarilia) {
+          setInitialViewport({
+            center: [lng, lat],
+            zoom: viewport.zoom ?? 14,
+            bearing: viewport.bearing ?? 0,
+            pitch: viewport.pitch ?? 0,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Erro ao recuperar viewport inicial:", err);
+      }
+    }
+
+    // Caso não exista viewport salva ou esteja fora dos limites, inicia no padrão de Marília
+    setInitialViewport({
+      center: [-49.9458, -22.2139],
+      zoom: 14,
+      bearing: 0,
+      pitch: 0,
+    });
+  }, []);
+
+
 
   // Listener em tempo real do Firestore
   useEffect(() => {
@@ -512,6 +681,59 @@ export default function Home() {
       .slice(0, 3);
   }, [filteredReclamacoes]);
 
+  const topReclamacoesIds = useMemo(() => {
+    return new Set(topReclamacoes.map((r) => r.id));
+  }, [topReclamacoes]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Monitorar redimensionamento de tela para cálculos adaptativos em tempo de execução
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Altura estimada da Navbar com base nas seções visíveis e expansões
+  const navbarHeight = useMemo(() => {
+    if (isMobile) {
+      let height = 76; // altura base do container mobile
+      if (filtersOpen) height += 156; // painel de filtros empilhado na vertical no mobile
+      if (mobileMenuOpen) height += 172; // menu mobile expandido
+      return height;
+    } else {
+      let height = 88; // altura base do container desktop
+      if (filtersOpen) height += 96; // painel de filtros horizontal no desktop
+      return height;
+    }
+  }, [isMobile, filtersOpen, mobileMenuOpen]);
+
+  // Top dinâmico das Pills centrais de Reclamações Populares
+  const pillsTop = useMemo(() => {
+    return navbarHeight + (isMobile ? 12 : 12);
+  }, [navbarHeight, isMobile]);
+
+  // Top dinâmico dos Botões laterais de Clima e Em Alta
+  const buttonsTop = useMemo(() => {
+    const hasPills = topReclamacoes.length > 0 && showTopPills;
+    if (hasPills) {
+      if (isMobile) {
+        // No mobile, as pills se empilham verticalmente (cada uma ocupa ~46px incluindo o gap)
+        const pillsHeight = topReclamacoes.length * 46;
+        return pillsTop + pillsHeight + 4;
+      } else {
+        return pillsTop + 65;
+      }
+    } else {
+      return navbarHeight + (isMobile ? 12 : 16);
+    }
+  }, [navbarHeight, pillsTop, topReclamacoes.length, showTopPills, isMobile]);
+
   const handleFlyTo = useCallback((rec: Reclamacao) => {
     setFlyToTarget({
       lng: rec.longitude,
@@ -525,58 +747,75 @@ export default function Home() {
       <div className="relative w-screen h-screen overflow-hidden">
         {/* Full-screen Interactive Map */}
         <div className="absolute inset-0 z-0">
-          <Map center={[-49.9458, -22.2139]} zoom={14}>
-            <MapControls position="bottom-right" showZoom showLocate />
-            <CamadaClimatica />
+          {initialViewport ? (
+            <Map
+              center={initialViewport.center}
+              zoom={initialViewport.zoom}
+              bearing={initialViewport.bearing}
+              pitch={initialViewport.pitch}
+            >
+              <MapViewportPersistence />
+              <MapControls position="bottom-right" showZoom showLocate />
+              <CamadaClimatica buttonsTop={buttonsTop} />
 
-            {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
-            {(() => {
-              const getCoordKey = (lat: number, lng: number) => {
-                return `${lat.toFixed(5)},${lng.toFixed(5)}`;
-              };
+              {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
+              {(() => {
+                const getCoordKey = (lat: number, lng: number) => {
+                  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+                };
 
-              const agrupadas: Record<string, Reclamacao[]> = {};
-              filteredReclamacoes.forEach((rec) => {
-                if (!rec.latitude || !rec.longitude) return;
-                const key = getCoordKey(rec.latitude, rec.longitude);
-                if (!agrupadas[key]) agrupadas[key] = [];
-                agrupadas[key].push(rec);
-              });
+                const agrupadas: Record<string, Reclamacao[]> = {};
+                filteredReclamacoes.forEach((rec) => {
+                  if (!rec.latitude || !rec.longitude) return;
+                  const key = getCoordKey(rec.latitude, rec.longitude);
+                  if (!agrupadas[key]) agrupadas[key] = [];
+                  agrupadas[key].push(rec);
+                });
 
-              return Object.values(agrupadas).map((grupo) => {
-                if (grupo.length === 0) return null;
+                return Object.values(agrupadas).map((grupo) => {
+                  if (grupo.length === 0) return null;
 
-                if (grupo.length === 1) {
-                  const rec = grupo[0];
-                  const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
-                  const pinColor = cat.color;
+                  if (grupo.length === 1) {
+                    const rec = grupo[0];
+                    const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+                    const pinColor = cat.color;
 
-                  return (
-                    <MapPin3D
-                      key={rec.id}
-                      rec={rec}
-                      pinColor={pinColor}
-                      cat={cat}
-                      isLoggedIn={isLoggedIn}
-                      user={user}
-                      setShowLoginModal={setShowLoginModal}
-                    />
-                  );
-                } else {
-                  const ancor = grupo[0];
-                  return (
-                    <MapMultiPin3D
-                      key={`group-${ancor.id}`}
-                      reclamacoes={grupo}
-                      isLoggedIn={isLoggedIn}
-                      user={user}
-                      setShowLoginModal={setShowLoginModal}
-                    />
-                  );
-                }
-              });
-            })()}
-          </Map>
+                    return (
+                      <MapPin3D
+                        key={rec.id}
+                        rec={rec}
+                        pinColor={pinColor}
+                        cat={cat}
+                        isLoggedIn={isLoggedIn}
+                        user={user}
+                        setShowLoginModal={setShowLoginModal}
+                        isHot={topReclamacoesIds.has(rec.id)}
+                      />
+                    );
+                  } else {
+                    const ancor = grupo[0];
+                    return (
+                      <MapMultiPin3D
+                        key={`group-${ancor.id}`}
+                        reclamacoes={grupo}
+                        isLoggedIn={isLoggedIn}
+                        user={user}
+                        setShowLoginModal={setShowLoginModal}
+                        topReclamacoesIds={topReclamacoesIds}
+                      />
+                    );
+                  }
+                });
+              })()}
+            </Map>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-all duration-300">
+              <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-elevated">
+                <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Carregando mapa interativo...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Faixas de Desfoque Gradual (Glassmorphism de profundidade limitado ao grid max-w-7xl) */}
@@ -594,7 +833,7 @@ export default function Home() {
           <div className="w-full h-full bg-gradient-to-t from-white/75 via-white/15 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
         </div>
 
-        {/* MapNavbar com propriedades de filtro */}
+        {/* MapNavbar com propriedades de filtro e callbacks de redimensionamento */}
         <MapNavbar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -602,17 +841,20 @@ export default function Home() {
           setSelectedCategory={setSelectedCategory}
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
+          onFiltersToggle={setFiltersOpen}
+          onMobileMenuToggle={setMobileMenuOpen}
         />
 
         {/* ─── Top 3 Popular Complaints Pills ─── */}
         {topReclamacoes.length > 0 && (
           <div
             className={cn(
-              "absolute top-[100px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
+              "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
               showTopPills
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 -translate-y-12 scale-95 pointer-events-none"
             )}
+            style={{ top: `${pillsTop}px` }}
           >
             <div className="flex gap-2 justify-center flex-wrap">
               {topReclamacoes.map((rec, i) => {
@@ -652,7 +894,10 @@ export default function Home() {
 
         {/* Botão de Alternar Relatos Em Alta (Simetria perfeita com o Botão Clima no Top-Left) */}
         {topReclamacoes.length > 0 && (
-          <div className="absolute top-[165px] left-4 md:left-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none">
+          <div 
+            className="absolute left-4 md:left-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
+            style={{ top: `${buttonsTop}px` }}
+          >
             <button
               onClick={() => setShowTopPills(!showTopPills)}
               className={cn(
@@ -674,7 +919,10 @@ export default function Home() {
         )}
 
         {/* Botão de Clima Flutuante no Top-Right */}
-        <div className="absolute top-[165px] right-4 md:right-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none">
+        <div 
+          className="absolute right-4 md:right-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
+          style={{ top: `${buttonsTop}px` }}
+        >
           <BotaoClima />
         </div>
 
@@ -793,9 +1041,18 @@ export default function Home() {
                   </p>
                   <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED]">
                     <div className="flex items-center gap-1.5 text-[#94A3B8]">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        favorite
-                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-3.5 h-3.5 transition-colors duration-300"
+                      >
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                      </svg>
                       <span className="text-xs font-medium">{card.concordos} Concordos</span>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: st.color }}>
@@ -834,6 +1091,40 @@ export default function Home() {
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
         />
+
+        {/* Estilos Globais para Partículas e Animação Elástica do Botão de Concordar */}
+        <style jsx global>{`
+          @keyframes float-heart {
+            0% {
+              opacity: 0;
+              transform: translateY(0) scale(0.3) rotate(0deg);
+            }
+            15% {
+              opacity: 0.95;
+              transform: translateY(-8px) scale(1.1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-45px) scale(0.5);
+            }
+          }
+          .animate-float-heart {
+            animation: float-heart 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+
+          @keyframes elastic-bounce {
+            0% { transform: scale(1) translateZ(8px); }
+            30% { transform: scale(1.22, 0.78) translateZ(8px); }
+            45% { transform: scale(0.78, 1.22) translateZ(8px); }
+            60% { transform: scale(1.12, 0.88) translateZ(8px); }
+            75% { transform: scale(0.96, 1.04) translateZ(8px); }
+            90% { transform: scale(1.02, 0.98) translateZ(8px); }
+            100% { transform: scale(1) translateZ(8px); }
+          }
+          .animate-elastic {
+            animation: elastic-bounce 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          }
+        `}</style>
       </div>
     </ClimaProvider>
   );
