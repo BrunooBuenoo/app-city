@@ -714,21 +714,13 @@ export default function Home() {
   }, [isMobile, filtersOpen, mobileMenuOpen]);
 
   // Top dinâmico das Pills centrais de Reclamações Populares
-  const pillsTop = useMemo(() => {
-    return navbarHeight + (isMobile ? 12 : 12);
-  }, [navbarHeight, isMobile]);
+  const pillsTop = navbarHeight + (isMobile ? 12 : 12);
 
   // Top dinâmico dos Botões laterais de Clima e Em Alta
   const buttonsTop = useMemo(() => {
     const hasPills = topReclamacoes.length > 0 && showTopPills;
     if (hasPills) {
-      if (isMobile) {
-        // No mobile, as pills se empilham verticalmente (cada uma ocupa ~46px incluindo o gap)
-        const pillsHeight = topReclamacoes.length * 46;
-        return pillsTop + pillsHeight + 4;
-      } else {
-        return pillsTop + 65;
-      }
+      return pillsTop + 55; // As pílulas agora ficam em uma única linha com rolagem horizontal, ocupando altura fixa
     } else {
       return navbarHeight + (isMobile ? 12 : 16);
     }
@@ -820,7 +812,7 @@ export default function Home() {
 
         {/* Faixas de Desfoque Gradual (Glassmorphism de profundidade limitado ao grid max-w-7xl) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[92px] px-3 md:px-4 z-10 pointer-events-none">
-          <div className="w-full h-full bg-gradient-to-b from-white/65 via-white/15 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
+          <div className="w-full h-full bg-gradient-to-b from-white/65 dark:from-zinc-950/80 via-white/15 dark:via-zinc-950/20 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
         </div>
         <div
           className={cn(
@@ -830,7 +822,7 @@ export default function Home() {
               : "opacity-0 translate-y-6 scale-95"
           )}
         >
-          <div className="w-full h-full bg-gradient-to-t from-white/75 via-white/15 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
+          <div className="w-full h-full bg-gradient-to-t from-white/75 dark:from-zinc-950/90 via-white/15 dark:via-zinc-950/20 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
         </div>
 
         {/* MapNavbar com propriedades de filtro e callbacks de redimensionamento */}
@@ -849,21 +841,24 @@ export default function Home() {
         {topReclamacoes.length > 0 && (
           <div
             className={cn(
-              "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
+              "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-2 md:px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
               showTopPills
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 -translate-y-12 scale-95 pointer-events-none"
             )}
             style={{ top: `${pillsTop}px` }}
           >
-            <div className="flex gap-2 justify-center flex-wrap">
+            <div 
+              className="flex flex-nowrap gap-2 overflow-x-auto pb-3 pt-1 px-2 items-center justify-start md:justify-center w-full snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {topReclamacoes.map((rec, i) => {
                 const cat = getCategoryByLabel(rec.categoria);
                 return (
                   <button
                     key={rec.id}
                     onClick={() => handleFlyTo(rec)}
-                    className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 bg-white/95 backdrop-blur-xl rounded-full shadow-elevated border border-white/50 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] hover:-translate-y-0.5 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-300"
+                    className="shrink-0 snap-center pointer-events-auto flex items-center gap-2 px-3.5 py-2 bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl rounded-full shadow-elevated border border-white/50 dark:border-zinc-800/50 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-300"
                   >
                     <div className="flex items-center gap-1.5">
                       <span
@@ -872,7 +867,7 @@ export default function Home() {
                       >
                         {cat?.icon ?? "report"}
                       </span>
-                      <span className="text-xs font-semibold text-[#112F4E] truncate max-w-[120px] md:max-w-[180px]">
+                      <span className="text-xs font-semibold text-[#112F4E] dark:text-zinc-100 truncate max-w-[120px] md:max-w-[180px]">
                         {rec.titulo}
                       </span>
                     </div>
@@ -901,18 +896,24 @@ export default function Home() {
             <button
               onClick={() => setShowTopPills(!showTopPills)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
+                "flex items-center rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
+                !showTopPills ? "w-9 h-9 justify-center p-0" : "gap-2 px-4 py-2.5",
                 showTopPills
-                  ? "bg-amber-500 border-amber-400 text-white hover:bg-amber-600 hover:border-amber-500 shadow-[0_4px_14px_rgba(245,158,11,0.4)]"
-                  : "bg-white/95 backdrop-blur-xl border-slate-200 text-[#112F4E] hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] hover:-translate-y-0.5"
+                  ? "bg-red-500 border-red-400 text-white hover:bg-red-600 hover:border-red-500 shadow-[0_4px_14px_rgba(239,68,68,0.4)]"
+                  : "bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl border-slate-200 dark:border-zinc-800/50 text-[#112F4E] dark:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
               )}
               title={showTopPills ? "Recolher relatos em alta" : "Mostrar relatos em alta"}
             >
               <div className={cn("relative transition-transform duration-500", showTopPills && "scale-110")}>
-                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-amber-500 group-hover:animate-bounce")} />
+                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-[#112F4E] dark:text-zinc-100 group-hover:animate-bounce")} />
               </div>
-              <span className="text-xs font-bold tracking-wide uppercase select-none">
-                {showTopPills ? "Em Alta Ativo" : "Em Alta"}
+              <span 
+                className={cn(
+                  "text-xs font-bold tracking-wide uppercase select-none",
+                  !showTopPills && "hidden"
+                )}
+              >
+                Em Alta
               </span>
             </button>
           </div>
@@ -955,12 +956,12 @@ export default function Home() {
           )}
         >
           <div className="flex justify-start w-full">
-            <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
-              <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9]">
+            <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-[#E2E8F0] dark:border-zinc-800 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-none select-none max-w-[175px]">
+              <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9] dark:border-zinc-800/80">
                 <span className="material-symbols-outlined text-[12px] text-[#1a8ccc] font-bold">mouse</span>
-                <span className="text-[9px] font-black text-[#112F4E] uppercase tracking-widest">Navegação</span>
+                <span className="text-[9px] font-black text-[#112F4E] dark:text-zinc-100 uppercase tracking-widest">Navegação</span>
               </div>
-              <div className="flex flex-col gap-1 text-[9px] font-bold text-[#64748B] mt-1">
+              <div className="flex flex-col gap-1 text-[9px] font-bold text-[#64748B] dark:text-zinc-400 mt-1">
                 <div className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[12px] text-[#1a8ccc]">pan_tool_alt</span>
                   <span>Botão Esquerdo - Mover-se</span>
@@ -993,7 +994,7 @@ export default function Home() {
             <div className="flex justify-center mb-2 animate-in fade-in duration-300">
               <button
                 onClick={() => setShowBottomCarousel(false)}
-                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-md hover:bg-white border border-slate-200 shadow-[0_6px_20px_rgba(17,47,78,0.08)] rounded-full text-[10.5px] font-bold text-[#112F4E] hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
+                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-[0_6px_20px_rgba(17,47,78,0.08)] dark:shadow-none rounded-full text-[10.5px] font-bold text-[#112F4E] dark:text-zinc-100 hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
               >
                 <span>RECOLHER</span>
                 <span className="material-symbols-outlined text-[14px] font-bold">expand_more</span>
@@ -1012,9 +1013,9 @@ export default function Home() {
                 <Link
                   key={card.id}
                   href={`/reclamacao/${card.id}`}
-                  className={`min-w-[300px] max-w-[340px] bg-white/95 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] hover:-translate-y-1 transition-all duration-200 shrink-0 ${isInCluster
+                  className={`min-w-[300px] max-w-[340px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-200 shrink-0 ${isInCluster
                       ? "border-red-300 ring-1 ring-red-200"
-                      : "border-white/50"
+                      : "border-white/50 dark:border-zinc-800/50"
                     }`}
                 >
                   <div className="flex justify-between items-start">
@@ -1031,16 +1032,16 @@ export default function Home() {
                       >
                         {cat?.label ?? card.categoria}
                       </span>
-                      <h3 className="text-base font-semibold text-[#112F4E] mt-0.5 truncate">
+                      <h3 className="text-base font-semibold text-[#112F4E] dark:text-zinc-100 mt-0.5 truncate">
                         {card.titulo}
                       </h3>
                     </div>
                   </div>
-                  <p className="text-sm text-[#4A5D70] leading-relaxed line-clamp-2 font-light">
+                  <p className="text-sm text-[#4A5D70] dark:text-zinc-300 leading-relaxed line-clamp-2 font-light">
                     {card.descricao}
                   </p>
-                  <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED]">
-                    <div className="flex items-center gap-1.5 text-[#94A3B8]">
+                  <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED] dark:border-zinc-800/50">
+                    <div className="flex items-center gap-1.5 text-[#94A3B8] dark:text-zinc-400">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -1066,9 +1067,9 @@ export default function Home() {
 
             {/* Empty state */}
             {filteredReclamacoes.length === 0 && (
-              <div className="min-w-[300px] bg-white/95 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 text-center">
-                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] mb-2 block">map</span>
-                <p className="text-sm text-[#94A3B8]">Nenhuma reclamação encontrada.</p>
+              <div className="min-w-[300px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 text-center">
+                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] dark:text-zinc-700 mb-2 block">map</span>
+                <p className="text-sm text-[#94A3B8] dark:text-zinc-400">Nenhuma reclamação encontrada.</p>
               </div>
             )}
           </div>
@@ -1079,7 +1080,7 @@ export default function Home() {
           <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-in slide-in-from-bottom-6 duration-500 cubic-bezier(0.16, 1, 0.3, 1)">
             <button
               onClick={() => setShowBottomCarousel(true)}
-              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-md hover:bg-white border border-slate-200 shadow-[0_6px_20px_rgba(17,47,78,0.08)] rounded-full text-[10.5px] font-bold text-[#112F4E] hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
+              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-[0_6px_20px_rgba(17,47,78,0.08)] dark:shadow-none rounded-full text-[10.5px] font-bold text-[#112F4E] dark:text-zinc-100 hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
             >
               <span className="material-symbols-outlined text-[14px] font-bold">expand_less</span>
               <span>Últimas reclamações ({filteredReclamacoes.length})</span>
