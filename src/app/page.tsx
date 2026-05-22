@@ -912,7 +912,6 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [highlightedAddress, setHighlightedAddress] = useState<any>(null);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
   useEffect(() => {
