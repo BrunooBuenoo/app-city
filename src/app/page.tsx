@@ -1196,7 +1196,7 @@ export default function Home() {
             style={{ top: `${pillsTop}px` }}
           >
             <div 
-              className="flex flex-nowrap gap-2 overflow-x-auto pb-3 pt-1 px-2 items-center justify-start md:justify-center w-full snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              className="flex flex-nowrap gap-2 overflow-x-auto pb-3 pt-1 px-2 items-center justify-start md:justify-center snap-x snap-mandatory [&::-webkit-scrollbar]:hidden pointer-events-auto w-max max-w-full mx-auto"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {topReclamacoes.map((rec, i) => {
