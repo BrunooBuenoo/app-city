@@ -207,3 +207,16 @@
 .animate-scale-up {
   animation: scale-up 0.2s ease-out;
 }
+
+/* ─── MapLibre Popup Overrides ─── */
+.maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none !important;
+}

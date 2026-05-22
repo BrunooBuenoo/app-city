@@ -34,12 +34,24 @@ export default function OverlayTempestade() {
       width: number;
     }
 
+    // Estrutura do splash da gota batendo na tela (efeito 3D)
+    interface ScreenSplash {
+      id: number;
+      x: number;
+      y: number;
+      radius: number;
+      maxRadius: number;
+      opacity: number;
+      speed: number;
+    }
+
     const slant = -4.5; // Vento muito forte e inclinado
     const margin = Math.abs(slant) * 80; // Margem de compensação de vento lateral para cobertura total da tela
 
     // Aumentamos drasticamente a densidade para uma tempestade avassaladora
     const dropCount = Math.min(Math.floor((width * height) / 1800), 500); 
     const drops: HeavyDrop[] = [];
+    const splashes: ScreenSplash[] = [];
 
     for (let i = 0; i < dropCount; i++) {
       drops.push({
@@ -79,6 +91,48 @@ export default function OverlayTempestade() {
           d.y = -d.length;
           d.x = Math.random() * (width + margin * 2) - margin; // Preenche perfeitamente de borda a borda considerando o desvio lateral
           d.speed = 18 + Math.random() * 10;
+        }
+      }
+
+      // 2. Ocasionalmente gera uma gota colidindo com a tela (efeito 3D premium - mais frequente na tempestade)
+      if (Math.random() < 0.035) { // 3.5% de chance por frame
+        splashes.push({
+          id: Math.random(),
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: 1,
+          maxRadius: 12 + Math.random() * 18,
+          opacity: 0.15 + Math.random() * 0.22,
+          speed: 0.8 + Math.random() * 0.7
+        });
+      }
+
+      // 3. Desenhar e animar os splashes de gotas na tela
+      for (let i = splashes.length - 1; i >= 0; i--) {
+        const s = splashes[i];
+        
+        ctx.beginPath();
+        // Círculo principal translúcido da gota batendo
+        ctx.strokeStyle = `rgba(230, 242, 255, ${s.opacity})`;
+        ctx.lineWidth = 1.2;
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Círculo interno menor para dar efeito de refração 3D
+        if (s.radius > 3) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(230, 242, 255, ${s.opacity * 0.45})`;
+          ctx.lineWidth = 0.8;
+          ctx.arc(s.x, s.y, s.radius * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Atualizar estado
+        s.radius += s.speed;
+        s.opacity -= 0.015; // esmaecimento linear mais rápido sob turbulência
+
+        if (s.opacity <= 0 || s.radius >= s.maxRadius) {
+          splashes.splice(i, 1);
         }
       }
 

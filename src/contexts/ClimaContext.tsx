@@ -12,6 +12,8 @@ interface ClimaContextType {
   forcedCondition: WeatherData["condition"] | undefined;
   setForcedCondition: (cond: WeatherData["condition"] | undefined) => void;
   refreshWeather: () => Promise<void>;
+  isExpanded: boolean;
+  setIsExpanded: (expanded: boolean) => void;
 }
 
 const ClimaContext = createContext<ClimaContextType | null>(null);
@@ -30,6 +32,7 @@ export function ClimaProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [forcedCondition, setForcedCondition] = useState<WeatherData["condition"] | undefined>(undefined);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   
   // Cache exclusivo do Clima Real
   const [realWeather, setRealWeather] = useState<WeatherData | null>(null);
@@ -119,6 +122,8 @@ export function ClimaProvider({ children }: { children: React.ReactNode }) {
         forcedCondition,
         setForcedCondition,
         refreshWeather,
+        isExpanded,
+        setIsExpanded,
       }}
     >
       {children}

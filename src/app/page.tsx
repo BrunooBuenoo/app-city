@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Map, MapMarker, MarkerContent, MapControls, MapPopup, useMap } from "@/components/ui/map";
@@ -10,7 +10,7 @@ import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
 import { onReclamacoesChange, votar, type Reclamacao } from "@/services/firebase";
 import { findClusteredComplaints, getClusterCounts } from "@/utils/clustering";
-import { ThumbsUp, AlertTriangle, TrendingUp } from "lucide-react";
+import { ThumbsUp, AlertTriangle, TrendingUp, Loader2 } from "lucide-react";
 import CamadaClimatica from "@/components/clima/camada-climatica";
 import BotaoClima from "@/components/clima/botao-clima";
 import { ClimaProvider } from "@/contexts/ClimaContext";
@@ -33,6 +33,7 @@ function MapPin3D({
   setShowLoginModal,
   offsetX = 0, // Desvio lateral horizontal
   offsetY = 0, // Deslocamento vertical dinâmico
+  isHot = false, // Se o pin pertence ao Top 3 e está "Em Alta"
 }: {
   rec: Reclamacao;
   pinColor: string;
@@ -42,34 +43,72 @@ function MapPin3D({
   setShowLoginModal: (show: boolean) => void;
   offsetX?: number;
   offsetY?: number;
+  isHot?: boolean;
 }) {
   const [imgError, setImgError] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; scale: number; rot: number; delay: number }[]>([]);
+  const [isElasticActive, setIsElasticActive] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+
   const temFoto = rec.fotos && rec.fotos.length > 0 && !imgError;
   const fotoUrl = temFoto ? rec.fotos[0] : "";
   const totalConcordos = rec.concordos ?? 0;
-  const userVotouConcordo = user ? (rec.votantes?.[user.uid] === "concordo") : false;
+  const userVotoObj = user ? rec.votantes?.[user.uid] : null;
+  const userVotouConcordo = userVotoObj
+    ? (typeof userVotoObj === "string" ? userVotoObj === "concordo" : (userVotoObj as any)?.tipo === "concordo")
+    : false;
 
   return (
-    <MapMarker longitude={rec.longitude} latitude={rec.latitude}>
+    <MapMarker 
+      longitude={rec.longitude} 
+      latitude={rec.latitude} 
+      onClick={(e: any) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        setShowPopup(true);
+      }}
+    >
       <MarkerContent>
         <div className="relative flex flex-col items-center select-none group perspective-[1000px] pb-3">
 
           {/* SOMBRA 3D NO CHÃO DO MAPA */}
           <div
-            className="absolute bottom-1 w-6 h-1.5 bg-black/35 rounded-full blur-[1.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[2.5px] group-hover:opacity-40"
-            style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+            className="absolute w-7 h-2 bg-black/50 blur-[2.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[3.5px] group-hover:opacity-30"
+            style={{ transform: "translateY(2px) rotateX(65deg)", pointerEvents: "none" }}
           />
 
           {/* ANEL PULSANTE DE FRENTE PARA O CHÃO */}
           <div
-            className="absolute bottom-[-2px] w-8 h-8 rounded-full border-2 animate-ping opacity-30"
+            className="absolute w-8 h-8 rounded-full border-[2.5px] animate-ping opacity-30"
             style={{
               borderColor: pinColor,
-              transform: "rotateX(75deg)",
+              transform: "translateY(-4px) rotateX(75deg)",
               animationDuration: "2.5s",
               pointerEvents: "none"
             }}
           />
+
+          {/* ANÉIS DE CALOR DOURADOS / ÂMBAR PULSANTES (Top 3) */}
+          {isHot && (
+            <>
+              <div
+                className="absolute w-12 h-12 rounded-full border-[2.5px] border-amber-500 animate-ping opacity-75"
+                style={{
+                  transform: "translateY(-4px) rotateX(75deg)",
+                  animationDuration: "2s",
+                  pointerEvents: "none",
+                }}
+              />
+              <div
+                className="absolute w-12 h-12 rounded-full border-[2.5px] border-orange-400 animate-ping opacity-45"
+                style={{
+                  transform: "translateY(-4px) rotateX(75deg)",
+                  animationDuration: "2s",
+                  animationDelay: "0.8s",
+                  pointerEvents: "none",
+                }}
+              />
+            </>
+          )}
 
           {/* HASTE DE CONEXÃO RADIAL (PONTILHADA VERMELHA) */}
           {offsetY > 0 && (() => {
@@ -79,8 +118,8 @@ function MapPin3D({
               <div
                 className="absolute origin-bottom animate-scale-up"
                 style={{
-                  height: `${d - 16}px`,
-                  bottom: "20px",
+                  height: `${d - 4}px`, // d - 4 para deixar um respiro na ponta do pin
+                  bottom: "2px", // Fixado no centro geométrico
                   left: "50%",
                   borderLeft: "2px dashed #EF4444",
                   transform: `translateX(-50%) rotate(${graus}deg)`,
@@ -91,58 +130,48 @@ function MapPin3D({
             );
           })()}
 
-          {/* CORPO FLUTUANTE DO PIN (COM INCLINAÇÃO 3D E TRANSLATE NO HOVER + OFFSET RADIAL) */}
+          {/* CORPO FLUTUANTE DO PIN (TEARDROP PREMIUM) */}
           <div
-            className="relative flex flex-col items-center transition-all duration-500 ease-out origin-bottom transform-style-3d group-hover:-translate-y-3 group-hover:rotateY(10deg) group-hover:rotateX(10deg)"
+            className="relative flex flex-col items-center transition-transform duration-400 ease-out origin-bottom group-hover:-translate-y-2 group-hover:scale-[1.03]"
             style={{
-              transform: `translate(${offsetX}px, ${-offsetY}px)`,
+              transform: `translate(${offsetX}px, ${-offsetY}px)`, // Removemos o -22px para que a ponta alinhe corretamente com a linha pontilhada
+              zIndex: isHot ? 40 : 10,
             }}
           >
-            {/* BALÃO / CONTAINER DO CARD 3D */}
-            <Link href={`/reclamacao/${rec.id}`}>
-              <div
-                className="relative rounded-2xl border-2 bg-white flex items-center justify-center shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all overflow-hidden shrink-0 transform-style-3d"
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderColor: pinColor,
-                  boxShadow: `0 10px 20px -5px ${pinColor}4D, 0 12px 24px -10px rgba(0,0,0,0.3)`
-                }}
-              >
-                {/* MINIATURA DA FOTO EM 3D OU ÍCONE DA CATEGORIA */}
-                {temFoto ? (
-                  <img
-                    src={fotoUrl}
-                    alt={rec.titulo}
-                    width={48}
-                    height={48}
-                    onError={() => {
-                      console.warn(`Falha ao carregar imagem para a reclamação ${rec.id}. Ativando fallback.`);
-                      setImgError(true);
-                    }}
-                    className="w-full h-full object-cover rounded-xl scale-95 group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center rounded-xl select-none text-white scale-95 group-hover:scale-105 transition-transform duration-300"
-                    style={{ backgroundColor: pinColor }}
-                  >
-                    <span className="material-symbols-outlined text-[24px]">
+            <div className="cursor-pointer pointer-events-auto">
+              {/* SHAPE DO TEARDROP */}
+              <div className="relative w-[44px] h-[44px] flex items-center justify-center">
+                {/* O formato de gota d'água */}
+                <div 
+                  className="absolute inset-0 rounded-[50%_50%_50%_4px] rotate-[-45deg] border-[2.5px] border-white transition-colors duration-300"
+                  style={{ 
+                    backgroundColor: pinColor,
+                    boxShadow: `inset 2px 2px 4px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,0,0,0.15), 0 10px 18px -4px ${pinColor}80, 0 4px 6px -2px rgba(0,0,0,0.2)` 
+                  }}
+                />
+                
+                {/* Círculo Interno com o conteúdo */}
+                <div 
+                  className="absolute inset-[4px] rounded-full bg-white flex items-center justify-center overflow-hidden z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                >
+                  {temFoto ? (
+                    <img
+                      src={fotoUrl}
+                      alt={rec.titulo}
+                      onError={() => {
+                        console.warn(`Falha ao carregar imagem para a reclamação ${rec.id}. Ativando fallback.`);
+                        setImgError(true);
+                      }}
+                      className="w-full h-full object-cover scale-105"
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-[20px]" style={{ color: pinColor }}>
                       {cat.icon || "help_outline"}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </Link>
-
-            {/* CONECTOR (A PONTA DO BALÃO DO PIN QUE APONTA PRO CHÃO) */}
-            <div
-              className="w-3 h-3 rotate-45 -mt-1.5 border-r border-b bg-white shadow-[2px_2px_2px_rgba(0,0,0,0.05)]"
-              style={{
-                borderColor: pinColor,
-                backgroundColor: temFoto ? "#ffffff" : pinColor
-              }}
-            />
+            </div>
 
             {/* MINI BADGE DE CATEGORIA NO CANTO SUPERIOR ESQUERDO (Para pins com foto para fácil identificação) */}
             {temFoto && (
@@ -171,6 +200,23 @@ function MapPin3D({
                   return;
                 }
                 if (user) {
+                  // Disparar animação elástica e partículas
+                  setIsElasticActive(true);
+                  setTimeout(() => setIsElasticActive(false), 600);
+
+                  const newParticles = Array.from({ length: 6 }).map((_, i) => ({
+                    id: Math.random(),
+                    x: (Math.random() - 0.5) * 36,
+                    y: -15 - Math.random() * 15,
+                    scale: 0.6 + Math.random() * 0.6,
+                    rot: Math.round((Math.random() - 0.5) * 60),
+                    delay: i * 60,
+                  }));
+                  setParticles((prev) => [...prev, ...newParticles]);
+                  setTimeout(() => {
+                    setParticles((prev) => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+                  }, 1200);
+
                   try {
                     await votar(rec.id, user.uid, "concordo");
                   } catch (err) {
@@ -178,27 +224,157 @@ function MapPin3D({
                   }
                 }
               }}
-              className="absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] active:scale-90 hover:scale-105 transition-all select-none transform-style-3d cursor-pointer"
+              className={cn(
+                "absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d cursor-pointer",
+                isElasticActive && "animate-elastic",
+                isHot && "animate-pulse"
+              )}
               style={{
-                backgroundColor: userVotouConcordo ? pinColor : "#ffffff",
-                color: userVotouConcordo ? "#ffffff" : "#112F4E",
-                borderColor: pinColor,
+                backgroundColor: userVotouConcordo ? `${pinColor}12` : (isHot ? "#FFFBEB" : "#ffffff"),
+                color: userVotouConcordo ? pinColor : (isHot ? "#D97706" : "#112F4E"),
+                borderColor: pinColor, // Contorno segue sempre a cor da reclamação
                 transform: "translateZ(8px)",
                 boxShadow: userVotouConcordo
-                  ? `0 4px 10px ${pinColor}66, 0 2px 4px rgba(0,0,0,0.15)`
-                  : `0 4px 8px rgba(0,0,0,0.1)`
+                  ? `0 4px 10px ${pinColor}33, 0 2px 4px rgba(0,0,0,0.1)`
+                  : (isHot 
+                      ? `0 0 12px rgba(245,158,11,0.3), 0 4px 8px rgba(245,158,11,0.15)`
+                      : `0 4px 8px rgba(0,0,0,0.1)`)
               }}
             >
-              <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: `"${userVotouConcordo ? 'FILL' : 'FILL'} ${userVotouConcordo ? 1 : 0}"` }}>
-                favorite
-              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={userVotouConcordo ? pinColor : "none"}
+                stroke={pinColor}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-2.5 h-2.5 transition-colors duration-300"
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
               <span>{totalConcordos}</span>
+
+              {/* Renderização de Partículas de Corações */}
+              {particles.map((p) => (
+                <span
+                  key={p.id}
+                  className="absolute text-[12px] text-red-500 pointer-events-none select-none animate-float-heart"
+                  style={{
+                    left: `calc(50% + ${p.x}px)`,
+                    top: `${p.y}px`,
+                    transform: `scale(${p.scale}) rotate(${p.rot}deg)`,
+                    animationDelay: `${p.delay}ms`,
+                    zIndex: 50,
+                  }}
+                >
+                  ❤️
+                </span>
+              ))}
             </button>
 
           </div>
         </div>
       </MarkerContent>
+
+      {/* POPUP DE VISUALIZAÇÃO RÁPIDA (MODAL NO MAPA) */}
+      {showPopup && (
+        <QuickViewPopup 
+          rec={rec} 
+          cat={cat} 
+          pinColor={pinColor} 
+          temFoto={temFoto} 
+          fotoUrl={fotoUrl} 
+          onClose={() => setShowPopup(false)} 
+          offsetY={offsetY} 
+          offsetX={offsetX} 
+        />
+      )}
     </MapMarker>
+  );
+}
+
+// COMPONENTE DE MODAL RÁPIDO DO MAPA
+function QuickViewPopup({
+  rec,
+  cat,
+  pinColor,
+  temFoto,
+  fotoUrl,
+  onClose,
+  offsetY = 0,
+  offsetX = 0,
+}: {
+  rec: Reclamacao;
+  cat: any;
+  pinColor: string;
+  temFoto: boolean;
+  fotoUrl: string;
+  onClose: () => void;
+  offsetY?: number;
+  offsetX?: number;
+}) {
+  return (
+    <MapPopup
+      longitude={rec.longitude}
+      latitude={rec.latitude}
+      onClose={onClose}
+      offset={offsetY > 0 ? [offsetX, -offsetY - 20] : 30}
+      className="p-0 border-none bg-transparent shadow-none"
+    >
+      <div className="w-[280px] sm:w-[300px] bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-zinc-800 pointer-events-auto">
+        {/* Foto header */}
+        {temFoto ? (
+          <div className="h-[140px] w-full relative">
+            <img src={fotoUrl} alt={rec.titulo} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <button 
+              onClick={onClose}
+              className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-md"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+            <div className="absolute bottom-3 left-3 right-3 text-white flex items-center gap-2">
+              <div className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center" style={{ backgroundColor: pinColor }}>
+                <span className="material-symbols-outlined text-[14px]">{cat.icon}</span>
+              </div>
+              <span className="text-sm font-bold truncate flex-1">{rec.titulo}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 pb-3 border-b border-slate-100 dark:border-zinc-800 flex items-start gap-3 relative" style={{ backgroundColor: `${pinColor}10` }}>
+            <button 
+              onClick={onClose}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+            <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-white shadow-sm mt-1" style={{ backgroundColor: pinColor }}>
+              <span className="material-symbols-outlined">{cat.icon}</span>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-zinc-100 flex-1 line-clamp-2 pr-4">{rec.titulo}</h3>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          <p className="text-[13px] leading-snug text-slate-500 dark:text-zinc-400 line-clamp-3">
+            {rec.descricao || "Sem descrição disponível para esta ocorrência."}
+          </p>
+          
+          <div className="flex justify-between items-center pt-2">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ backgroundColor: `${statusLabels[rec.status]?.color || "#94A3B8"}20`, color: statusLabels[rec.status]?.color || "#94A3B8" }}>
+              {statusLabels[rec.status]?.label || "Desconhecido"}
+            </span>
+            
+            <Link href={`/reclamacao/${rec.id}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group/link">
+              Ver Detalhes 
+              <span className="material-symbols-outlined text-[14px] group-hover/link:translate-x-0.5 transition-transform">arrow_forward</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </MapPopup>
   );
 }
 
@@ -208,11 +384,13 @@ function MapMultiPin3D({
   isLoggedIn,
   user,
   setShowLoginModal,
+  topReclamacoesIds,
 }: {
   reclamacoes: Reclamacao[];
   isLoggedIn: boolean;
   user: any;
   setShowLoginModal: (show: boolean) => void;
+  topReclamacoesIds?: Set<string>;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -258,6 +436,7 @@ function MapMultiPin3D({
               setShowLoginModal={setShowLoginModal}
               offsetX={offsetX}
               offsetY={offsetY}
+              isHot={topReclamacoesIds?.has(rec.id)}
             />
           );
         })}
@@ -299,17 +478,18 @@ function MapMultiPin3D({
           title="Clique para expandir relatos deste local"
         >
           {/* SOMBRA 3D NO CHÃO DO MAPA */}
+          {/* SOMBRA 3D NO CHÃO DO MAPA */}
           <div
-            className="absolute bottom-1 w-7 h-1.5 bg-black/40 rounded-full blur-[1.5px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[2.5px] group-hover:opacity-50"
-            style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
+            className="absolute w-8 h-2 bg-black/50 blur-[3px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[4px] group-hover:opacity-30"
+            style={{ transform: "translateY(2px) rotateX(65deg)", pointerEvents: "none" }}
           />
 
           {/* ANEL PULSANTE DUPLO VERMELHO DE EMERGÊNCIA */}
           <div
-            className="absolute bottom-[-2px] w-10 h-10 rounded-full border-2 animate-ping opacity-35"
+            className="absolute w-10 h-10 rounded-full border-[2.5px] animate-ping opacity-35"
             style={{
               borderColor: "#EF4444",
-              transform: "rotateX(75deg)",
+              transform: "translateY(-4px) rotateX(75deg)",
               animationDuration: "1.8s",
               pointerEvents: "none"
             }}
@@ -317,30 +497,33 @@ function MapMultiPin3D({
 
           {/* CORPO FLUTUANTE DO PIN MULTIPLO AMPLIADO */}
           <div
-            className="relative flex flex-col items-center transition-all duration-300 ease-out origin-bottom transform-style-3d group-hover:-translate-y-3 group-hover:scale-105"
+            className="relative flex flex-col items-center transition-transform duration-400 ease-out origin-bottom group-hover:-translate-y-2 group-hover:scale-[1.03]"
+            style={{
+              zIndex: 30,
+            }}
           >
-            {/* BALÃO EMPILHADO VERMELHO MAIOR */}
-            <div
-              className="relative rounded-2xl border-2 bg-gradient-to-tr from-[#B91C1C] to-[#EF4444] flex items-center justify-center shadow-lg transition-all overflow-hidden shrink-0"
-              style={{
-                width: "54px",
-                height: "54px",
-                borderColor: "#ffffff",
-                boxShadow: `0 10px 22px -4px rgba(239, 68, 68, 0.5), 0 12px 24px -10px rgba(0,0,0,0.35)`
-              }}
-            >
-              <div className="flex flex-col items-center justify-center text-white select-none">
-                <span className="material-symbols-outlined text-[28px] animate-pulse">warning</span>
+            {/* SHAPE DO TEARDROP VERMELHO */}
+            <div className="relative w-[50px] h-[50px] flex items-center justify-center">
+              {/* O formato de gota d'água */}
+              <div 
+                className="absolute inset-0 rounded-[50%_50%_50%_4px] rotate-[-45deg] border-[2.5px] border-white transition-colors duration-300 bg-gradient-to-tr from-[#B91C1C] to-[#EF4444]"
+                style={{ 
+                  boxShadow: `inset 2px 2px 4px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,0,0,0.15), 0 10px 18px -4px rgba(239, 68, 68, 0.5), 0 4px 6px -2px rgba(0,0,0,0.2)` 
+                }}
+              />
+              
+              {/* Círculo Interno com o conteúdo */}
+              <div 
+                className="absolute inset-[4px] rounded-full bg-transparent flex items-center justify-center overflow-hidden z-10"
+              >
+                <div className="flex flex-col items-center justify-center text-white select-none">
+                  <span className="material-symbols-outlined text-[28px] animate-pulse drop-shadow-md">warning</span>
+                </div>
               </div>
             </div>
 
-            {/* CONECTOR VERMELHO */}
-            <div
-              className="w-3.5 h-3.5 rotate-45 -mt-1.5 border-r border-b bg-[#B91C1C] shadow-[2px_2px_2px_rgba(0,0,0,0.05)] border-white"
-            />
-
             {/* BADGE DE NÚMERO SUPERIOR DIREITO */}
-            <div className="absolute -top-3 -right-4 z-20 flex items-center justify-center w-6.5 h-6.5 rounded-full bg-[#112F4E] border-2 border-white text-[10px] font-black text-white shadow-md animate-bounce">
+            <div className="absolute -top-1 -right-2 z-20 flex items-center justify-center min-w-[28px] h-[28px] px-1.5 rounded-full bg-[#112F4E] border-2 border-white text-[11px] font-black text-white shadow-md animate-bounce">
               {totalReclamacoes}
             </div>
           </div>
@@ -348,6 +531,43 @@ function MapMultiPin3D({
       </MarkerContent>
     </MapMarker>
   );
+}
+
+// Subcomponente dedicado a salvar o estado de visualização do mapa (viewport) no localStorage
+function MapViewportPersistence() {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    // Salvar estado de posicionamento sempre que o mapa parar de mover, girar ou inclinar
+    const handleMoveEnd = () => {
+      try {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const bearing = map.getBearing();
+        const pitch = map.getPitch();
+
+        const viewport = {
+          center: [center.lng, center.lat],
+          zoom,
+          bearing,
+          pitch,
+        };
+
+        localStorage.setItem("appmarilia:map_viewport", JSON.stringify(viewport));
+      } catch (err) {
+        console.error("[MapViewportPersistence] Erro ao salvar viewport:", err);
+      }
+    };
+
+    map.on("moveend", handleMoveEnd);
+    return () => {
+      map.off("moveend", handleMoveEnd);
+    };
+  }, [map, isLoaded]);
+
+  return null;
 }
 
 // ─── Inner component that has access to map context ───
@@ -405,34 +625,266 @@ function MapContent({
         const isBouncing = bouncingPin === rec.id;
 
         return (
-          <MapMarker key={rec.id} longitude={rec.longitude} latitude={rec.latitude}>
-            <MarkerContent>
-              <Link href={`/reclamacao/${rec.id}`}>
-                <div className={`relative group cursor-pointer ${isBouncing ? "animate-bounce" : ""}`}>
-                  {/* Alert icon for clustered */}
-                  {isInCluster && (
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-lg flex items-center gap-0.5 whitespace-nowrap z-20">
-                      <AlertTriangle className="w-2.5 h-2.5" />
-                      {neighborCount}
-                    </div>
-                  )}
-                  <div
-                    className="absolute -inset-3 rounded-full animate-ping opacity-20"
-                    style={{ backgroundColor: pinColor, animationDuration: isInCluster ? "1.5s" : "2.5s" }}
-                  />
-                  <div
-                    className={`w-4 h-4 rounded-full border-[3px] border-white shadow-lg relative z-10 group-hover:scale-125 transition-transform ${isInCluster ? "ring-2 ring-red-400/50" : ""
-                      }`}
-                    style={{ backgroundColor: pinColor }}
-                  />
-                </div>
-              </Link>
-            </MarkerContent>
-          </MapMarker>
+          <SimpleMapPin 
+            key={rec.id} 
+            rec={rec} 
+            isInCluster={isInCluster} 
+            neighborCount={neighborCount || 0} 
+            cat={cat} 
+            pinColor={pinColor} 
+            isBouncing={isBouncing} 
+          />
         );
       })}
     </>
   );
+}
+
+// COMPONENTE DO PIN SIMPLES (USADO ANTES DO ZOOM DE CLUSTERS ABRIR)
+function SimpleMapPin({
+  rec,
+  isInCluster,
+  neighborCount,
+  cat,
+  pinColor,
+  isBouncing
+}: {
+  rec: Reclamacao;
+  isInCluster: boolean;
+  neighborCount: number;
+  cat: any;
+  pinColor: string;
+  isBouncing: boolean;
+}) {
+  const [showPopup, setShowPopup] = useState(false);
+  const temFoto = rec.fotos && rec.fotos.length > 0;
+  const fotoUrl = temFoto ? rec.fotos[0] : "";
+
+  return (
+    <MapMarker 
+      longitude={rec.longitude} 
+      latitude={rec.latitude}
+      onClick={(e: any) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        setShowPopup(true);
+      }}
+    >
+      <MarkerContent>
+        <div className={`relative group cursor-pointer pointer-events-auto ${isBouncing ? "animate-bounce" : ""}`}>
+          {/* Alert icon for clustered */}
+          {isInCluster && (
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-lg flex items-center gap-0.5 whitespace-nowrap z-20">
+              <AlertTriangle className="w-2.5 h-2.5" />
+              {neighborCount}
+            </div>
+          )}
+          <div
+            className="absolute -inset-3 rounded-full animate-ping opacity-20"
+            style={{ backgroundColor: pinColor, animationDuration: isInCluster ? "1.5s" : "2.5s" }}
+          />
+          <div
+            className={`w-4 h-4 rounded-full border-[3px] border-white shadow-lg relative z-10 group-hover:scale-125 transition-transform ${isInCluster ? "ring-2 ring-red-400/50" : ""}`}
+            style={{ backgroundColor: pinColor }}
+          />
+        </div>
+      </MarkerContent>
+
+      {showPopup && (
+        <QuickViewPopup 
+          rec={rec} 
+          cat={cat} 
+          pinColor={pinColor} 
+          temFoto={temFoto} 
+          fotoUrl={fotoUrl} 
+          onClose={() => setShowPopup(false)} 
+          offsetY={0} 
+          offsetX={0} 
+        />
+      )}
+    </MapMarker>
+  );
+}
+
+// COMPONENTE PARA DESTACAR A RUA (WAZE-LIKE) E MOVER O MAPA
+function MapHighlight({ geojson, bbox }: { geojson?: any; bbox?: string[] }) {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded || !geojson) return;
+
+    const sourceId = "highlight-source";
+    const fillLayerId = "highlight-layer-fill";
+    const lineLayerId = "highlight-layer-line";
+    const circleLayerId = "highlight-layer-circle";
+
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: "geojson",
+        data: geojson,
+      });
+    } else {
+      (map.getSource(sourceId) as any).setData(geojson);
+    }
+
+    if (!map.getLayer(fillLayerId)) {
+      map.addLayer({
+        id: fillLayerId,
+        type: "fill",
+        source: sourceId,
+        filter: ["==", "$type", "Polygon"],
+        paint: {
+          "fill-color": "#8B5CF6", // Waze-like purple/blue
+          "fill-opacity": 0.2,
+        },
+      });
+    }
+
+    if (!map.getLayer(lineLayerId)) {
+      map.addLayer({
+        id: lineLayerId,
+        type: "line",
+        source: sourceId,
+        filter: ["!=", "$type", "Point"],
+        paint: {
+          "line-color": "#8B5CF6",
+          "line-width": 6,
+          "line-opacity": 0.8,
+        },
+      });
+    }
+
+    if (!map.getLayer(circleLayerId)) {
+      map.addLayer({
+        id: circleLayerId,
+        type: "circle",
+        source: sourceId,
+        filter: ["==", "$type", "Point"],
+        paint: {
+          "circle-radius": 10,
+          "circle-color": "#8B5CF6",
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-opacity": 0.8,
+        },
+      });
+    }
+
+    if (bbox) {
+      map.fitBounds([
+        [parseFloat(bbox[2]), parseFloat(bbox[0])], // [minLng, minLat]
+        [parseFloat(bbox[3]), parseFloat(bbox[1])], // [maxLng, maxLat]
+      ], { padding: 50, duration: 2000 });
+    }
+
+    return () => {
+      // Limpeza das camadas ao desmontar para sumir com o destaque
+      if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+      if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+      if (map.getLayer(circleLayerId)) map.removeLayer(circleLayerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+    };
+  }, [map, isLoaded, geojson, bbox]);
+
+  return null;
+}
+
+// COMPONENTE PARA RECUPERAR A LOCALIZACAO DO USUARIO (WAZE-LIKE)
+function UserLocationManager({
+  userLocation,
+  setUserLocation,
+}: {
+  userLocation: { lat: number; lng: number } | null;
+  setUserLocation: (loc: { lat: number; lng: number } | null) => void;
+}) {
+  const { map, isLoaded } = useMap();
+  const [hasFlown, setHasFlown] = useState(false);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    if (!userLocation && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+        },
+        (err) => {
+          console.error("Erro ao obter localização do usuário:", err);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, [map, isLoaded, userLocation, setUserLocation]);
+
+  useEffect(() => {
+    if (map && isLoaded && userLocation && !hasFlown) {
+      map.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 15.5,
+        duration: 2500,
+        essential: true,
+      });
+      setHasFlown(true);
+    }
+  }, [map, isLoaded, userLocation, hasFlown]);
+
+  if (!userLocation) return null;
+
+  return (
+    <MapMarker latitude={userLocation.lat} longitude={userLocation.lng}>
+      <MarkerContent>
+        <div className="relative group cursor-pointer z-50 pointer-events-none">
+          <div
+            className="absolute -inset-3 rounded-full animate-ping opacity-30 bg-[#1a8ccc]"
+            style={{ animationDuration: "2.5s" }}
+          />
+          <div className="w-5 h-5 rounded-full border-[2.5px] border-white shadow-lg relative z-10 bg-[#1a8ccc] flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+// COMPONENTE PARA VOLTAR O MAPA AO LIMPAR A BUSCA
+function MapAutoRecenter({
+  highlightedAddress,
+  userLocation,
+  initialViewport,
+}: {
+  highlightedAddress: any;
+  userLocation: { lat: number; lng: number } | null;
+  initialViewport: any;
+}) {
+  const { map, isLoaded } = useMap();
+  const prevHighlight = useRef(highlightedAddress);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    if (prevHighlight.current && !highlightedAddress) {
+      if (userLocation) {
+        map.flyTo({
+          center: [userLocation.lng, userLocation.lat],
+          zoom: 15.5,
+          duration: 1500,
+          essential: true,
+        });
+      } else if (initialViewport) {
+        map.flyTo({
+          center: initialViewport.center,
+          zoom: initialViewport.zoom,
+          duration: 1500,
+          essential: true,
+        });
+      }
+    }
+
+    prevHighlight.current = highlightedAddress;
+  }, [highlightedAddress, userLocation, initialViewport, map, isLoaded]);
+
+  return null;
 }
 
 export default function Home() {
@@ -443,14 +895,65 @@ export default function Home() {
   const [flyToTarget, setFlyToTarget] = useState<{ lng: number; lat: number; id: string } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Viewport inicial persistida no cliente para evitar erros de hidratação (SSR) e saltos visuais
+  const [initialViewport, setInitialViewport] = useState<{
+    center: [number, number];
+    zoom: number;
+    bearing: number;
+    pitch: number;
+  } | null>(null);
+
   // Estados para recolher/expandir seções (foco no mapa no mobile)
-  const [showTopPills, setShowTopPills] = useState(true);
-  const [showBottomCarousel, setShowBottomCarousel] = useState(true);
+  const [showTopPills, setShowTopPills] = useState(false);
+  const [showBottomCarousel, setShowBottomCarousel] = useState(false);
 
   // Filtros
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [highlightedAddress, setHighlightedAddress] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("appmarilia:map_viewport");
+    if (saved) {
+      try {
+        const viewport = JSON.parse(saved);
+        const [lng, lat] = viewport.center;
+
+        // Bounding Box amplo ao redor de Marília, SP (~45 km de raio)
+        const minLat = -22.40;
+        const maxLat = -22.00;
+        const minLng = -50.20;
+        const maxLng = -49.70;
+
+        const dentroDeMarilia = lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+
+        if (dentroDeMarilia) {
+          setInitialViewport({
+            center: [lng, lat],
+            zoom: viewport.zoom ?? 14,
+            bearing: viewport.bearing ?? 0,
+            pitch: viewport.pitch ?? 0,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Erro ao recuperar viewport inicial:", err);
+      }
+    }
+
+    // Caso não exista viewport salva ou esteja fora dos limites, inicia no padrão de Marília
+    setInitialViewport({
+      center: [-49.9458, -22.2139],
+      zoom: 14,
+      bearing: 0,
+      pitch: 0,
+    });
+  }, []);
+
+
 
   // Solicitar geolocalização ao acessar o mapa
   useEffect(() => {
@@ -499,13 +1002,8 @@ export default function Home() {
   // Filtragem dinâmica
   const filteredReclamacoes = useMemo(() => {
     return reclamacoes.filter((rec) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const titleMatch = (rec.titulo || "").toLowerCase().includes(q);
-        const descMatch = (rec.descricao || "").toLowerCase().includes(q);
-        const addrMatch = (rec.endereco || "").toLowerCase().includes(q);
-        if (!titleMatch && !descMatch && !addrMatch) return false;
-      }
+      if (rec.status === "resolvido") return false; // Oculta problemas resolvidos do mapa
+      
       if (selectedCategory) {
         const cleanRecCat = (rec.categoria || "").toLowerCase();
         const cleanSelCat = selectedCategory.toLowerCase();
@@ -516,7 +1014,7 @@ export default function Home() {
       }
       return true;
     });
-  }, [reclamacoes, searchQuery, selectedCategory, selectedStatus]);
+  }, [reclamacoes, selectedCategory, selectedStatus]);
 
   // Clustering
   const clusteredIds = useMemo(
@@ -536,6 +1034,51 @@ export default function Home() {
       .slice(0, 3);
   }, [filteredReclamacoes]);
 
+  const topReclamacoesIds = useMemo(() => {
+    return new Set(topReclamacoes.map((r) => r.id));
+  }, [topReclamacoes]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Monitorar redimensionamento de tela para cálculos adaptativos em tempo de execução
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Altura estimada da Navbar com base nas seções visíveis e expansões
+  const navbarHeight = useMemo(() => {
+    if (isMobile) {
+      let height = 76; // altura base do container mobile
+      if (filtersOpen) height += 156; // painel de filtros empilhado na vertical no mobile
+      if (mobileMenuOpen) height += 172; // menu mobile expandido
+      return height;
+    } else {
+      let height = 88; // altura base do container desktop
+      if (filtersOpen) height += 96; // painel de filtros horizontal no desktop
+      return height;
+    }
+  }, [isMobile, filtersOpen, mobileMenuOpen]);
+
+  // Top dinâmico das Pills centrais de Reclamações Populares
+  const pillsTop = navbarHeight + (isMobile ? 12 : 12);
+
+  // Top dinâmico dos Botões laterais de Clima e Em Alta
+  const buttonsTop = useMemo(() => {
+    const hasPills = topReclamacoes.length > 0 && showTopPills;
+    if (hasPills) {
+      return pillsTop + 55; // As pílulas agora ficam em uma única linha com rolagem horizontal, ocupando altura fixa
+    } else {
+      return navbarHeight + (isMobile ? 12 : 16);
+    }
+  }, [navbarHeight, pillsTop, topReclamacoes.length, showTopPills, isMobile]);
+
   const handleFlyTo = useCallback((rec: Reclamacao) => {
     setFlyToTarget({
       lng: rec.longitude,
@@ -546,66 +1089,100 @@ export default function Home() {
 
   return (
     <ClimaProvider>
-      <div className="relative w-screen h-screen overflow-hidden">
+      <div className="relative w-screen h-[100dvh] overflow-hidden">
         {/* Full-screen Interactive Map */}
         <div className="absolute inset-0 z-0">
-          <Map center={[-49.9458, -22.2139]} zoom={14}>
-            <MapControls position="bottom-right" showZoom showLocate />
-            <CamadaClimatica />
+          {initialViewport ? (
+            <Map
+              center={initialViewport.center}
+              zoom={initialViewport.zoom}
+              bearing={initialViewport.bearing}
+              pitch={initialViewport.pitch}
+            >
+              <MapViewportPersistence />
+              <MapControls position="bottom-right" showZoom showLocate />
+              <CamadaClimatica buttonsTop={buttonsTop} />
 
-            {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
-            {(() => {
-              const getCoordKey = (lat: number, lng: number) => {
-                return `${lat.toFixed(5)},${lng.toFixed(5)}`;
-              };
+              {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
+              {(() => {
+                const getCoordKey = (lat: number, lng: number) => {
+                  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+                };
 
-              const agrupadas: Record<string, Reclamacao[]> = {};
-              filteredReclamacoes.forEach((rec) => {
-                if (!rec.latitude || !rec.longitude) return;
-                const key = getCoordKey(rec.latitude, rec.longitude);
-                if (!agrupadas[key]) agrupadas[key] = [];
-                agrupadas[key].push(rec);
-              });
+                const agrupadas: Record<string, Reclamacao[]> = {};
+                filteredReclamacoes.forEach((rec) => {
+                  if (!rec.latitude || !rec.longitude) return;
+                  const key = getCoordKey(rec.latitude, rec.longitude);
+                  if (!agrupadas[key]) agrupadas[key] = [];
+                  agrupadas[key].push(rec);
+                });
 
-              return Object.values(agrupadas).map((grupo) => {
-                if (grupo.length === 0) return null;
+                return Object.values(agrupadas).map((grupo) => {
+                  if (grupo.length === 0) return null;
 
-                if (grupo.length === 1) {
-                  const rec = grupo[0];
-                  const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
-                  const pinColor = cat.color;
+                  if (grupo.length === 1) {
+                    const rec = grupo[0];
+                    const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+                    const pinColor = cat.color;
 
-                  return (
-                    <MapPin3D
-                      key={rec.id}
-                      rec={rec}
-                      pinColor={pinColor}
-                      cat={cat}
-                      isLoggedIn={isLoggedIn}
-                      user={user}
-                      setShowLoginModal={setShowLoginModal}
-                    />
-                  );
-                } else {
-                  const ancor = grupo[0];
-                  return (
-                    <MapMultiPin3D
-                      key={`group-${ancor.id}`}
-                      reclamacoes={grupo}
-                      isLoggedIn={isLoggedIn}
-                      user={user}
-                      setShowLoginModal={setShowLoginModal}
-                    />
-                  );
-                }
-              });
-            })()}
-          </Map>
+                    return (
+                      <MapPin3D
+                        key={rec.id}
+                        rec={rec}
+                        pinColor={pinColor}
+                        cat={cat}
+                        isLoggedIn={isLoggedIn}
+                        user={user}
+                        setShowLoginModal={setShowLoginModal}
+                        isHot={topReclamacoesIds.has(rec.id)}
+                      />
+                    );
+                  } else {
+                    const ancor = grupo[0];
+                    return (
+                      <MapMultiPin3D
+                        key={`group-${ancor.id}`}
+                        reclamacoes={grupo}
+                        isLoggedIn={isLoggedIn}
+                        user={user}
+                        setShowLoginModal={setShowLoginModal}
+                        topReclamacoesIds={topReclamacoesIds}
+                      />
+                    );
+                  }
+                });
+              })()}
+
+              {highlightedAddress && highlightedAddress.geojson && (
+                <MapHighlight 
+                  geojson={highlightedAddress.geojson} 
+                  bbox={highlightedAddress.boundingbox} 
+                />
+              )}
+
+              <UserLocationManager
+                userLocation={userLocation}
+                setUserLocation={setUserLocation}
+              />
+              <MapAutoRecenter
+                highlightedAddress={highlightedAddress}
+                userLocation={userLocation}
+                initialViewport={initialViewport}
+              />
+            </Map>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-all duration-300">
+              <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-elevated">
+                <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Carregando mapa interativo...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Faixas de Desfoque Gradual (Glassmorphism de profundidade limitado ao grid max-w-7xl) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[92px] px-3 md:px-4 z-10 pointer-events-none">
-          <div className="w-full h-full bg-gradient-to-b from-white/65 via-white/15 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
+          <div className="w-full h-full bg-gradient-to-b from-white/65 dark:from-zinc-950/80 via-white/15 dark:via-zinc-950/20 to-transparent backdrop-blur-[3px] rounded-b-2xl" />
         </div>
         <div
           className={cn(
@@ -615,10 +1192,10 @@ export default function Home() {
               : "opacity-0 translate-y-6 scale-95"
           )}
         >
-          <div className="w-full h-full bg-gradient-to-t from-white/75 via-white/15 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
+          <div className="w-full h-full bg-gradient-to-t from-white/75 dark:from-zinc-950/90 via-white/15 dark:via-zinc-950/20 to-transparent backdrop-blur-[3px] rounded-t-2xl" />
         </div>
 
-        {/* MapNavbar com propriedades de filtro */}
+        {/* MapNavbar com propriedades de filtro e callbacks de redimensionamento */}
         <MapNavbar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -626,26 +1203,33 @@ export default function Home() {
           setSelectedCategory={setSelectedCategory}
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
+          onFiltersToggle={setFiltersOpen}
+          onMobileMenuToggle={setMobileMenuOpen}
+          onAddressSelect={setHighlightedAddress}
         />
 
         {/* ─── Top 3 Popular Complaints Pills ─── */}
         {topReclamacoes.length > 0 && (
           <div
             className={cn(
-              "absolute top-[100px] left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
+              "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-2 md:px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
               showTopPills
                 ? "opacity-100 translate-y-0 scale-100"
                 : "opacity-0 -translate-y-12 scale-95 pointer-events-none"
             )}
+            style={{ top: `${pillsTop}px` }}
           >
-            <div className="flex gap-2 justify-center flex-wrap">
+            <div 
+              className="flex flex-nowrap gap-2 overflow-x-auto pb-3 pt-1 px-2 items-center justify-start md:justify-center snap-x snap-mandatory [&::-webkit-scrollbar]:hidden pointer-events-auto w-max max-w-full mx-auto"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {topReclamacoes.map((rec, i) => {
                 const cat = getCategoryByLabel(rec.categoria);
                 return (
                   <button
                     key={rec.id}
                     onClick={() => handleFlyTo(rec)}
-                    className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 bg-white/95 backdrop-blur-xl rounded-full shadow-elevated border border-white/50 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] hover:-translate-y-0.5 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-300"
+                    className="shrink-0 snap-center pointer-events-auto flex items-center gap-2 px-3.5 py-2 bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl rounded-full shadow-elevated border border-white/50 dark:border-zinc-800/50 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all cursor-pointer group animate-in fade-in zoom-in-95 duration-300"
                   >
                     <div className="flex items-center gap-1.5">
                       <span
@@ -654,7 +1238,7 @@ export default function Home() {
                       >
                         {cat?.icon ?? "report"}
                       </span>
-                      <span className="text-xs font-semibold text-[#112F4E] truncate max-w-[120px] md:max-w-[180px]">
+                      <span className="text-xs font-semibold text-[#112F4E] dark:text-zinc-100 truncate max-w-[120px] md:max-w-[180px]">
                         {rec.titulo}
                       </span>
                     </div>
@@ -676,29 +1260,41 @@ export default function Home() {
 
         {/* Botão de Alternar Relatos Em Alta (Simetria perfeita com o Botão Clima no Top-Left) */}
         {topReclamacoes.length > 0 && (
-          <div className="absolute top-[165px] left-4 md:left-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none">
+          <div 
+            className="absolute left-4 md:left-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
+            style={{ top: `${buttonsTop}px` }}
+          >
             <button
               onClick={() => setShowTopPills(!showTopPills)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
+                "flex items-center rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
+                !showTopPills ? "w-9 h-9 justify-center p-0" : "gap-2 px-4 py-2.5",
                 showTopPills
-                  ? "bg-amber-500 border-amber-400 text-white hover:bg-amber-600 hover:border-amber-500 shadow-[0_4px_14px_rgba(245,158,11,0.4)]"
-                  : "bg-white/95 backdrop-blur-xl border-slate-200 text-[#112F4E] hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] hover:-translate-y-0.5"
+                  ? "bg-red-500 border-red-400 text-white hover:bg-red-600 hover:border-red-500 shadow-[0_4px_14px_rgba(239,68,68,0.4)]"
+                  : "bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl border-slate-200 dark:border-zinc-800/50 text-[#112F4E] dark:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
               )}
               title={showTopPills ? "Recolher relatos em alta" : "Mostrar relatos em alta"}
             >
               <div className={cn("relative transition-transform duration-500", showTopPills && "scale-110")}>
-                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-amber-500 group-hover:animate-bounce")} />
+                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-[#112F4E] dark:text-zinc-100 group-hover:animate-bounce")} />
               </div>
-              <span className="text-xs font-bold tracking-wide uppercase select-none">
-                {showTopPills ? "Em Alta Ativo" : "Em Alta"}
+              <span 
+                className={cn(
+                  "text-xs font-bold tracking-wide uppercase select-none",
+                  !showTopPills && "hidden"
+                )}
+              >
+                Em Alta
               </span>
             </button>
           </div>
         )}
 
         {/* Botão de Clima Flutuante no Top-Right */}
-        <div className="absolute top-[165px] right-4 md:right-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none">
+        <div 
+          className="absolute right-4 md:right-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
+          style={{ top: `${buttonsTop}px` }}
+        >
           <BotaoClima />
         </div>
 
@@ -731,12 +1327,12 @@ export default function Home() {
           )}
         >
           <div className="flex justify-start w-full">
-            <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-[#E2E8F0] shadow-[0_4px_12px_rgba(0,0,0,0.05)] select-none max-w-[175px]">
-              <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9]">
+            <div className="hidden md:flex pointer-events-auto flex-col gap-1 p-2.5 rounded-xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-[#E2E8F0] dark:border-zinc-800 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-none select-none max-w-[175px]">
+              <div className="flex items-center gap-1 pb-1 border-b border-[#F1F5F9] dark:border-zinc-800/80">
                 <span className="material-symbols-outlined text-[12px] text-[#1a8ccc] font-bold">mouse</span>
-                <span className="text-[9px] font-black text-[#112F4E] uppercase tracking-widest">Navegação</span>
+                <span className="text-[9px] font-black text-[#112F4E] dark:text-zinc-100 uppercase tracking-widest">Navegação</span>
               </div>
-              <div className="flex flex-col gap-1 text-[9px] font-bold text-[#64748B] mt-1">
+              <div className="flex flex-col gap-1 text-[9px] font-bold text-[#64748B] dark:text-zinc-400 mt-1">
                 <div className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[12px] text-[#1a8ccc]">pan_tool_alt</span>
                   <span>Botão Esquerdo - Mover-se</span>
@@ -769,7 +1365,7 @@ export default function Home() {
             <div className="flex justify-center mb-2 animate-in fade-in duration-300">
               <button
                 onClick={() => setShowBottomCarousel(false)}
-                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-md hover:bg-white border border-slate-200 shadow-[0_6px_20px_rgba(17,47,78,0.08)] rounded-full text-[10.5px] font-bold text-[#112F4E] hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
+                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-[0_6px_20px_rgba(17,47,78,0.08)] dark:shadow-none rounded-full text-[10.5px] font-bold text-[#112F4E] dark:text-zinc-100 hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
               >
                 <span>RECOLHER</span>
                 <span className="material-symbols-outlined text-[14px] font-bold">expand_more</span>
@@ -788,9 +1384,9 @@ export default function Home() {
                 <Link
                   key={card.id}
                   href={`/reclamacao/${card.id}`}
-                  className={`min-w-[300px] max-w-[340px] bg-white/95 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] hover:-translate-y-1 transition-all duration-200 shrink-0 ${isInCluster
+                  className={`min-w-[300px] max-w-[340px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-200 shrink-0 ${isInCluster
                       ? "border-red-300 ring-1 ring-red-200"
-                      : "border-white/50"
+                      : "border-white/50 dark:border-zinc-800/50"
                     }`}
                 >
                   <div className="flex justify-between items-start">
@@ -807,19 +1403,28 @@ export default function Home() {
                       >
                         {cat?.label ?? card.categoria}
                       </span>
-                      <h3 className="text-base font-semibold text-[#112F4E] mt-0.5 truncate">
+                      <h3 className="text-base font-semibold text-[#112F4E] dark:text-zinc-100 mt-0.5 truncate">
                         {card.titulo}
                       </h3>
                     </div>
                   </div>
-                  <p className="text-sm text-[#4A5D70] leading-relaxed line-clamp-2 font-light">
+                  <p className="text-sm text-[#4A5D70] dark:text-zinc-300 leading-relaxed line-clamp-2 font-light">
                     {card.descricao}
                   </p>
-                  <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED]">
-                    <div className="flex items-center gap-1.5 text-[#94A3B8]">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        favorite
-                      </span>
+                  <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED] dark:border-zinc-800/50">
+                    <div className="flex items-center gap-1.5 text-[#94A3B8] dark:text-zinc-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-3.5 h-3.5 transition-colors duration-300"
+                      >
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                      </svg>
                       <span className="text-xs font-medium">{card.concordos} Concordos</span>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: st.color }}>
@@ -833,9 +1438,9 @@ export default function Home() {
 
             {/* Empty state */}
             {filteredReclamacoes.length === 0 && (
-              <div className="min-w-[300px] bg-white/95 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 text-center">
-                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] mb-2 block">map</span>
-                <p className="text-sm text-[#94A3B8]">Nenhuma reclamação encontrada.</p>
+              <div className="min-w-[300px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 text-center">
+                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] dark:text-zinc-700 mb-2 block">map</span>
+                <p className="text-sm text-[#94A3B8] dark:text-zinc-400">Nenhuma reclamação encontrada.</p>
               </div>
             )}
           </div>
@@ -846,7 +1451,7 @@ export default function Home() {
           <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-in slide-in-from-bottom-6 duration-500 cubic-bezier(0.16, 1, 0.3, 1)">
             <button
               onClick={() => setShowBottomCarousel(true)}
-              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-md hover:bg-white border border-slate-200 shadow-[0_6px_20px_rgba(17,47,78,0.08)] rounded-full text-[10.5px] font-bold text-[#112F4E] hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
+              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-[0_6px_20px_rgba(17,47,78,0.08)] dark:shadow-none rounded-full text-[10.5px] font-bold text-[#112F4E] dark:text-zinc-100 hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
             >
               <span className="material-symbols-outlined text-[14px] font-bold">expand_less</span>
               <span>Últimas reclamações ({filteredReclamacoes.length})</span>
@@ -858,6 +1463,40 @@ export default function Home() {
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
         />
+
+        {/* Estilos Globais para Partículas e Animação Elástica do Botão de Concordar */}
+        <style jsx global>{`
+          @keyframes float-heart {
+            0% {
+              opacity: 0;
+              transform: translateY(0) scale(0.3) rotate(0deg);
+            }
+            15% {
+              opacity: 0.95;
+              transform: translateY(-8px) scale(1.1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-45px) scale(0.5);
+            }
+          }
+          .animate-float-heart {
+            animation: float-heart 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+
+          @keyframes elastic-bounce {
+            0% { transform: scale(1) translateZ(8px); }
+            30% { transform: scale(1.22, 0.78) translateZ(8px); }
+            45% { transform: scale(0.78, 1.22) translateZ(8px); }
+            60% { transform: scale(1.12, 0.88) translateZ(8px); }
+            75% { transform: scale(0.96, 1.04) translateZ(8px); }
+            90% { transform: scale(1.02, 0.98) translateZ(8px); }
+            100% { transform: scale(1) translateZ(8px); }
+          }
+          .animate-elastic {
+            animation: elastic-bounce 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          }
+        `}</style>
       </div>
     </ClimaProvider>
   );
