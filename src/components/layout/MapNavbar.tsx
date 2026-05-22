@@ -181,12 +181,29 @@ export default function MapNavbar({
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
               onBlur={() => setSearchFocused(false)}
-              className={`w-full pl-9 pr-4 py-2.5 bg-[#FAF7F2] dark:bg-zinc-800 border rounded-xl text-sm text-[#112F4E] dark:text-zinc-200 placeholder:text-[#94A3B8] outline-none transition-all ${
+              className={`w-full pl-9 ${inputValue ? 'pr-10' : 'pr-4'} py-2.5 bg-[#FAF7F2] dark:bg-zinc-800 border rounded-xl text-[16px] md:text-sm text-[#112F4E] dark:text-zinc-200 placeholder:text-[#94A3B8] outline-none transition-all ${
                 searchFocused
                   ? "border-[#1a8ccc] ring-2 ring-[#1a8ccc]/15 dark:border-[#38bdf8] dark:ring-[#38bdf8]/15"
                   : "border-[#E2E8F0] dark:border-zinc-700"
               }`}
             />
+            {inputValue && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()} // Prevent blur before clearing
+                onClick={() => {
+                  setInputValue('');
+                  setSearchQuery('');
+                  if (onAddressSelect) onAddressSelect(null as any);
+                  setSuggestions([]);
+                  setShowSuggestions(false);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#94A3B8] hover:text-[#4A5D70] dark:hover:text-zinc-300 transition-colors"
+                aria-label="Limpar busca"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Autocomplete suggestions dropdown */}
             {showSuggestions && (

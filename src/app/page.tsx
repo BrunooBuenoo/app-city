@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Map, MapMarker, MarkerContent, MapControls, MapPopup, useMap } from "@/components/ui/map";
@@ -777,9 +777,112 @@ function MapHighlight({ geojson, bbox }: { geojson?: any; bbox?: string[] }) {
     }
 
     return () => {
-      // Limpeza opcional se necessário, mas mantemos enquanto selecionado
+      // Limpeza das camadas ao desmontar para sumir com o destaque
+      if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+      if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+      if (map.getLayer(circleLayerId)) map.removeLayer(circleLayerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
     };
   }, [map, isLoaded, geojson, bbox]);
+
+  return null;
+}
+
+// COMPONENTE PARA RECUPERAR A LOCALIZACAO DO USUARIO (WAZE-LIKE)
+function UserLocationManager({
+  userLocation,
+  setUserLocation,
+}: {
+  userLocation: { lat: number; lng: number } | null;
+  setUserLocation: (loc: { lat: number; lng: number } | null) => void;
+}) {
+  const { map, isLoaded } = useMap();
+  const [hasFlown, setHasFlown] = useState(false);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    if (!userLocation && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+        },
+        (err) => {
+          console.error("Erro ao obter localização do usuário:", err);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, [map, isLoaded, userLocation, setUserLocation]);
+
+  useEffect(() => {
+    if (map && isLoaded && userLocation && !hasFlown) {
+      map.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 15.5,
+        duration: 2500,
+        essential: true,
+      });
+      setHasFlown(true);
+    }
+  }, [map, isLoaded, userLocation, hasFlown]);
+
+  if (!userLocation) return null;
+
+  return (
+    <MapMarker latitude={userLocation.lat} longitude={userLocation.lng}>
+      <MarkerContent>
+        <div className="relative group cursor-pointer z-50 pointer-events-none">
+          <div
+            className="absolute -inset-3 rounded-full animate-ping opacity-30 bg-[#1a8ccc]"
+            style={{ animationDuration: "2.5s" }}
+          />
+          <div className="w-5 h-5 rounded-full border-[2.5px] border-white shadow-lg relative z-10 bg-[#1a8ccc] flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+// COMPONENTE PARA VOLTAR O MAPA AO LIMPAR A BUSCA
+function MapAutoRecenter({
+  highlightedAddress,
+  userLocation,
+  initialViewport,
+}: {
+  highlightedAddress: any;
+  userLocation: { lat: number; lng: number } | null;
+  initialViewport: any;
+}) {
+  const { map, isLoaded } = useMap();
+  const prevHighlight = useRef(highlightedAddress);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    if (prevHighlight.current && !highlightedAddress) {
+      if (userLocation) {
+        map.flyTo({
+          center: [userLocation.lng, userLocation.lat],
+          zoom: 15.5,
+          duration: 1500,
+          essential: true,
+        });
+      } else if (initialViewport) {
+        map.flyTo({
+          center: initialViewport.center,
+          zoom: initialViewport.zoom,
+          duration: 1500,
+          essential: true,
+        });
+      }
+    }
+
+    prevHighlight.current = highlightedAddress;
+  }, [highlightedAddress, userLocation, initialViewport, map, isLoaded]);
 
   return null;
 }
@@ -808,6 +911,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [highlightedAddress, setHighlightedAddress] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
   useEffect(() => {
@@ -1031,6 +1135,16 @@ export default function Home() {
                   bbox={highlightedAddress.boundingbox} 
                 />
               )}
+
+              <UserLocationManager
+                userLocation={userLocation}
+                setUserLocation={setUserLocation}
+              />
+              <MapAutoRecenter
+                highlightedAddress={highlightedAddress}
+                userLocation={userLocation}
+                initialViewport={initialViewport}
+              />
             </Map>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 transition-all duration-300">
