@@ -91,8 +91,8 @@ export default function MinhasReclamacoes() {
   if (loading || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Carregando suas reclamações...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Carregando suas reclamações...</p>
       </div>
     );
   }
@@ -101,16 +101,16 @@ export default function MinhasReclamacoes() {
     <div className="p-4 md:p-8 max-w-[1280px] mx-auto w-full space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl md:text-3xl font-semibold text-[#112F4E] tracking-tight">Minhas Reclamações</h2>
-        <p className="text-[#4A5D70] text-sm md:text-base mt-1 font-light">Acompanhe e fiscalize o andamento de cada uma das suas solicitações.</p>
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight" style={{ color: "var(--color-text)" }}>Minhas Reclamações</h2>
+        <p className="text-sm md:text-base mt-1 font-light" style={{ color: "var(--color-text-secondary)" }}>Acompanhe e fiscalize o andamento de cada uma das suas solicitações.</p>
       </div>
 
       {/* Summary Cards */}
       <section>
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
           {summaryCards.map((card) => (
-            <div key={card.label} className="min-w-[140px] flex-1 bg-white p-4 rounded-2xl shadow-sm border border-[#E2E8F0] hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block mb-2">{card.label}</span>
+            <div key={card.label} className="min-w-[140px] flex-1 p-4 rounded-2xl border transition-shadow" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider block mb-2" style={{ color: "var(--color-text-muted)" }}>{card.label}</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-2xl font-extrabold" style={{ color: card.color }}>{card.value}</span>
                 {card.hasHeart && (
@@ -124,12 +124,12 @@ export default function MinhasReclamacoes() {
 
       {/* Complaints List */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold text-[#94A3B8] uppercase tracking-widest mb-1">Registros Recentes ({reclamacoes.length})</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>Registros Recentes ({reclamacoes.length})</h3>
 
         {reclamacoes.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-dashed border-[#E2E8F0] text-center space-y-3">
-            <HelpCircle className="w-12 h-12 text-[#94A3B8] mx-auto opacity-70" />
-            <p className="text-sm text-[#4A5D70] font-light">Você ainda não registrou nenhuma reclamação.</p>
+          <div className="p-8 rounded-2xl border border-dashed text-center space-y-3" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+            <HelpCircle className="w-12 h-12 mx-auto opacity-70" style={{ color: "var(--color-text-muted)" }} />
+            <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Você ainda não registrou nenhuma reclamação.</p>
             <Link href="/usuario/reclamacao/nova" className="inline-block px-4 py-2 bg-[#1a8ccc] text-white font-semibold text-xs rounded-xl hover:bg-[#1572a6] transition-colors shadow-sm">
               Criar Primeira Reclamação
             </Link>
@@ -141,7 +141,7 @@ export default function MinhasReclamacoes() {
               const meta = statusMeta[c.status] || { label: c.status, bg: "bg-[#FAF7F2]", text: "text-[#4A5D70]" };
               const cat = getCategoryByLabel(c.categoria);
               return (
-                <div key={c.id} className="bg-white p-5 rounded-2xl shadow-sm border border-[#E2E8F0] flex flex-col justify-between gap-4 hover:shadow-md transition-all hover:-translate-y-0.5">
+                <div key={c.id} className="p-5 rounded-2xl border flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-all" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
                   <div>
                     {/* Top Row */}
                     <div className="flex justify-between items-start gap-2 mb-3">
@@ -156,7 +156,7 @@ export default function MinhasReclamacoes() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-sm font-bold text-[#112F4E] truncate" title={c.titulo}>{c.titulo}</h4>
+                          <h4 className="text-sm font-bold truncate" title={c.titulo} style={{ color: "var(--color-text)" }}>{c.titulo}</h4>
                           <p 
                             className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold"
                             style={cat ? { color: cat.color } : undefined}
@@ -172,19 +172,19 @@ export default function MinhasReclamacoes() {
 
                     {/* Details */}
                     <div className="space-y-2 pt-1">
-                      <div className="flex items-start gap-2 text-[#4A5D70]">
-                        <MapPin className="w-4 h-4 text-[#94A3B8] shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2" style={{ color: "var(--color-text-secondary)" }}>
+                        <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--color-text-muted)" }} />
                         <span className="text-xs font-light leading-snug truncate" title={c.endereco}>{c.endereco}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[#4A5D70]">
-                        <Calendar className="w-4 h-4 text-[#94A3B8] shrink-0" />
+                      <div className="flex items-center gap-2" style={{ color: "var(--color-text-secondary)" }}>
+                        <Calendar className="w-4 h-4 shrink-0" style={{ color: "var(--color-text-muted)" }} />
                         <span className="text-xs font-light">{formatDate(c.criadoEm)}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex justify-between items-center pt-3 border-t border-[#F5F2ED]">
+                  <div className="flex justify-between items-center pt-3 border-t" style={{ borderColor: "var(--color-border-light)" }}>
                     <div className="flex items-center gap-1.5 text-[#10B981]">
                       <ThumbsUp className="w-4 h-4" />
                       <span className="text-xs font-bold">{c.concordos} Apoios</span>

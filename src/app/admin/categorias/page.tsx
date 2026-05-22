@@ -21,32 +21,32 @@ export default function Categorias() {
     <div className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Categorias</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>Categorias</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
           Visualize todas as categorias e subcategorias disponíveis para classificar reclamações.
         </p>
       </div>
 
       {/* Summary */}
       <div className="flex gap-4 flex-wrap">
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-2xl border p-5 flex items-center gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="w-10 h-10 rounded-xl bg-[#E8F2F8] flex items-center justify-center">
             <FolderOpen className="w-5 h-5 text-[#1a8ccc]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#112F4E]">{CATEGORIES.length}</p>
-            <p className="text-xs text-[#94A3B8]">Categorias ativas</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>{CATEGORIES.length}</p>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Categorias ativas</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-2xl border p-5 flex items-center gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="w-10 h-10 rounded-xl bg-[#EDE9FE] flex items-center justify-center">
             <Hash className="w-5 h-5 text-[#8B5CF6]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#112F4E]">
+            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
               {Object.values(subcategorias).reduce((sum, arr) => sum + arr.length, 0)}
             </p>
-            <p className="text-xs text-[#94A3B8]">Subcategorias</p>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Subcategorias</p>
           </div>
         </div>
       </div>
@@ -58,7 +58,8 @@ export default function Categorias() {
           return (
             <div
               key={cat.id}
-              className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md transition-shadow space-y-4"
+              className="rounded-2xl border p-5 transition-shadow space-y-4"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -73,8 +74,8 @@ export default function Categorias() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#112F4E]">{cat.label}</h3>
-                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold">
+                  <h3 className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{cat.label}</h3>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--color-text-muted)" }}>
                     {subs.length} subcategorias
                   </p>
                 </div>

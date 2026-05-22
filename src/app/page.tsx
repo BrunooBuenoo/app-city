@@ -441,6 +441,7 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
   const [flyToTarget, setFlyToTarget] = useState<{ lng: number; lat: number; id: string } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Estados para recolher/expandir seções (foco no mapa no mobile)
   const [showTopPills, setShowTopPills] = useState(true);
@@ -450,6 +451,24 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
+  // Solicitar geolocalização ao acessar o mapa
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.warn("Geolocalização negada ou indisponível:", err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, []);
 
   // Listener em tempo real do Firestore
   useEffect(() => {
@@ -466,7 +485,12 @@ export default function Home() {
 
   const handleFabClick = () => {
     if (isLoggedIn) {
-      router.push("/usuario/reclamacao/nova");
+      // Se temos a localização do usuário, passar via query params
+      if (userLocation) {
+        router.push(`/usuario/reclamacao/nova?lat=${userLocation.lat}&lng=${userLocation.lng}`);
+      } else {
+        router.push("/usuario/reclamacao/nova");
+      }
     } else {
       setShowLoginModal(true);
     }

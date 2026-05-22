@@ -71,7 +71,7 @@ export default function Perfil() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
       </div>
     );
   }
@@ -80,16 +80,16 @@ export default function Perfil() {
     <div className="max-w-3xl mx-auto p-6 md:p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Meu Perfil</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Gerencie suas informações pessoais.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>Meu Perfil</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>Gerencie suas informações pessoais.</p>
       </div>
 
       {/* Avatar Card */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-6 relative overflow-hidden">
+      <div className="rounded-2xl border p-6 space-y-6 relative overflow-hidden" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
         <div className="flex flex-col md:flex-row md:items-center gap-5 justify-between">
           <div className="flex items-center gap-5">
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-[#E8F2F8] flex items-center justify-center overflow-hidden border-2 border-[#E2E8F0] transition-all duration-300">
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden border-2 transition-all duration-300" style={{ backgroundColor: "var(--color-primary-container)", borderColor: "var(--color-border)" }}>
                 {foto ? (
                   <img src={foto} alt="Avatar" className="w-full h-full object-cover animate-fade-in" />
                 ) : (
@@ -98,8 +98,8 @@ export default function Perfil() {
               </div>
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-bold text-[#112F4E] truncate">{nome || user?.displayName || "Cidadão"}</h2>
-              <p className="text-sm text-[#94A3B8] truncate">{user?.email}</p>
+              <h2 className="text-lg font-bold truncate" style={{ color: "var(--color-text)" }}>{nome || user?.displayName || "Cidadão"}</h2>
+              <p className="text-sm truncate" style={{ color: "var(--color-text-muted)" }}>{user?.email}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                   profile?.role === "admin" ? "bg-[#EDE9FE] text-[#8B5CF6]" : "bg-[#E8F2F8] text-[#1a8ccc]"
@@ -126,12 +126,13 @@ export default function Perfil() {
                 <button 
                   type="button"
                   onClick={() => setIsRulesOpen(true)}
-                  className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-extrabold bg-[#FAF7F2] border border-[#E2E8F0] hover:bg-[#FAF7F2]/80 hover:border-[#1a8ccc]/35 hover:scale-102 shadow-md transition-all cursor-pointer select-none active:scale-95"
+                  className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-extrabold border shadow-md transition-all cursor-pointer select-none active:scale-95"
+                  style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}
                 >
                   <InsigniaBadge nivelId={levelInfo.id} size="lg" />
                   <div className="text-left leading-tight pr-1.5">
-                    <p className="text-[10px] text-[#94A3B8] font-normal uppercase tracking-wider">Patente Atual</p>
-                    <p className="text-[#112F4E] text-sm font-extrabold">{levelInfo.nome}</p>
+                    <p className="text-[10px] font-normal uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Patente Atual</p>
+                    <p className="text-sm font-extrabold" style={{ color: "var(--color-text)" }}>{levelInfo.nome}</p>
                     <p className="text-[#1a8ccc] font-bold text-xs mt-0.5">{pontos} Pontos</p>
                   </div>
                   <HelpCircle className="w-4.5 h-4.5 text-[#94A3B8]/80 shrink-0 self-center" />
@@ -141,11 +142,11 @@ export default function Perfil() {
           </div>
         </div>
 
-        <div className="pt-2 border-t border-[#F5F2ED]">
+        <div className="pt-2 border-t" style={{ borderColor: "var(--color-border-light)" }}>
           {!editandoAvatar ? (
             <div className="flex items-center justify-between py-1.5">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full overflow-hidden border border-[#E2E8F0] bg-white flex shrink-0">
+                <div className="w-11 h-11 rounded-full overflow-hidden border flex shrink-0" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
                   {foto ? (
                     <img src={foto} alt="Avatar Escolhido" className="w-full h-full object-cover" />
                   ) : (
@@ -153,14 +154,15 @@ export default function Perfil() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#112F4E]">Seu Avatar Oficial</p>
-                  <p className="text-[10px] text-[#94A3B8] font-light">Este avatar é exibido em todas as suas ocorrências e apoios públicos.</p>
+                  <p className="text-xs font-bold" style={{ color: "var(--color-text)" }}>Seu Avatar Oficial</p>
+                  <p className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>Este avatar é exibido em todas as suas ocorrências e apoios públicos.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setEditandoAvatar(true)}
-                className="px-3.5 py-2 border border-[#E2E8F0] hover:bg-[#FAF7F2] text-[#1a8ccc] hover:text-[#1572a6] font-bold text-xs rounded-xl transition-all cursor-pointer select-none"
+                className="px-3.5 py-2 border text-[#1a8ccc] font-bold text-xs rounded-xl transition-all cursor-pointer select-none"
+                style={{ borderColor: "var(--color-border)" }}
               >
                 Trocar de avatar
               </button>
@@ -168,7 +170,7 @@ export default function Perfil() {
           ) : (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-[#4A5D70]">Escolha seu novo avatar oficial:</p>
+                <p className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>Escolha seu novo avatar oficial:</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -210,43 +212,46 @@ export default function Perfil() {
       </div>
 
       {/* Form Card */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm space-y-5">
-        <h3 className="text-sm font-semibold text-[#112F4E]">Informações Pessoais</h3>
+      <div className="rounded-2xl border p-6 space-y-5" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+        <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Informações Pessoais</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-[#4A5D70] mb-1.5">Nome Completo</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-secondary)" }}>Nome Completo</label>
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white focus:border-[#1a8ccc] focus:ring-2 focus:ring-[#1a8ccc]/15 transition-all outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border transition-all outline-none text-sm"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
               placeholder="Seu nome completo"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#4A5D70] mb-1.5">Email</label>
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAF7F2] text-sm text-[#94A3B8]">
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-secondary)" }}>Email</label>
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
               <Mail className="w-4 h-4 shrink-0" />
               <span className="truncate">{user?.email || "—"}</span>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#4A5D70] mb-1.5">Telefone</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-secondary)" }}>Telefone</label>
             <input
               type="tel"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white focus:border-[#1a8ccc] focus:ring-2 focus:ring-[#1a8ccc]/15 transition-all outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border transition-all outline-none text-sm"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
               placeholder="(14) 99999-9999"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#4A5D70] mb-1.5">Faixa Etária</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-secondary)" }}>Faixa Etária</label>
             <select
               value={faixaEtaria}
               onChange={(e) => setFaixaEtaria(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white focus:border-[#1a8ccc] focus:ring-2 focus:ring-[#1a8ccc]/15 transition-all outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border transition-all outline-none text-sm"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
             >
               <option value="">Selecione</option>
               <option value="18-24">18-24 anos</option>

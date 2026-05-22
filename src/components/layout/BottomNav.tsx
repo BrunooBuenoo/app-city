@@ -3,43 +3,52 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clsx } from "clsx";
+import { Home, MapPin, PlusCircle, Clock, User } from "lucide-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
 
-  const links = [
-    { href: "/", icon: "home", label: "Início" },
-    { href: "/usuario/minhas-reclamacoes", icon: "assignment", label: "Reclamações" },
-    { href: "#", icon: "notifications", label: "Alertas" },
-    { href: "/usuario/perfil", icon: "person", label: "Perfil" },
+  const items = [
+    { href: "/usuario/dashboard", icon: Home, label: "Home" },
+    { href: "/", icon: MapPin, label: "Mapa" },
+    { href: "/usuario/reclamacao/nova", icon: PlusCircle, label: "Registrar", isAction: true },
+    { href: "/usuario/historico", icon: Clock, label: "Alertas" },
+    { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-5 pt-2.5 bg-white/90 backdrop-blur-xl border-t border-[#E2E8F0]">
-      {links.map((link) => {
-        const isActive = pathname === link.href || (link.href === '/' && pathname === '/usuario/dashboard'); 
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t flex items-center justify-around h-16 px-2"
+      style={{ borderColor: "var(--color-border)" }}
+    >
+      {items.map((item) => {
+        const isActive = pathname === item.href;
+
+        if (item.isAction) {
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex flex-col items-center justify-center -mt-5 w-14 h-14 rounded-2xl bg-[#1a8ccc] text-white shadow-lg active:scale-95 transition-all cursor-pointer"
+            >
+              <item.icon className="w-6 h-6" />
+            </Link>
+          );
+        }
+
         return (
           <Link
-            key={link.label}
-            href={link.href}
-            className={clsx(
-              "flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 transition-all duration-200 active:scale-90 rounded-xl",
-              isActive
-                ? "text-[#1a8ccc]"
-                : "text-[#94A3B8] hover:text-[#4A5D70]"
-            )}
+            key={item.label}
+            href={item.href}
+            className="flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-xl transition-all"
+            style={{
+              color: isActive ? "var(--color-primary)" : "var(--color-text-muted)",
+            }}
           >
-            <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              {link.icon}
+            <item.icon className={`w-5 h-5 transition-transform ${isActive ? "scale-110" : ""}`} />
+            <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>
+              {item.label}
             </span>
-            <span className="text-[11px] font-medium">{link.label}</span>
-            {isActive && (
-              <div className="w-4 h-0.5 bg-[#1a8ccc] rounded-full mt-0.5" />
-            )}
           </Link>
         );
       })}

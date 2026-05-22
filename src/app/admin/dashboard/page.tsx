@@ -46,13 +46,7 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
-  // Notificação simulada
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      showToast("info", "Nova reclamação recebida", "Vazamento de esgoto registrado no Jd. Marília");
-    }, 4500);
-    return () => clearTimeout(timer);
-  }, [showToast]);
+  // Removed simulated notification — it was confusing UX
 
   // Filtro de data
   const filteredReclamacoes = reclamacoes.filter((r) => {
@@ -193,8 +187,8 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Carregando dados do painel...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Carregando dados do painel...</p>
       </div>
     );
   }
@@ -202,14 +196,14 @@ export default function AdminDashboard() {
   return (
     <>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#F5F2ED]">
+      <header className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--color-border-light)" }}>
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[#112F4E]" />
-          <h1 className="text-lg font-semibold text-[#112F4E]">Dashboard Administrativo</h1>
+          <BarChart3 className="w-5 h-5" style={{ color: "var(--color-text)" }} />
+          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Dashboard Administrativo</h1>
         </div>
-        <button className="p-2 hover:bg-[#FAF7F2] rounded-lg transition-colors relative cursor-pointer">
-          <Bell className="w-5 h-5 text-[#94A3B8]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white" />
+        <button className="p-2 rounded-lg transition-colors relative cursor-pointer" style={{ color: "var(--color-text-muted)" }}>
+          <Bell className="w-5 h-5" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2" style={{ ringColor: "var(--color-surface)" }} />
         </button>
       </header>
 
@@ -224,8 +218,9 @@ export default function AdminDashboard() {
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                   activeFilter === filter.id
                     ? "bg-[#1a8ccc] text-white shadow-sm"
-                    : "bg-white text-[#112F4E] border border-[#E2E8F0] hover:bg-[#FAF7F2]"
+                    : "border"
                 }`}
+                style={activeFilter !== filter.id ? { backgroundColor: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" } : undefined}
               >
                 {filter.label}
               </button>
@@ -241,13 +236,13 @@ export default function AdminDashboard() {
             { label: "Em Progresso / Análise", value: emAndamentoCount, color: "from-amber-50 to-amber-100/50", Icon: Clock, trend: `${pctAndamento}% do total`, up: true },
             { label: "Resolvidas", value: resolvidoCount, color: "from-green-50 to-green-100/50", Icon: CheckCircle, trend: `${pctResolvidas}% do total`, up: true },
           ].map((stat) => (
-            <div key={stat.label} className={`p-4 rounded-xl bg-gradient-to-r ${stat.color} border border-[#E2E8F0]/30 shadow-sm`}>
+            <div key={stat.label} className="p-4 rounded-xl border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-[#4A5D70] uppercase tracking-wider">{stat.label}</p>
-                <stat.Icon className="w-4 h-4 text-[#94A3B8]" />
+                <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>{stat.label}</p>
+                <stat.Icon className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
               </div>
-              <p className="text-3xl font-bold text-[#112F4E]">{stat.value}</p>
-              <div className="flex items-center gap-1 mt-1 text-[11px] text-[#94A3B8]">
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>{stat.value}</p>
+              <div className="flex items-center gap-1 mt-1 text-[11px]" style={{ color: "var(--color-text-muted)" }}>
                 <span>{stat.trend}</span>
               </div>
             </div>
@@ -255,16 +250,16 @@ export default function AdminDashboard() {
         </div>
 
         {/* Status Distribution Progress Bar */}
-        <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm space-y-4">
+        <div className="p-5 rounded-xl border space-y-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-[#94A3B8]" />
-              <h3 className="text-sm font-semibold text-[#112F4E]">Proporção por Status (Período)</h3>
+              <PieChart className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+              <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Proporção por Status (Período)</h3>
             </div>
-            <span className="text-xs font-semibold text-[#4A5D70]">Total: {totalCount} relatos</span>
+            <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>Total: {totalCount} relatos</span>
           </div>
 
-          <div className="w-full h-3.5 rounded-full flex overflow-hidden bg-[#FAF7F2] border border-[#E2E8F0]">
+          <div className="w-full h-3.5 rounded-full flex overflow-hidden border" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
             <div className="bg-[#1a8ccc] h-full transition-all duration-500" style={{ width: `${pctAbertas}%` }} title={`Abertas: ${pctAbertas}%`} />
             <div className="bg-[#F59E0B] h-full transition-all duration-500" style={{ width: `${pctAndamento}%` }} title={`Em Andamento: ${pctAndamento}%`} />
             <div className="bg-[#10B981] h-full transition-all duration-500" style={{ width: `${pctResolvidas}%` }} title={`Resolvidas: ${pctResolvidas}%`} />
@@ -278,14 +273,14 @@ export default function AdminDashboard() {
               { color: "#10B981", label: "Resolvidas", value: resolvidoCount, pct: pctResolvidas },
               { color: "#EF4444", label: "Críticas", value: criticoCount, pct: pctCriticas },
             ].map((item) => (
-              <div key={item.label} className="p-3 bg-[#FAF7F2] rounded-lg border border-[#E2E8F0]/50 flex flex-col">
+              <div key={item.label} className="p-3 rounded-lg border flex flex-col" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-[#4A5D70] font-medium">{item.label}</span>
+                  <span className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>{item.label}</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-lg font-bold text-[#112F4E]">{item.value}</span>
-                  <span className="text-[10px] text-[#94A3B8]">({item.pct}%)</span>
+                  <span className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{item.value}</span>
+                  <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>({item.pct}%)</span>
                 </div>
               </div>
             ))}
@@ -295,7 +290,7 @@ export default function AdminDashboard() {
         {/* Charts — 2 Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Chart 1: Criadas */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
+          <div className="p-5 rounded-xl border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#94A3B8]" />

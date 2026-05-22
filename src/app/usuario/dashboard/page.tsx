@@ -170,8 +170,8 @@ export default function UsuarioDashboard() {
   if (loading || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Carregando meu painel...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Carregando meu painel...</p>
       </div>
     );
   }
@@ -179,10 +179,10 @@ export default function UsuarioDashboard() {
   return (
     <>
       {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-[#F5F2ED]">
+      <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b" style={{ borderColor: "var(--color-border-light)" }}>
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[#112F4E]" />
-          <h1 className="text-lg font-semibold text-[#112F4E]">Meu Painel de Cidadão</h1>
+          <BarChart3 className="w-5 h-5" style={{ color: "var(--color-text)" }} />
+          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Meu Painel de Cidadão</h1>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/usuario/reclamacao/nova">
@@ -191,9 +191,9 @@ export default function UsuarioDashboard() {
               Nova Reclamação
             </button>
           </Link>
-          <button className="p-2 hover:bg-[#FAF7F2] rounded-lg transition-colors relative cursor-pointer">
-            <Bell className="w-5 h-5 text-[#94A3B8]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#F59E0B] rounded-full ring-2 ring-white" />
+          <button className="p-2 rounded-lg transition-colors relative cursor-pointer" style={{ color: "var(--color-text-muted)" }}>
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#F59E0B] rounded-full ring-2" style={{ ringColor: "var(--color-surface)" }} />
           </button>
         </div>
       </header>
@@ -204,7 +204,7 @@ export default function UsuarioDashboard() {
           const pontos = profile?.pontos || 0;
           const nivelInfo = calcularNivel(pontos);
           return (
-            <div className="p-5 rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden relative mt-4">
+            <div className="p-5 rounded-2xl border overflow-hidden relative mt-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
               <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-gradient-to-br from-[#1a8ccc]/10 to-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />
               <div className="flex flex-col lg:flex-row items-center justify-between gap-5 relative z-10">
                 <div className="flex items-center gap-4 w-full lg:w-auto">
@@ -212,20 +212,20 @@ export default function UsuarioDashboard() {
                     <InsigniaBadge nivelId={nivelInfo.id} size="lg" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider block mb-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--color-text-muted)" }}>
                       Nível de Cidadania
                     </span>
-                    <h2 className="text-base font-bold text-[#112F4E] flex items-center gap-1.5 leading-snug">
+                    <h2 className="text-base font-bold flex items-center gap-1.5 leading-snug" style={{ color: "var(--color-text)" }}>
                       {nivelInfo.nome}
-                      <span className="px-2 py-0.5 rounded-full bg-[#1a8ccc]/10 text-[#1a8ccc] text-[10px] font-extrabold uppercase">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase" style={{ backgroundColor: "var(--color-primary-container)", color: "var(--color-on-primary-container)" }}>
                         {pontos} pts
                       </span>
                     </h2>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       {nivelInfo.pontosRestantes > 0 ? (
-                        <div className="flex items-center gap-1 text-xs text-[#94A3B8] font-light">
+                        <div className="flex items-center gap-1 text-xs font-light" style={{ color: "var(--color-text-muted)" }}>
                           <span>Faltam</span>
-                          <strong className="text-[#4A5D70] font-semibold">{nivelInfo.pontosRestantes} pts</strong>
+                          <strong className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>{nivelInfo.pontosRestantes} pts</strong>
                           <span>para</span>
                           <span className="text-[#8B5CF6] font-semibold flex items-center gap-1">
                             {nivelInfo.proximoNivelNome}
@@ -244,10 +244,10 @@ export default function UsuarioDashboard() {
 
                 <div className="w-full lg:w-72 space-y-2">
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-[#94A3B8] font-semibold uppercase tracking-wider">Progresso do Nível</span>
-                    <span className="text-[#112F4E] font-bold">{nivelInfo.progresso}%</span>
+                    <span className="font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Progresso do Nível</span>
+                    <span className="font-bold" style={{ color: "var(--color-text)" }}>{nivelInfo.progresso}%</span>
                   </div>
-                  <div className="w-full h-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-full overflow-hidden shadow-inner p-0.5">
+                  <div className="w-full h-2.5 rounded-full overflow-hidden shadow-inner p-0.5 border" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
                     <div 
                       className="h-full rounded-full bg-gradient-to-r from-[#1a8ccc] to-[#8B5CF6] transition-all duration-700 shadow-sm"
                       style={{ width: `${nivelInfo.progresso}%` }}
@@ -257,7 +257,7 @@ export default function UsuarioDashboard() {
 
                 <div className="w-full lg:w-auto shrink-0 flex gap-2">
                   <Link href="/usuario/ranking" className="w-full lg:w-auto">
-                    <button className="w-full flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl border border-[#E2E8F0] text-[#4A5D70] font-semibold text-xs hover:bg-[#FAF7F2] transition-all cursor-pointer active:scale-95">
+                    <button className="w-full flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl border font-semibold text-xs transition-all cursor-pointer active:scale-95" style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}>
                       <span className="material-symbols-outlined text-[15px] text-[#F59E0B]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
                       Ver Ranking Global
                     </button>
@@ -276,8 +276,9 @@ export default function UsuarioDashboard() {
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                 activeFilter === filter.id
                   ? "bg-[#1a8ccc] text-white shadow-sm"
-                  : "bg-white text-[#112F4E] border border-[#E2E8F0] hover:bg-[#FAF7F2]"
+                  : "border"
               }`}
+              style={activeFilter !== filter.id ? { backgroundColor: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" } : undefined}
             >
               {filter.label}
             </button>
@@ -292,14 +293,14 @@ export default function UsuarioDashboard() {
             { label: "Em Progresso", value: emAndamentoCount, color: "from-yellow-50 to-yellow-100/50", Icon: Clock, trend: "Acompanhando" },
             { label: "Apoios Recebidos", value: totalConcordos, color: "from-red-50 to-red-100/50", Icon: Heart, trend: "Concordos" },
           ].map((stat) => (
-            <div key={stat.label} className={`p-3.5 md:p-4 rounded-xl bg-gradient-to-r ${stat.color} border border-[#E2E8F0]/30 shadow-sm`}>
+            <div key={stat.label} className="p-3.5 md:p-4 rounded-xl border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center gap-1.5 mb-1.5">
-                <stat.Icon className="w-3.5 h-3.5 text-[#94A3B8]" />
-                <p className="text-[11px] md:text-xs font-semibold text-[#4A5D70] truncate uppercase tracking-wider">{stat.label}</p>
+                <stat.Icon className="w-3.5 h-3.5" style={{ color: "var(--color-text-muted)" }} />
+                <p className="text-[11px] md:text-xs font-semibold truncate uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>{stat.label}</p>
               </div>
-              <p className="text-2xl md:text-3xl font-bold text-[#112F4E]">{stat.value}</p>
+              <p className="text-2xl md:text-3xl font-bold" style={{ color: "var(--color-text)" }}>{stat.value}</p>
               <div className="flex items-center gap-1 mt-1">
-                <span className="text-[10px] text-[#94A3B8] font-light">{stat.trend}</span>
+                <span className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>{stat.trend}</span>
               </div>
             </div>
           ))}
@@ -308,21 +309,21 @@ export default function UsuarioDashboard() {
         {/* Categories + Weekly grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Categories Card */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm flex flex-col justify-between">
+          <div className="p-5 rounded-xl border flex flex-col justify-between" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-[#94A3B8]" />
-                  <h3 className="text-sm font-semibold text-[#112F4E]">Incidência de Categorias</h3>
+                  <PieChart className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+                  <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Incidência de Categorias</h3>
                 </div>
                 <Link href="/usuario/minhas-reclamacoes" className="text-xs font-semibold text-[#1a8ccc] hover:underline">Ver Todas</Link>
               </div>
               
               {categoriesData.length === 0 ? (
-                <p className="text-xs text-[#94A3B8] text-center py-6 font-light">Nenhuma reclamação registrada no período.</p>
+                <p className="text-xs text-center py-6 font-light" style={{ color: "var(--color-text-muted)" }}>Nenhuma reclamação registrada no período.</p>
               ) : (
                 <>
-                  <div className="w-full h-3 rounded-full flex overflow-hidden mb-4 border border-[#E2E8F0] bg-[#FAF7F2]">
+                  <div className="w-full h-3 rounded-full flex overflow-hidden mb-4 border" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
                     {categoriesData.map((cat, i) => (
                       <div
                         key={i}
@@ -337,10 +338,10 @@ export default function UsuarioDashboard() {
                       <div key={i} className="flex items-center justify-between py-0.5">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: cat.color }} />
-                          <cat.Icon className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
-                          <span className="text-xs text-[#4A5D70] truncate">{cat.label}</span>
+                          <cat.Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--color-text-muted)" }} />
+                          <span className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>{cat.label}</span>
                         </div>
-                        <span className="text-xs font-semibold text-[#112F4E]">{cat.count} ({cat.pct}%)</span>
+                        <span className="text-xs font-semibold" style={{ color: "var(--color-text)" }}>{cat.count} ({cat.pct}%)</span>
                       </div>
                     ))}
                   </div>
@@ -350,12 +351,12 @@ export default function UsuarioDashboard() {
           </div>
 
           {/* Activity Chart */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm flex flex-col justify-between">
+          <div className="p-5 rounded-xl border flex flex-col justify-between" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#94A3B8]" />
-                  <h3 className="text-sm font-semibold text-[#112F4E]">Frequência Semanal</h3>
+                  <TrendingUp className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+                  <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Frequência Semanal</h3>
                 </div>
               </div>
               <div className="h-[140px] flex items-end gap-3 pt-4 px-2">
@@ -366,7 +367,7 @@ export default function UsuarioDashboard() {
                   return (
                     <div key={label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
                       {count > 0 && (
-                        <span className="absolute bottom-full mb-1 bg-[#112F4E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                        <span className="absolute bottom-full mb-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" style={{ backgroundColor: "var(--color-text)" }}>
                           {count}
                         </span>
                       )}
@@ -376,7 +377,7 @@ export default function UsuarioDashboard() {
                         }`}
                         style={{ height: count > 0 ? `${heightPct}%` : "10%" }}
                       />
-                      <span className="text-[10px] text-[#94A3B8] font-light">{label}</span>
+                      <span className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>{label}</span>
                     </div>
                   );
                 })}
@@ -386,11 +387,11 @@ export default function UsuarioDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
-          <div className="p-4 flex items-center justify-between border-b border-[#E2E8F0]">
+        <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+          <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: "var(--color-border)" }}>
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#94A3B8]" />
-              <h3 className="text-sm font-semibold text-[#112F4E]">Histórico Recente</h3>
+              <FileText className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+              <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Histórico Recente</h3>
             </div>
             <Link href="/usuario/minhas-reclamacoes" className="text-xs font-semibold text-[#1a8ccc] hover:underline">
               Ver lista completa
@@ -398,23 +399,23 @@ export default function UsuarioDashboard() {
           </div>
           
           {filteredReclamacoes.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#94A3B8] font-light">
+            <div className="p-8 text-center text-xs font-light" style={{ color: "var(--color-text-muted)" }}>
               Nenhuma reclamação ativa. Clique em &quot;Nova Reclamação&quot; para registrar o seu primeiro relato!
             </div>
           ) : (
-            <div className="divide-y divide-[#F5F2ED]">
+            <div className="divide-y" style={{ borderColor: "var(--color-border-light)" }}>
               {filteredReclamacoes.slice(0, 4).map((row) => {
                 const Icon = getCategoryIcon(row.categoria);
                 const color = getStatusColor(row.status);
                 return (
-                  <Link href={`/reclamacao/${row.id}`} key={row.id} className="block hover:bg-[#FAF7F2]/40 transition-colors">
+                  <Link href={`/reclamacao/${row.id}`} key={row.id} className="block transition-colors" style={{ borderColor: "var(--color-border-light)" }}>
                     <div className="p-4 flex items-center gap-3">
-                      <div className="w-8.5 h-8.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                        <Icon className="w-4 h-4 text-[#4A5D70]" />
+                      <div className="w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 border" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+                        <Icon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[#112F4E] truncate">{row.titulo}</p>
-                        <p className="text-xs text-[#94A3B8] font-light">
+                        <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{row.titulo}</p>
+                        <p className="text-xs font-light" style={{ color: "var(--color-text-muted)" }}>
                           {row.endereco.split(",")[0]} · {formatDate(row.criadoEm)}
                         </p>
                       </div>

@@ -48,7 +48,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--color-bg)" }}>
       {/* Top decorative bar */}
       <div className="w-full h-1.5 bg-gradient-to-r from-[#1a8ccc] via-[#10B981] to-[#F59E0B]" />
 
@@ -112,30 +112,30 @@ export default function Login() {
                 <div className="w-10 h-10 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
                   <span className="text-white text-lg font-bold">S</span>
                 </div>
-                <span className="text-[#112F4E] text-lg font-semibold">SAC Marília</span>
+                <span className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>SAC Marília</span>
               </div>
             </div>
 
             {/* Header */}
             <div className="text-center lg:text-left">
-              <h2 className="text-3xl md:text-4xl font-medium text-[#112F4E] tracking-tight mb-3">
+              <h2 className="text-3xl md:text-4xl font-medium tracking-tight mb-3" style={{ color: "var(--color-text)" }}>
                 Bem-vindo de volta
               </h2>
-              <p className="text-[#4A5D70] text-base font-light leading-relaxed">
+              <p className="text-base font-light leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
                 Entre com sua conta Google para acessar a plataforma e acompanhar suas solicitações.
               </p>
             </div>
 
             {/* Google Sign-In Button */}
             <div className="space-y-4">
-              <label className="flex items-center gap-2.5 px-4 py-3 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl cursor-pointer hover:bg-[#FAF7F2]/80 transition-all select-none mb-1">
+              <label className="flex items-center gap-2.5 px-4 py-3 border rounded-xl cursor-pointer transition-all select-none mb-1" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
                 <input
                   type="checkbox"
                   checked={isAdminLogin}
                   onChange={(e) => setIsAdminLogin(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-[#1a8ccc] focus:ring-[#1a8ccc] accent-[#1a8ccc] cursor-pointer"
                 />
-                <span className="text-xs md:text-sm font-semibold text-[#4A5D70]">
+                <span className="text-xs md:text-sm font-semibold" style={{ color: "var(--color-text-secondary)" }}>
                   Entrar como Administrador
                 </span>
               </label>
@@ -143,7 +143,8 @@ export default function Login() {
               <button
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-[#E2E8F0] rounded-2xl text-[#112F4E] font-medium text-base shadow-sm hover:shadow-md hover:border-[#1a8ccc]/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 rounded-2xl font-medium text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none"
+                style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-[#1a8ccc] border-t-transparent rounded-full animate-spin" />
@@ -176,15 +177,16 @@ export default function Login() {
 
               {/* Divider */}
               <div className="flex items-center gap-4">
-                <div className="flex-1 h-px bg-[#E2E8F0]" />
-                <span className="text-xs text-[#94A3B8] font-medium">OU</span>
-                <div className="flex-1 h-px bg-[#E2E8F0]" />
+                <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
+                <span className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>OU</span>
+                <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
               </div>
 
               {/* Explore without login */}
               <Link
                 href="/"
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#FAF7F2] border border-[#E2E8F0] rounded-2xl text-[#4A5D70] font-medium text-sm hover:bg-[#F5F2ED] hover:text-[#112F4E] transition-all"
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 border rounded-2xl font-medium text-sm transition-all"
+                style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
               >
                 <MapPin className="w-4 h-4" />
                 Explorar o mapa sem conta
@@ -193,7 +195,7 @@ export default function Login() {
             </div>
 
             {/* Terms */}
-            <p className="text-center text-xs text-[#94A3B8] leading-relaxed px-4">
+            <p className="text-center text-xs leading-relaxed px-4" style={{ color: "var(--color-text-muted)" }}>
               Ao continuar, você concorda com nossos{" "}
               <a href="#" className="text-[#1a8ccc] font-medium underline underline-offset-2">
                 Termos de Uso

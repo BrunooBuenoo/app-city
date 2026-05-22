@@ -5,10 +5,11 @@ import "./globals.css";
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sac do Marilia ao Contrário",
+  title: "Sac do Marília ao Contrário",
   description: "Gestão Urbana",
 };
 
+import { ThemeProvider } from "next-themes";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -27,13 +28,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${plusJakarta.className} selection:bg-primary/10`} suppressHydrationWarning>
-        <AuthProvider>
-          <ToastProvider>
-            <SmoothScroll>{children}</SmoothScroll>
-          </ToastProvider>
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+          <AuthProvider>
+            <ToastProvider>
+              <SmoothScroll>{children}</SmoothScroll>
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-

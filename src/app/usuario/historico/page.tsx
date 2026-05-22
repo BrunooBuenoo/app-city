@@ -53,18 +53,18 @@ export default function Historico() {
     <div className="max-w-4xl mx-auto p-6 md:p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Histórico de Alertas</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>Histórico de Alertas</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
           Acompanhe todas as atualizações de status das suas reclamações.
         </p>
       </div>
 
       {/* Timeline */}
       {reclamacoes.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 shadow-sm text-center">
-          <span className="material-symbols-outlined text-[48px] text-[#E2E8F0] mb-3 block">notifications_none</span>
-          <h3 className="text-base font-semibold text-[#112F4E] mb-1">Nenhuma notificação ainda</h3>
-          <p className="text-sm text-[#94A3B8] font-light">
+        <div className="rounded-2xl border p-12 text-center" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+          <span className="material-symbols-outlined text-[48px] mb-3 block" style={{ color: "var(--color-border)" }}>notifications_none</span>
+          <h3 className="text-base font-semibold mb-1" style={{ color: "var(--color-text)" }}>Nenhuma notificação ainda</h3>
+          <p className="text-sm font-light" style={{ color: "var(--color-text-muted)" }}>
             Quando você registrar uma reclamação, as atualizações aparecerão aqui.
           </p>
         </div>
@@ -76,7 +76,8 @@ export default function Historico() {
               <Link
                 key={rec.id}
                 href={`/reclamacao/${rec.id}`}
-                className="block bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                className="block rounded-2xl border p-5 hover:-translate-y-0.5 transition-all group"
+                style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-start gap-4">
                   {/* Status Icon */}
@@ -90,10 +91,10 @@ export default function Historico() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3 mb-1">
-                      <h3 className="text-sm font-bold text-[#112F4E] truncate">{rec.titulo}</h3>
-                      <ArrowRight className="w-4 h-4 text-[#E2E8F0] group-hover:text-[#1a8ccc] shrink-0 transition-colors" />
+                      <h3 className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>{rec.titulo}</h3>
+                      <ArrowRight className="w-4 h-4 shrink-0 transition-colors" style={{ color: "var(--color-border)" }} />
                     </div>
-                    <p className="text-xs text-[#4A5D70] font-light line-clamp-1 mb-2">{rec.descricao}</p>
+                    <p className="text-xs font-light line-clamp-1 mb-2" style={{ color: "var(--color-text-secondary)" }}>{rec.descricao}</p>
                     <div className="flex items-center gap-3 flex-wrap">
                       <span
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
@@ -102,9 +103,9 @@ export default function Historico() {
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.color }} />
                         {st.label}
                       </span>
-                      <span className="text-[10px] text-[#94A3B8]">{rec.categoria}</span>
-                      <span className="text-[10px] text-[#94A3B8]">•</span>
-                      <span className="text-[10px] text-[#94A3B8]">{formatDate(rec.atualizadoEm)}</span>
+                      <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{rec.categoria}</span>
+                      <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>•</span>
+                      <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{formatDate(rec.atualizadoEm)}</span>
                     </div>
                   </div>
                 </div>

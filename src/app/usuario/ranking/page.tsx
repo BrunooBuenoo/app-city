@@ -28,8 +28,8 @@ export default function RankingPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Calculando o ranking de cidadãos...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Calculando o ranking de cidadãos...</p>
       </div>
     );
   }
@@ -53,15 +53,15 @@ export default function RankingPage() {
     <div className="px-4 md:px-6 pb-12 space-y-6">
       {/* Header */}
       <header className="flex items-center gap-3 pt-4 border-b border-[#F5F2ED] pb-4">
-        <Link href="/usuario/dashboard" className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#FAF7F2] transition-colors shrink-0">
-          <ArrowLeft className="w-4.5 h-4.5 text-[#112F4E]" />
+        <Link href="/usuario/dashboard" className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors shrink-0">
+          <ArrowLeft className="w-4.5 h-4.5" style={{ color: "var(--color-text)" }} />
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-[#112F4E] flex items-center gap-2">
+          <h1 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
             <Trophy className="w-5 h-5 text-[#F59E0B]" />
             Ranking de Cidadania
           </h1>
-          <p className="text-xs text-[#94A3B8] font-light">Os moradores mais engajados e ativos de Marília</p>
+          <p className="text-xs font-light" style={{ color: "var(--color-text-muted)" }}>Os moradores mais engajados e ativos de Marília</p>
         </div>
       </header>
 
@@ -73,8 +73,8 @@ export default function RankingPage() {
           
           {/* Pódio Visual (Glassmorphism 3D-like columns) */}
           {ranking.length > 0 ? (
-            <div className="bg-gradient-to-b from-white to-[#FAF7F2]/30 rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-              <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-6 text-center">
+            <div className="rounded-2xl border p-6" style={{ background: "linear-gradient(to bottom, var(--color-surface), var(--color-bg))", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-6 text-center" style={{ color: "var(--color-text-muted)" }}>
                 🏆 Placar de Líderes do Prestígio
               </h3>
               
@@ -84,7 +84,7 @@ export default function RankingPage() {
                 {top2 && (
                   <div className="w-full sm:w-36 flex flex-col items-center order-2 sm:order-1 transition-all hover:scale-[1.02] duration-300">
                     <div className="relative mb-2">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#94A3B8] bg-white shadow-md relative z-10 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#94A3B8] shadow-md relative z-10 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface)" }}>
                         {top2.foto ? (
                           <img src={top2.foto} alt={top2.nome} className="w-full h-full object-cover" />
                         ) : (
@@ -96,13 +96,13 @@ export default function RankingPage() {
                       </div>
                     </div>
                     <div className="text-center px-2 min-w-0 w-full mb-1">
-                      <p className="text-xs font-bold text-[#112F4E] truncate">{top2.nome}</p>
-                      <p className="text-[10px] text-[#94A3B8] font-medium truncate">{calcularNivel(top2.pontos || 0).nome}</p>
+                      <p className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{top2.nome}</p>
+                      <p className="text-[10px] font-medium truncate" style={{ color: "var(--color-text-muted)" }}>{calcularNivel(top2.pontos || 0).nome}</p>
                     </div>
                     {/* Pedestal Prata */}
                     <div className="w-full h-24 bg-gradient-to-t from-[#94A3B8]/20 to-[#E2E8F0]/40 rounded-t-xl border-t border-x border-[#E2E8F0] shadow-inner flex flex-col justify-end items-center pb-3 gap-1">
                       <InsigniaBadge nivelId={calcularNivel(top2.pontos || 0).id} size="sm" />
-                      <span className="text-xs font-bold text-[#4A5D70]">{top2.pontos || 0} pts</span>
+                      <span className="text-xs font-bold" style={{ color: "var(--color-text-secondary)" }}>{top2.pontos || 0} pts</span>
                     </div>
                   </div>
                 )}
@@ -111,7 +111,7 @@ export default function RankingPage() {
                 {top1 && (
                   <div className="w-full sm:w-40 flex flex-col items-center order-1 sm:order-2 transition-all hover:scale-[1.03] duration-300 relative -top-3">
                     <div className="relative mb-2">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-[#F59E0B] bg-white shadow-lg relative z-10 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-[#F59E0B] shadow-lg relative z-10 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface)" }}>
                         {top1.foto ? (
                           <img src={top1.foto} alt={top1.nome} className="w-full h-full object-cover" />
                         ) : (
@@ -126,7 +126,7 @@ export default function RankingPage() {
                       </div>
                     </div>
                     <div className="text-center px-2 min-w-0 w-full mb-1 mt-1">
-                      <p className="text-sm font-bold text-[#112F4E] truncate">{top1.nome}</p>
+                      <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>{top1.nome}</p>
                       <p className="text-[10px] text-[#F59E0B] font-semibold truncate">{calcularNivel(top1.pontos || 0).nome}</p>
                     </div>
                     {/* Pedestal Ouro */}
@@ -141,7 +141,7 @@ export default function RankingPage() {
                 {top3 && (
                   <div className="w-full sm:w-36 flex flex-col items-center order-3 transition-all hover:scale-[1.02] duration-300">
                     <div className="relative mb-2">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#D97706]/70 bg-white shadow-md relative z-10 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-[#D97706]/70 shadow-md relative z-10 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface)" }}>
                         {top3.foto ? (
                           <img src={top3.foto} alt={top3.nome} className="w-full h-full object-cover" />
                         ) : (
@@ -153,8 +153,8 @@ export default function RankingPage() {
                       </div>
                     </div>
                     <div className="text-center px-2 min-w-0 w-full mb-1">
-                      <p className="text-xs font-bold text-[#112F4E] truncate">{top3.nome}</p>
-                      <p className="text-[10px] text-[#94A3B8] font-medium truncate">{calcularNivel(top3.pontos || 0).nome}</p>
+                      <p className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{top3.nome}</p>
+                      <p className="text-[10px] font-medium truncate" style={{ color: "var(--color-text-muted)" }}>{calcularNivel(top3.pontos || 0).nome}</p>
                     </div>
                     {/* Pedestal Bronze */}
                     <div className="w-full h-20 bg-gradient-to-t from-[#D97706]/15 to-[#FEF3C7]/20 rounded-t-xl border-t border-x border-[#E2E8F0] shadow-inner flex flex-col justify-end items-center pb-3 gap-1">
@@ -166,19 +166,19 @@ export default function RankingPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center text-[#94A3B8] font-light shadow-sm">
+            <div className="rounded-2xl border p-8 text-center font-light" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text-muted)", boxShadow: "var(--shadow-card)" }}>
               Nenhum cidadão cadastrado ainda no ranking.
             </div>
           )}
 
           {/* Lista com os Demais Colocados */}
           {outros.length > 0 && (
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-              <div className="px-5 py-3.5 bg-[#FAF7F2]/50 border-b border-[#E2E8F0] flex justify-between items-center">
-                <span className="text-xs font-bold text-[#112F4E] uppercase tracking-wider">Restante dos Defensores</span>
-                <span className="text-[10px] font-medium text-[#94A3B8]">{outros.length} outros membros</span>
+            <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+              <div className="px-5 py-3.5 border-b flex justify-between items-center" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text)" }}>Restante dos Defensores</span>
+                <span className="text-[10px] font-medium" style={{ color: "var(--color-text-muted)" }}>{outros.length} outros membros</span>
               </div>
-              <div className="divide-y divide-[#F5F2ED]">
+              <div className="divide-y" style={{ borderColor: "var(--color-border-light)" }}>
                 {outros.map((item, index) => {
                   const level = calcularNivel(item.pontos || 0);
                   const posicao = index + 4; // Top 4 em diante
@@ -186,12 +186,12 @@ export default function RankingPage() {
                     <div key={item.uid} className="flex items-center justify-between p-4 hover:bg-[#FAF7F2]/30 transition-colors">
                       <div className="flex items-center gap-3.5 min-w-0">
                         {/* Posição */}
-                        <span className="w-5 text-center text-xs font-bold text-[#94A3B8] shrink-0">
+                        <span className="w-5 text-center text-xs font-bold shrink-0" style={{ color: "var(--color-text-muted)" }}>
                           {posicao}º
                         </span>
                         
                         {/* Avatar */}
-                        <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#E2E8F0] flex items-center justify-center bg-white">
+                        <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border flex items-center justify-center" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
                           {item.foto ? (
                             <img src={item.foto} alt={item.nome} className="w-full h-full object-cover" />
                           ) : (
@@ -201,17 +201,17 @@ export default function RankingPage() {
 
                         {/* Nome e Nível */}
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#112F4E] truncate">{item.nome}</p>
+                          <p className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{item.nome}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <InsigniaBadge nivelId={level.id} size="sm" />
-                            <span className="text-[10px] text-[#94A3B8] font-medium truncate leading-none">{level.nome}</span>
+                            <span className="text-[10px] font-medium truncate leading-none" style={{ color: "var(--color-text-muted)" }}>{level.nome}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Pontos */}
                       <div className="text-right shrink-0">
-                        <span className="text-xs font-extrabold text-[#112F4E] bg-[#FAF7F2] border border-[#E2E8F0] px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-extrabold px-2.5 py-1 rounded-lg border" style={{ color: "var(--color-text)", backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
                           {item.pontos || 0} pts
                         </span>
                       </div>
@@ -225,10 +225,10 @@ export default function RankingPage() {
 
         {/* Guia de Pontuação (col-span-4) */}
         <div className="order-1 xl:order-none xl:col-span-4 space-y-6 w-full">
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-4">
+          <div className="rounded-2xl border p-5 space-y-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
             <div>
-              <h3 className="text-sm font-bold text-[#112F4E]">Como Ganhar Pontos?</h3>
-              <p className="text-[11px] text-[#94A3B8] font-light mt-0.5">
+              <h3 className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Como Ganhar Pontos?</h3>
+              <p className="text-[11px] font-light mt-0.5" style={{ color: "var(--color-text-muted)" }}>
                 Suas interações ajudam o app a crescer e a cidade a melhorar! Veja como acumular pontos e subir de ranking:
               </p>
             </div>
@@ -243,12 +243,12 @@ export default function RankingPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-bold text-[#112F4E] truncate">{regra.acao}</h4>
+                        <h4 className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{regra.acao}</h4>
                         <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${regra.bgColor} ${regra.color} shrink-0`}>
                           {regra.pontos}
                         </span>
                       </div>
-                      <p className="text-[10px] text-[#94A3B8] font-light mt-0.5 leading-relaxed">
+                      <p className="text-[10px] font-light mt-0.5 leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
                         {regra.desc}
                       </p>
                     </div>
@@ -257,8 +257,8 @@ export default function RankingPage() {
               })}
             </div>
             
-            <div className="border-t border-[#F5F2ED] pt-4 text-center">
-              <span className="text-[10px] text-[#94A3B8] font-light">
+            <div className="border-t pt-4 text-center" style={{ borderColor: "var(--color-border-light)" }}>
+              <span className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>
                 *Pontuações negativas ocorrem caso você remova um apoio a uma reclamação.
               </span>
             </div>

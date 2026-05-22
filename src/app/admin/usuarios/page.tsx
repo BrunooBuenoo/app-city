@@ -64,37 +64,37 @@ export default function UsuariosAdmin() {
     <div className="p-6 md:p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Usuários</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Gerencie e visualize todos os usuários cadastrados na plataforma.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>Usuários</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>Gerencie e visualize todos os usuários cadastrados na plataforma.</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-2xl border p-5 flex items-center gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="w-10 h-10 rounded-xl bg-[#E8F2F8] flex items-center justify-center">
             <Users className="w-5 h-5 text-[#1a8ccc]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#112F4E]">{users.length}</p>
-            <p className="text-xs text-[#94A3B8]">Total de Usuários</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>{users.length}</p>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Total de Usuários</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-2xl border p-5 flex items-center gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="w-10 h-10 rounded-xl bg-[#EDE9FE] flex items-center justify-center">
             <Shield className="w-5 h-5 text-[#8B5CF6]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#112F4E]">{totalAdmins}</p>
-            <p className="text-xs text-[#94A3B8]">Administradores</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>{totalAdmins}</p>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Administradores</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-2xl border p-5 flex items-center gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
           <div className="w-10 h-10 rounded-xl bg-[#D1FAE5] flex items-center justify-center">
             <UserCircle className="w-5 h-5 text-[#10B981]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#112F4E]">{totalUsuarios}</p>
-            <p className="text-xs text-[#94A3B8]">Cidadãos</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>{totalUsuarios}</p>
+            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Cidadãos</p>
           </div>
         </div>
       </div>
@@ -107,16 +107,21 @@ export default function UsuariosAdmin() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar por nome ou email..."
-          className="w-full pl-10 pr-4 py-3 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#112F4E] placeholder:text-[#94A3B8] outline-none focus:border-[#1a8ccc] focus:ring-2 focus:ring-[#1a8ccc]/15 transition-all"
+          className="w-full pl-10 pr-4 py-3 border rounded-xl text-sm placeholder:opacity-60 outline-none transition-all"
+          style={{
+            backgroundColor: "var(--color-surface)",
+            borderColor: "var(--color-border)",
+            color: "var(--color-text)",
+          }}
         />
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#E2E8F0] bg-[#FAF7F2]">
+              <tr className="border-b" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-bg-alt)" }}>
                 <th className="text-left px-5 py-3 text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Usuário</th>
                 <th className="text-left px-5 py-3 text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider hidden sm:table-cell">Email</th>
                 <th className="text-left px-5 py-3 text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Papel</th>
@@ -145,13 +150,13 @@ export default function UsuariosAdmin() {
                             </span>
                           )}
                         </div>
-                        <span className="text-sm font-semibold text-[#112F4E] truncate max-w-[140px]">
+                        <span className="text-sm font-semibold truncate max-w-[140px]" style={{ color: "var(--color-text)" }}>
                           {u.nome || "Sem nome"}
                         </span>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 hidden sm:table-cell">
-                      <span className="text-xs text-[#4A5D70] truncate max-w-[180px] block">{u.email}</span>
+                      <span className="text-xs truncate max-w-[180px] block" style={{ color: "var(--color-text-secondary)" }}>{u.email}</span>
                     </td>
                     <td className="px-5 py-3.5">
                       <span
@@ -180,7 +185,7 @@ export default function UsuariosAdmin() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell">
-                      <span className="text-xs text-[#94A3B8]">{formatDate(u.criadoEm)}</span>
+                      <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{formatDate(u.criadoEm)}</span>
                     </td>
                   </tr>
                 ))

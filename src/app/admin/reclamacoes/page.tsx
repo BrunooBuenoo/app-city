@@ -66,11 +66,11 @@ export default function AdminReclamacoes() {
   return (
     <>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#F5F2ED]">
+      <header className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--color-border-light)" }}>
         <div className="flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-[#112F4E]" />
-          <h1 className="text-lg font-semibold text-[#112F4E]">Reclamações</h1>
-          <span className="ml-2 px-2.5 py-0.5 bg-[#E8F2F8] text-[#1a8ccc] text-xs font-bold rounded-full">
+          <ClipboardList className="w-5 h-5" style={{ color: "var(--color-text)" }} />
+          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Reclamações</h1>
+          <span className="ml-2 px-2.5 py-0.5 text-xs font-bold rounded-full" style={{ backgroundColor: "var(--color-primary-container)", color: "var(--color-on-primary-container)" }}>
             {reclamacoes.length}
           </span>
         </div>
@@ -86,7 +86,12 @@ export default function AdminReclamacoes() {
               placeholder="Buscar por título ou bairro..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#E2E8F0] rounded-xl text-sm text-[#112F4E] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#1a8ccc]/20 focus:border-[#1a8ccc] outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm placeholder:opacity-60 outline-none transition-all"
+              style={{
+                backgroundColor: "var(--color-bg-alt)",
+                borderColor: "var(--color-border)",
+                color: "var(--color-text)",
+              }}
             />
             {busca && (
               <button
@@ -103,7 +108,12 @@ export default function AdminReclamacoes() {
             <select
               value={categoriaFilter}
               onChange={(e) => setCategoriaFilter(e.target.value)}
-              className="appearance-none pl-4 pr-8 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#112F4E] cursor-pointer hover:bg-[#FAF7F2] transition-colors outline-none focus:ring-2 focus:ring-[#1a8ccc]/20"
+              className="appearance-none pl-4 pr-8 py-2.5 border rounded-xl text-sm cursor-pointer transition-colors outline-none"
+              style={{
+                backgroundColor: "var(--color-surface)",
+                borderColor: "var(--color-border)",
+                color: "var(--color-text)",
+              }}
             >
               {categorias.map((cat) => (
                 <option key={cat} value={cat}>
@@ -124,9 +134,9 @@ export default function AdminReclamacoes() {
               className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                 statusFilter === s.id
                   ? "text-white shadow-sm"
-                  : "bg-white text-[#4A5D70] border border-[#E2E8F0] hover:bg-[#FAF7F2]"
+                  : "border"
               }`}
-              style={statusFilter === s.id ? { backgroundColor: s.color } : undefined}
+              style={statusFilter !== s.id ? { backgroundColor: "var(--color-surface)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" } : statusFilter === s.id ? { backgroundColor: s.color } : undefined}
             >
               <span
                 className="w-2 h-2 rounded-full"
@@ -140,7 +150,7 @@ export default function AdminReclamacoes() {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--color-border)" }}>
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             {isLoading ? (
@@ -151,12 +161,13 @@ export default function AdminReclamacoes() {
             ) : (
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-[#E2E8F0] bg-[#FAFAF8]">
+                <tr className="border-b" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-bg-alt)" }}>
                   {["Reclamação", "Categoria", "Endereço", "Concordos", "Status", ""].map(
                     (h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-xs font-medium text-[#94A3B8] uppercase tracking-wider"
+                        className="px-4 py-3 text-xs font-medium uppercase tracking-wider"
+                        style={{ color: "var(--color-text-muted)" }}
                       >
                         {h}
                       </th>
@@ -171,7 +182,8 @@ export default function AdminReclamacoes() {
                   return (
                   <tr
                     key={r.id}
-                    className="hover:bg-[#FAFAF8]/50 transition-colors group"
+                    className="transition-colors group"
+                    style={{ borderColor: "var(--color-border-light)" }}
                   >
                     <td className="px-4 py-3.5">
                       <Link
@@ -190,10 +202,10 @@ export default function AdminReclamacoes() {
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-[#112F4E] group-hover:text-[#1a8ccc] transition-colors">
+                          <p className="text-sm font-medium transition-colors" style={{ color: "var(--color-text)" }}>
                             {r.titulo}
                           </p>
-                          <p className="text-xs text-[#94A3B8]">{r.anonimo ? "Anônimo" : r.autorNome}</p>
+                          <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{r.anonimo ? "Anônimo" : r.autorNome}</p>
                         </div>
                       </Link>
                     </td>
@@ -205,9 +217,9 @@ export default function AdminReclamacoes() {
                         {r.categoria}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-[#4A5D70]">{r.endereco}</td>
+                    <td className="px-4 py-3.5 text-sm" style={{ color: "var(--color-text-secondary)" }}>{r.endereco}</td>
                     <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5 text-[#94A3B8]">
+                      <div className="flex items-center gap-1.5" style={{ color: "var(--color-text-muted)" }}>
                         <ThumbsUp className="w-3.5 h-3.5" />
                         <span className="text-sm font-medium">{r.concordos}</span>
                       </div>
@@ -280,8 +292,8 @@ export default function AdminReclamacoes() {
           {/* Empty state */}
           {!isLoading && filtered.length === 0 && (
             <div className="p-12 text-center">
-              <Inbox className="w-12 h-12 text-[#E2E8F0] mx-auto mb-3" />
-              <p className="text-sm text-[#94A3B8]">
+              <Inbox className="w-12 h-12 mx-auto mb-3" style={{ color: "var(--color-border)" }} />
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
                 Nenhuma reclamação encontrada com estes filtros.
               </p>
             </div>
@@ -289,7 +301,7 @@ export default function AdminReclamacoes() {
         </div>
 
         {/* Summary footer */}
-        <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-2">
+        <div className="flex items-center justify-between text-xs pt-2" style={{ color: "var(--color-text-muted)" }}>
           <span>Mostrando {filtered.length} reclamações</span>
         </div>
       </div>

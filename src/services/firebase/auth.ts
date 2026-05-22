@@ -18,6 +18,15 @@ export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
   const profileRef = doc(db, "users", user.uid);
   const profileSnap = await getDoc(profileRef);
 
+  /**
+   * NOTA DE SEGURANÇA: A detecção de admin por email (contains "admin") é um mecanismo
+   * temporário para desenvolvimento. Em produção, isso DEVE ser substituído por:
+   * - Firebase Custom Claims (via Admin SDK no backend)
+   * - Ou uma lista de emails admin no Firestore protegida por regras de segurança
+   *
+   * O checkbox "Entrar como Administrador" na tela de login apenas seta `forceAdmin=true`,
+   * mas a verdadeira proteção está nas Firestore Rules que verificam `role == "admin"`.
+   */
   const shouldBeAdmin = forceAdmin || user.email?.toLowerCase().includes("admin");
 
   if (!profileSnap.exists()) {

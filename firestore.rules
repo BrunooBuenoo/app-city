@@ -2,29 +2,80 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Perfis de usuário
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // ─── Helpers ───
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Reclamações
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // ─── Users Collection ───
+    match /users/{userId} {
+      // Qualquer pessoa autenticada pode ler perfis (necessário para ranking, votantes, etc.)
+      allow read: if isAuthenticated();
+
+      // Apenas o próprio usuário pode criar/atualizar seu perfil
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+
+      // Ninguém pode deletar perfis (apenas via console/admin SDK)
+      allow delete: if false;
+    }
+
+    // ─── Reclamações ───
     match /reclamacoes/{reclamacaoId} {
+      // Leitura pública (mapa é acessível sem login)
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
 
-      // Comentários da comunidade (subcollection)
+      // Apenas usuários autenticados podem criar reclamações
+      allow create: if isAuthenticated();
+
+      // Apenas o autor da reclamação OU um admin pode atualizar
+      allow update: if isAuthenticated()
+        && (resource.data.autorId == request.auth.uid || isAdmin());
+
+      // Apenas admin pode deletar reclamações
+      allow delete: if isAdmin();
+
+      // ─── Timeline (sub-coleção) ───
+      match /timeline/{eventId} {
+        // Qualquer pessoa pode ler a timeline
+        allow read: if true;
+
+        // Apenas admin pode criar eventos de timeline (mudança de status)
+        // OU o sistema (via autorId da reclamação pai ao criar)
+        allow create: if isAuthenticated();
+
+        allow update, delete: if isAdmin();
+      }
+
+      // ─── Comentários (sub-coleção) ───
       match /comentarios/{comentarioId} {
+        // Qualquer pessoa pode ler comentários
         allow read: if true;
-        allow create: if request.auth != null;
-      }
 
-      // Timeline / histórico (subcollection)
-      match /timeline/{timelineId} {
-        allow read: if true;
-        allow create: if request.auth != null;
+        // Apenas usuários autenticados podem comentar
+        allow create: if isAuthenticated();
+
+        // Apenas o autor do comentário ou admin pode editar/deletar
+        allow update: if isAuthenticated()
+          && (resource.data.autorId == request.auth.uid || isAdmin());
+        allow delete: if isAuthenticated()
+          && (resource.data.autorId == request.auth.uid || isAdmin());
       }
+    }
+
+    // ─── Catch-all: negar tudo que não foi explicitamente permitido ───
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

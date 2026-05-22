@@ -9,7 +9,7 @@ export default function UsuarioLayout({ children }: { children: React.ReactNode 
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   return (
-    <div className="flex flex-col h-screen bg-[#FAF7F2]">
+    <div className="flex flex-col h-screen" style={{ backgroundColor: "var(--color-bg)" }}>
       {/* Mobile top bar */}
       <div className="md:hidden">
         <TopAppBar />
@@ -21,7 +21,10 @@ export default function UsuarioLayout({ children }: { children: React.ReactNode 
           onToggle={() => setSidebarExpanded(!sidebarExpanded)}
         />
         <div className="flex-1 flex flex-col overflow-hidden md:p-2 md:pl-0">
-          <main className="flex-1 bg-white md:rounded-2xl overflow-y-auto md:shadow-sm pt-16 md:pt-0 pb-20 md:pb-0">
+          <main
+            className="flex-1 md:rounded-2xl overflow-y-auto md:shadow-sm pt-16 md:pt-0 pb-20 md:pb-0"
+            style={{ backgroundColor: "var(--color-surface)" }}
+          >
             {children}
           </main>
         </div>

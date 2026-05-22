@@ -84,8 +84,8 @@ export default function Relatorios() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#112F4E] tracking-tight">Relatórios</h1>
-          <p className="text-sm text-[#94A3B8] mt-1">Visão analítica do sistema de reclamações</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>Relatórios</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>Visão analítica do sistema de reclamações</p>
         </div>
       </div>
 
@@ -97,15 +97,15 @@ export default function Relatorios() {
           { label: "Abertas", value: abertas, icon: Activity, color: "#F59E0B", sub: "Aguardando análise" },
           { label: "Críticas", value: criticas, icon: TrendingDown, color: "#EF4444", sub: "Necessitam atenção" },
         ].map((kpi) => (
-          <div key={kpi.label} className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-sm space-y-3">
+          <div key={kpi.label} className="rounded-2xl border p-5 space-y-3" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">{kpi.label}</span>
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{kpi.label}</span>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: kpi.color + "15" }}>
                 <kpi.icon className="w-4.5 h-4.5" style={{ color: kpi.color }} />
               </div>
             </div>
-            <p className="text-3xl font-bold text-[#112F4E]">{kpi.value}</p>
-            <p className="text-xs text-[#94A3B8] font-light">{kpi.sub}</p>
+            <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>{kpi.value}</p>
+            <p className="text-xs font-light" style={{ color: "var(--color-text-muted)" }}>{kpi.sub}</p>
           </div>
         ))}
       </div>
@@ -113,9 +113,9 @@ export default function Relatorios() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Breakdown */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-[#112F4E] mb-5 flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-[#94A3B8]" />
+        <div className="rounded-2xl border p-6" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+          <h3 className="text-sm font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--color-text)" }}>
+            <PieChart className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
             Distribuição por Status
           </h3>
           <div className="space-y-3">
@@ -124,11 +124,11 @@ export default function Relatorios() {
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                    <span className="font-medium text-[#112F4E]">{s.label}</span>
+                    <span className="font-medium" style={{ color: "var(--color-text)" }}>{s.label}</span>
                   </div>
-                  <span className="text-[#94A3B8] font-medium">{s.count} ({s.pct}%)</span>
+                  <span className="font-medium" style={{ color: "var(--color-text-muted)" }}>{s.count} ({s.pct}%)</span>
                 </div>
-                <div className="h-2 bg-[#FAF7F2] rounded-full overflow-hidden">
+                <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-bg-alt)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${s.pct}%`, backgroundColor: s.color }}
@@ -140,13 +140,13 @@ export default function Relatorios() {
         </div>
 
         {/* Top Categorias */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-[#112F4E] mb-5 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-[#94A3B8]" />
+        <div className="rounded-2xl border p-6" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+          <h3 className="text-sm font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--color-text)" }}>
+            <BarChart3 className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
             Top Categorias
           </h3>
           {topCategorias.length === 0 ? (
-            <p className="text-xs text-[#94A3B8] text-center py-6">Sem dados ainda.</p>
+            <p className="text-xs text-center py-6" style={{ color: "var(--color-text-muted)" }}>Sem dados ainda.</p>
           ) : (
             <div className="space-y-3">
               {topCategorias.map(([cat, count], i) => {
@@ -155,14 +155,14 @@ export default function Relatorios() {
                 const c = colors[i % colors.length];
                 return (
                   <div key={cat} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-[#112F4E] w-28 truncate">{cat}</span>
-                    <div className="flex-1 h-2.5 bg-[#FAF7F2] rounded-full overflow-hidden">
+                    <span className="text-xs font-semibold w-28 truncate" style={{ color: "var(--color-text)" }}>{cat}</span>
+                    <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-bg-alt)" }}>
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: c }}
                       />
                     </div>
-                    <span className="text-xs font-bold text-[#4A5D70] w-10 text-right">{count}</span>
+                    <span className="text-xs font-bold w-10 text-right" style={{ color: "var(--color-text-secondary)" }}>{count}</span>
                   </div>
                 );
               })}

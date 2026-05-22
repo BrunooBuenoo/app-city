@@ -60,8 +60,8 @@ export default function AdminMapaPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
-        <p className="text-sm text-[#4A5D70] font-light">Carregando mapa...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
+        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Carregando mapa...</p>
       </div>
     );
   }
@@ -69,12 +69,12 @@ export default function AdminMapaPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#F5F2ED] shrink-0">
+      <header className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: "var(--color-border-light)" }}>
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-[#1a8ccc]" />
-          <h1 className="text-lg font-semibold text-[#112F4E]">Mapa de Ocorrências</h1>
+          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Mapa de Ocorrências</h1>
         </div>
-        <div className="flex items-center gap-3 text-xs text-[#4A5D70]">
+        <div className="flex items-center gap-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
           <span className="px-2.5 py-1 rounded-full bg-blue-50 text-[#1a8ccc] font-bold">{stats.total} total</span>
           <span className="px-2.5 py-1 rounded-full bg-blue-50/60 text-[#1a8ccc] font-medium">{stats.abertas} abertas</span>
           <span className="px-2.5 py-1 rounded-full bg-green-50 text-[#10B981] font-medium">{stats.resolvidas} resolvidas</span>
@@ -82,17 +82,18 @@ export default function AdminMapaPage() {
       </header>
 
       {/* Filters Bar */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-[#F5F2ED] shrink-0 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-3 px-6 py-3 border-b shrink-0 overflow-x-auto no-scrollbar" style={{ borderColor: "var(--color-border-light)" }}>
         <div className="flex items-center gap-1.5">
-          <Filter className="w-3.5 h-3.5 text-[#94A3B8]" />
-          <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Filtros:</span>
+          <Filter className="w-3.5 h-3.5" style={{ color: "var(--color-text-muted)" }} />
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Filtros:</span>
         </div>
 
         {/* Status filter */}
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#112F4E] outline-none cursor-pointer"
+          className="text-xs px-3 py-1.5 rounded-lg border outline-none cursor-pointer"
+          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
         >
           <option value="todos">Todos Status</option>
           {Object.entries(statusLabels).map(([key, val]) => (
@@ -104,7 +105,8 @@ export default function AdminMapaPage() {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#112F4E] outline-none cursor-pointer"
+          className="text-xs px-3 py-1.5 rounded-lg border outline-none cursor-pointer"
+          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
         >
           <option value="todas">Todas Categorias</option>
           {CATEGORIES.map((cat) => (
@@ -154,19 +156,19 @@ export default function AdminMapaPage() {
                   >
                     {/* Tooltip on hover */}
                     {isHovered && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[200px] bg-white rounded-xl shadow-lg border border-[#E2E8F0] p-3 z-50 pointer-events-none">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[200px] rounded-xl shadow-lg border p-3 z-50 pointer-events-none" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
                         <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: pinColor }}>
                           {rec.categoria}
                         </p>
-                        <p className="text-xs font-semibold text-[#112F4E] truncate">{rec.titulo}</p>
-                        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#F1F5F9]">
+                        <p className="text-xs font-semibold truncate" style={{ color: "var(--color-text)" }}>{rec.titulo}</p>
+                        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t" style={{ borderColor: "var(--color-border-light)" }}>
                           <span className="text-[10px] font-semibold" style={{ color: statusLabels[rec.status]?.color }}>
                             {statusLabels[rec.status]?.label}
                           </span>
-                          <span className="text-[10px] text-[#94A3B8]">{rec.concordos} concordos</span>
+                          <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{rec.concordos} concordos</span>
                         </div>
                         {/* Arrow */}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-white" />
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent" style={{ borderTopColor: "var(--color-surface)" }} />
                       </div>
                     )}
 
@@ -193,8 +195,8 @@ export default function AdminMapaPage() {
         </Map>
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-[#E2E8F0] p-3 z-10 max-w-[180px]">
-          <p className="text-[9px] font-black text-[#112F4E] uppercase tracking-widest mb-2">Legenda</p>
+        <div className="absolute bottom-4 left-4 backdrop-blur-md rounded-xl shadow-lg border p-3 z-10 max-w-[180px]" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+          <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: "var(--color-text)" }}>Legenda</p>
           <div className="space-y-1.5">
             {Object.entries(statusLabels).map(([key, val]) => (
               <div key={key} className="flex items-center gap-2">
@@ -204,7 +206,7 @@ export default function AdminMapaPage() {
                   }`}
                   style={{ backgroundColor: val.color }}
                 />
-                <span className="text-[10px] text-[#4A5D70]">
+                <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
                   {val.label}
                   {key === "resolvido" && " (transparente)"}
                 </span>
