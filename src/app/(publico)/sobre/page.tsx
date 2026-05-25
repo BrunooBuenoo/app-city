@@ -6,7 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
 import { MapPin, ThumbsUp, CheckCircle2, Trophy, Users, FileText, Flame } from "lucide-react";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
+import { type Reclamacao } from "@/services/firebase";
 import { getCategoryByLabel } from "@/utils/categories";
 
 // Patent ranks data (keep in sync with gamification.ts)
@@ -66,10 +66,19 @@ export default function Sobre() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const unsubscribe = onReclamacoesChange((items) => {
-      setReclamacoes(items);
-    });
-    return () => unsubscribe();
+    let active = true;
+    fetch("/api/publico/mapa")
+      .then((res) => res.json())
+      .then((data) => {
+        if (active && Array.isArray(data)) {
+          setReclamacoes(data);
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar dados de mapa públicos:", err));
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
