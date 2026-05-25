@@ -111,10 +111,10 @@ export function Footer() {
             Desenvolvido por <span className="font-semibold text-[#1a8ccc] dark:text-[#38bdf8]">Omnistring</span>
           </p>
           <div className="flex gap-6 text-sm text-[#94A3B8] dark:text-[#64748B]">
-            <Link href="/termos" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
+            <Link href="/termos?tab=termos" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
               Termos de Uso
             </Link>
-            <Link href="/privacidade" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
+            <Link href="/termos?tab=privacidade" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
               Privacidade
             </Link>
           </div>

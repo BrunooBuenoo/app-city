@@ -354,7 +354,7 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
                 Este problema afeta você também?
               </h3>
               <p className="text-xs text-[#94A3B8]">
-                Votos de apoio ajudam a sinalizar a importância do problema para a prefeitura.
+                Votos de apoio ajudam a sinalizar e dar relevância cívica ao problema.
               </p>
               
               {/* Botão de concordar */}
@@ -418,7 +418,7 @@ export default function ReclamacaoDetalhe({ params }: { params: Promise<{ id: st
                   <h3 className="text-sm font-semibold text-[#112F4E]">Resolver Reclamação</h3>
                 </div>
                 <p className="text-xs text-[#4A5D70] font-light">
-                  Se a prefeitura ou a comunidade já resolveu este problema, marque-o como finalizado.
+                  Se este problema já foi solucionado por ações comunitárias ou outras vias, marque-o como finalizado.
                 </p>
                 <button
                   onClick={handleFinalizar}

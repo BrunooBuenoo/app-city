@@ -5,17 +5,17 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
-import { MapPin, ThumbsUp, CheckCircle2, Trophy, Users, FileText, Flame } from "lucide-react";
+import { MapPin, ThumbsUp, CheckCircle2, Trophy, Users, FileText, Flame, Eye, Shield, ShieldAlert, Award, PlusCircle } from "lucide-react";
 import { type Reclamacao } from "@/services/firebase";
 import { getCategoryByLabel } from "@/utils/categories";
 
 // Patent ranks data (keep in sync with gamification.ts)
 const RANKS_DISPLAY = [
-  { level: 1, name: "Observador", icon: "👁️", minXP: 0, color: "#94A3B8", gradient: "from-slate-200 to-slate-300", desc: "Comece participando. Crie sua primeira reclamação." },
-  { level: 2, name: "Colaborador", icon: "🤝", minXP: 50, color: "#1a8ccc", gradient: "from-sky-200 to-blue-300", desc: "Concorde com reclamações e ajude a comunidade." },
-  { level: 3, name: "Guardião", icon: "🛡️", minXP: 150, color: "#8B5CF6", gradient: "from-purple-200 to-violet-300", desc: "Sua participação ativa está fazendo diferença!" },
-  { level: 4, name: "Protetor", icon: "⚔️", minXP: 400, color: "#F59E0B", gradient: "from-amber-200 to-yellow-300", desc: "Cidadão exemplar com grande impacto na cidade." },
-  { level: 5, name: "Herói da Cidade", icon: "🏆", minXP: 1000, color: "#EF4444", gradient: "from-rose-200 to-red-300", desc: "O mais alto nível. Você é um verdadeiro herói!" },
+  { level: 1, name: "Observador", icon: Eye, minXP: 0, color: "#94A3B8", gradient: "from-slate-200 to-slate-300", desc: "Comece participando. Crie sua primeira reclamação." },
+  { level: 2, name: "Colaborador", icon: Users, minXP: 50, color: "#1a8ccc", gradient: "from-sky-200 to-blue-300", desc: "Concorde com reclamações e ajude a comunidade." },
+  { level: 3, name: "Guardião", icon: Shield, minXP: 150, color: "#8B5CF6", gradient: "from-purple-200 to-violet-300", desc: "Sua participação ativa está fazendo diferença!" },
+  { level: 4, name: "Protetor", icon: ShieldAlert, minXP: 400, color: "#F59E0B", gradient: "from-amber-200 to-yellow-300", desc: "Cidadão exemplar com grande impacto na cidade." },
+  { level: 5, name: "Herói da Cidade", icon: Trophy, minXP: 1000, color: "#EF4444", gradient: "from-rose-200 to-red-300", desc: "O mais alto nível. Você é um verdadeiro herói!" },
 ];
 
 const stats = [
@@ -203,7 +203,7 @@ export default function Sobre() {
                   e transparente
                 </h2>
                 <p className="text-[#4A5D70] dark:text-zinc-400 text-lg font-light leading-relaxed mb-8 max-w-md">
-                  Entenda como a sua solicitação chega até as equipes da prefeitura e é solucionada de forma eficiente.
+                  Entenda como a sua solicitação entra para o radar comunitário e ganha força para cobrar soluções eficientes.
                 </p>
                 <Link href="/" className="bg-[#1a8ccc] dark:bg-[#0ea5e9] hover:bg-[#1572a6] dark:hover:bg-[#0284c7] text-white font-medium px-8 py-4 rounded-full w-fit transition-all hover:-translate-y-1 shadow-sm">
                   Reportar Agora
@@ -220,7 +220,7 @@ export default function Sobre() {
                 {[
                   { left: "10%", bottom: "10%", num: "1", color: "#1a8ccc", title: "Reporte o Problema", desc: "Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos." },
                   { left: "40%", top: "35%", num: "2", color: "#F59E0B", title: "Acompanhe o Status", desc: "Receba notificações e interaja com a comunidade dando \"Concordo\" em relatos próximos." },
-                  { right: "5%", top: "5%", num: "3", color: "#10B981", title: "Problema Resolvido", desc: "As equipes da prefeitura atuam e o problema é solucionado com eficiência." },
+                  { right: "5%", top: "5%", num: "3", color: "#10B981", title: "Problema Resolvido", desc: "A cobrança comunitária surte efeito e as melhorias urbanas são conquistadas." },
                 ].map((step) => (
                   <div
                     key={step.num}
@@ -243,7 +243,7 @@ export default function Sobre() {
                 {[
                   { color: "text-[#1a8ccc] dark:text-[#38bdf8]", bg: "bg-[#E8F2F8] dark:bg-[#1a8ccc]/25", title: "Reporte o Problema", desc: "Tire uma foto, descreva o que aconteceu e marque no mapa." },
                   { color: "text-[#F59E0B] dark:text-[#fbbf24]", bg: "bg-[#FEF3C7] dark:bg-[#F59E0B]/25", title: "Acompanhe o Status", desc: "Receba notificações e interaja com a comunidade." },
-                  { color: "text-[#10B981] dark:text-[#34d399]", bg: "bg-[#D1FAE5] dark:bg-[#10B981]/25", title: "Problema Resolvido", desc: "As equipes da prefeitura atuam e o problema é solucionado." },
+                  { color: "text-[#10B981] dark:text-[#34d399]", bg: "bg-[#D1FAE5] dark:bg-[#10B981]/25", title: "Problema Resolvido", desc: "A cobrança comunitária surte efeito e a melhoria urbana é realizada." },
                 ].map((step, i) => (
                   <div key={i} className="flex gap-6 relative z-10">
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold shrink-0 text-xl shadow-sm ${step.bg} ${step.color}`}>{i + 1}</div>
@@ -277,13 +277,15 @@ export default function Sobre() {
             {/* XP Rules */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
               {[
-                { icon: "📝", label: "Criar reclamação", xp: "+5 XP" },
-                { icon: "👍", label: "Concordar", xp: "+1 XP" },
-                { icon: "✅", label: "Concordo resolvido", xp: "+10 XP" },
-                { icon: "🎉", label: "Sua reclamação resolvida", xp: "+20 XP" },
+                { icon: PlusCircle, label: "Criar reclamação", xp: "+5 XP" },
+                { icon: ThumbsUp, label: "Concordar", xp: "+1 XP" },
+                { icon: CheckCircle2, label: "Concordo resolvido", xp: "+10 XP" },
+                { icon: Award, label: "Sua reclamação resolvida", xp: "+20 XP" },
               ].map((rule) => (
-                <div key={rule.label} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-[#E2E8F0] dark:border-zinc-800 shadow-sm text-center">
-                  <span className="text-2xl block mb-2">{rule.icon}</span>
+                <div key={rule.label} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-[#E2E8F0] dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-[#E8F2F8] dark:bg-zinc-800/80 text-[#1a8ccc] dark:text-[#38bdf8] flex items-center justify-center mb-3">
+                    <rule.icon className="w-5 h-5" />
+                  </div>
                   <p className="text-xs text-[#4A5D70] dark:text-zinc-400 font-medium mb-1">{rule.label}</p>
                   <p className="text-sm font-bold text-[#1a8ccc] dark:text-[#38bdf8]">{rule.xp}</p>
                 </div>
@@ -306,7 +308,9 @@ export default function Sobre() {
                       Max Level
                     </div>
                   )}
-                  <span className="text-4xl block mb-3">{rank.icon}</span>
+                  <div className="w-14 h-14 rounded-2xl bg-[#E8F2F8] dark:bg-zinc-800 text-[#1a8ccc] dark:text-[#38bdf8] flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <rank.icon className="w-7 h-7" style={{ color: rank.color }} />
+                  </div>
                   <h3 className="text-base font-bold text-[#112F4E] dark:text-zinc-100 mb-1">{rank.name}</h3>
                   <div className="flex items-center justify-center gap-1 mb-3">
                     <Flame className="w-3.5 h-3.5" style={{ color: rank.color }} />

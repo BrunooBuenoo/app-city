@@ -368,7 +368,7 @@ export default function NovaReclamacao() {
           Nova Reclamação
         </h1>
         <p className="text-sm text-[#94A3B8] mt-1">
-          Informe os detalhes do problema para que a prefeitura possa analisar e tomar providências.
+          Informe os detalhes do problema para catalogá-lo no mapa comunitário e cobrar soluções eficientes.
         </p>
       </div>
 

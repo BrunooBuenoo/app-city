@@ -45,7 +45,7 @@ export default function ConfirmationModal({ isOpen, onClose }: ConfirmationModal
           Reclamação Enviada!
         </h3>
         <p className="text-sm text-[#4A5D70] font-light leading-relaxed mb-8">
-          Sua solicitação foi registrada com sucesso e será analisada pela equipe da prefeitura. Você receberá atualizações sobre o andamento.
+          Sua solicitação foi registrada com sucesso e será analisada pela equipe do Marília ao Contrário. Você receberá atualizações sobre o andamento.
         </p>
 
         {/* Actions */}

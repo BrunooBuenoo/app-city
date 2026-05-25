@@ -43,7 +43,7 @@ export function Navbar() {
                 <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100 leading-none block">
                   SAC Marília
                 </span>
-                <span className="text-[9px] text-[#94A3B8] font-medium tracking-wide">
+                <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100 tracking-wide">
                   ao Contrário
                 </span>
               </div>

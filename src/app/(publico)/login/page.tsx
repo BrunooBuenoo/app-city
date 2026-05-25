@@ -3,9 +3,20 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, MapPin, Users, ArrowRight } from "lucide-react";
+import { 
+  Shield, 
+  MapPin, 
+  Users, 
+  ArrowRight, 
+  Compass, 
+  ChevronLeft,
+  Sparkles,
+  Trophy,
+  CheckCircle
+} from "lucide-react";
 import { signInWithGoogle, getUserProfile } from "@/services/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function Login() {
   const router = useRouter();
@@ -14,7 +25,7 @@ export default function Login() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState("");
 
-  // Se já logado, redireciona
+  // Se já logado, redireciona de forma inteligente
   useEffect(() => {
     if (!loading && isLoggedIn && profile) {
       if (profile.role === "admin") {
@@ -48,47 +59,77 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--color-bg)" }}>
-      {/* Top decorative bar */}
-      <div className="w-full h-1.5 bg-gradient-to-r from-[#1a8ccc] via-[#10B981] to-[#F59E0B]" />
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-zinc-950 flex flex-col text-[#112F4E] dark:text-zinc-100 transition-colors duration-300 relative overflow-hidden">
+      
+      {/* Botão de Voltar para a Landing Page (Sobre) e ThemeToggle flutuantes no topo */}
+      <div className="absolute top-6 left-6 right-6 z-50 flex items-center justify-between pointer-events-none">
+        <Link 
+          href="/sobre" 
+          className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 text-[#4A5D70] dark:text-zinc-300 hover:text-[#112F4E] dark:hover:text-zinc-100 border border-[#E2E8F0] dark:border-zinc-800 backdrop-blur-md text-xs font-semibold shadow-sm hover:shadow transition-all"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Conhecer o SAC
+        </Link>
+        
+        <div className="pointer-events-auto bg-white/80 dark:bg-zinc-900/80 border border-[#E2E8F0] dark:border-zinc-800 rounded-xl p-1 backdrop-blur-md shadow-sm">
+          <ThemeToggle />
+        </div>
+      </div>
+
+      {/* Barra estética fina no topo da página */}
+      <div className="w-full h-1.5 bg-gradient-to-r from-[#1a8ccc] via-[#10B981] to-[#F59E0B] relative z-40" />
 
       <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left Panel — Branding */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#112F4E] to-[#1a3f6b] p-12 flex-col justify-between relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1a8ccc]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#10B981]/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+        
+        {/* ─── Coluna Esquerda: Branding & Ilustração Hero (Victor no Dinossauro) ─── */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#112F4E] to-[#1E4E80] dark:from-zinc-950 dark:to-zinc-900 p-16 flex-col justify-between relative overflow-hidden border-r border-[#E2E8F0]/10 dark:border-zinc-800/40">
+          
+          {/* Círculos decorativos fluidos de vidro no fundo */}
+          <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-[#1a8ccc]/10 dark:bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-[#10B981]/5 dark:bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl pointer-events-none" />
 
+          {/* Logo do App */}
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
-                <span className="text-white text-lg font-bold">S</span>
+            <Link href="/" className="flex items-center gap-3 group w-fit">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md">
+                <MapPin className="w-5.5 h-5.5 text-white animate-bounce" />
               </div>
-              <span className="text-white/80 text-lg font-medium">SAC Marília</span>
-            </div>
+              <div>
+                <span className="text-base font-bold text-white block leading-tight tracking-wide">
+                  SAC Marília
+                </span>
+                <span className="text-[10px] text-white/50 font-medium tracking-widest uppercase">
+                  ao Contrário
+                </span>
+              </div>
+            </Link>
           </div>
 
-          <div className="relative z-10 space-y-8">
-            <h1 className="text-4xl xl:text-5xl font-medium text-white leading-tight">
-              Sua voz transforma
-              <br />
-              <span className="text-[#1a8ccc] italic font-serif">Marília.</span>
+          {/* Conteúdo Informativo */}
+          <div className="relative z-10 space-y-10 my-auto max-w-lg">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-widest shadow-sm">
+              Mudando a Cidade Juntos
+            </div>
+
+            <h1 className="text-4xl xl:text-5xl font-medium text-white leading-[1.1] tracking-tight">
+              Sua voz transforma <br />
+              <span className="text-[#38BDF8] italic font-serif">Marília.</span>
             </h1>
-            <p className="text-white/60 text-lg font-light max-w-md leading-relaxed">
-              Reporte problemas, acompanhe soluções e ajude a construir uma cidade
-              melhor para todos os cidadãos.
+            
+            <p className="text-white/60 text-lg font-light leading-relaxed">
+              Mapeie problemas públicos, colabore com relatos de vizinhos, acumule XP e conquiste patentes cívicas de cidadão exemplar.
             </p>
 
-            {/* Feature highlights */}
+            {/* Diferenciais da Plataforma */}
             <div className="space-y-4 pt-4">
               {[
-                { Icon: MapPin, text: "Marque no mapa e reporte em minutos" },
-                { Icon: Users, text: "Comunidade valida os relatos" },
-                { Icon: Shield, text: "Acompanhe a resolução em tempo real" },
+                { Icon: MapPin, text: "Marque no mapa e reporte em minutos", color: "text-[#38BDF8] bg-[#38BDF8]/10" },
+                { Icon: Users, text: "Colaboração comunitária via Concordos", color: "text-[#34D399] bg-[#34D399]/10" },
+                { Icon: Trophy, text: "Suba de nível e ganhe prestígio cívico", color: "text-amber-400 bg-amber-400/10" },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                    <item.Icon className="w-4 h-4 text-[#1a8ccc]" />
+                  <div className={`w-9 h-9 rounded-lg ${item.color} flex items-center justify-center shrink-0`}>
+                    <item.Icon className="w-4.5 h-4.5" />
                   </div>
                   <span className="text-white/70 text-sm font-light">{item.text}</span>
                 </div>
@@ -96,60 +137,97 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Rodapé do Painel Esquerdo */}
           <div className="relative z-10">
             <p className="text-white/30 text-xs">
-              © 2026 SAC Marília ao Contrário — Prefeitura de Marília
+              © 2026 SAC Marília ao Contrário. Desenvolvido por Omnistring.
             </p>
+          </div>
+
+          {/* Ilustração icônica da Hero: Victor no Dinossauro flutuando no rodapé do painel */}
+          <div className="absolute bottom-0 right-0 z-30 pointer-events-none translate-y-[20%] translate-x-[5%] scale-90 xl:scale-100 origin-bottom-right transition-transform duration-300">
+            <img 
+              src="/image/victor.png" 
+              alt="Victor no Dinossauro" 
+              className="w-[280px] xl:w-[350px] h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.3)] animate-[float_6s_ease-in-out_infinite]"
+              style={{
+                filter: "drop-shadow(0 20px 40px rgba(0, 0, 0, 0.25))"
+              }}
+            />
           </div>
         </div>
 
-        {/* Right Panel — Login Form */}
-        <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-          <div className="w-full max-w-md space-y-10">
-            {/* Mobile logo */}
-            <div className="lg:hidden text-center">
-              <div className="inline-flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-[#1a8ccc] flex items-center justify-center">
-                  <span className="text-white text-lg font-bold">S</span>
+        {/* ─── Coluna Direita: Painel e Formulário de Login ─── */}
+        <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-20">
+          
+          {/* Fundo decorativo para mobile */}
+          <div className="lg:hidden absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-1/4 right-0 w-64 h-64 bg-[#1a8ccc]/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 left-0 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl" />
+          </div>
+
+          <div className="w-full max-w-md space-y-8 relative z-10">
+            
+            {/* Logo do App visível apenas no Mobile */}
+            <div className="lg:hidden text-center mb-4">
+              <div className="inline-flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md">
+                  <MapPin className="w-5.5 h-5.5 text-white" />
                 </div>
-                <span className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>SAC Marília</span>
+                <div className="text-left">
+                  <span className="text-base font-bold text-[#112F4E] dark:text-white block leading-tight">
+                    SAC Marília
+                  </span>
+                  <span className="text-[9px] text-[#4A5D70] dark:text-[#94A3B8] font-bold tracking-widest uppercase">
+                    ao Contrário
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Header */}
+            {/* Cabeçalho de Boas-vindas */}
             <div className="text-center lg:text-left">
-              <h2 className="text-3xl md:text-4xl font-medium tracking-tight mb-3" style={{ color: "var(--color-text)" }}>
+              <h2 className="text-3xl md:text-4xl font-medium tracking-tight mb-3 text-[#112F4E] dark:text-white">
                 Bem-vindo de volta
               </h2>
-              <p className="text-base font-light leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                Entre com sua conta Google para acessar a plataforma e acompanhar suas solicitações.
+              <p className="text-sm md:text-base font-light leading-relaxed text-[#4A5D70] dark:text-zinc-400">
+                Entre de forma instantânea com sua conta Google para gerenciar suas solicitações de zeladoria urbana.
               </p>
             </div>
 
-            {/* Google Sign-In Button */}
+            {/* Controles de Autenticação */}
             <div className="space-y-4">
-              <label className="flex items-center gap-2.5 px-4 py-3 border rounded-xl cursor-pointer transition-all select-none mb-1" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
+              
+              {/* Checkbox Admin - Redesenhado Premium */}
+              <label 
+                className="flex items-center gap-3 px-4 py-3.5 border rounded-2xl cursor-pointer transition-all duration-300 select-none bg-white dark:bg-zinc-900 border-[#E2E8F0] dark:border-zinc-800 hover:border-[#1a8ccc] dark:hover:border-zinc-700 shadow-sm"
+              >
                 <input
                   type="checkbox"
                   checked={isAdminLogin}
                   onChange={(e) => setIsAdminLogin(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-[#1a8ccc] focus:ring-[#1a8ccc] accent-[#1a8ccc] cursor-pointer"
+                  className="w-4.5 h-4.5 rounded border-slate-350 dark:border-zinc-700 text-[#1a8ccc] focus:ring-[#1a8ccc] accent-[#1a8ccc] cursor-pointer"
                 />
-                <span className="text-xs md:text-sm font-semibold" style={{ color: "var(--color-text-secondary)" }}>
-                  Entrar como Administrador
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs md:text-sm font-semibold text-[#112F4E] dark:text-zinc-200">
+                    Entrar como Administrador
+                  </span>
+                  <span className="text-[10px] text-[#94A3B8] font-light">
+                    Apenas para moderadores cívicos
+                  </span>
+                </div>
               </label>
 
+              {/* Botão de Login com Google - Premium */}
               <button
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 rounded-2xl font-medium text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none"
-                style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4.5 border-2 rounded-2xl font-semibold text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none bg-white dark:bg-zinc-900 border-[#E2E8F0] dark:border-zinc-800 hover:border-[#1a8ccc] dark:hover:border-zinc-700 text-[#112F4E] dark:text-white"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-[#1a8ccc] border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <svg className="w-5.5 h-5.5 shrink-0" viewBox="0 0 24 24">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                       fill="#4285F4"
@@ -170,44 +248,47 @@ export default function Login() {
                 )}
                 <span>{isLoading ? "Conectando..." : "Entrar com Google"}</span>
               </button>
-              {/* Error message */}
+
+              {/* Mensagem de Erro formatada */}
               {error && (
-                <p className="text-sm text-center text-[#EF4444] bg-[#FEE2E2] px-4 py-2.5 rounded-xl">{error}</p>
+                <p className="text-sm text-center text-[#EF4444] bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 px-4 py-3 rounded-xl font-medium">
+                  {error}
+                </p>
               )}
 
-              {/* Divider */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-                <span className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>OU</span>
-                <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
+              {/* Divisor Visual */}
+              <div className="flex items-center gap-4 py-2">
+                <div className="flex-1 h-px bg-[#E2E8F0] dark:bg-zinc-800" />
+                <span className="text-xs font-bold tracking-widest text-[#94A3B8]" style={{ fontVariant: "all-small-caps" }}>ou</span>
+                <div className="flex-1 h-px bg-[#E2E8F0] dark:bg-zinc-800" />
               </div>
 
-              {/* Explore without login */}
+              {/* Botão Secundário: Explorar Mapa sem Login */}
               <Link
                 href="/"
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 border rounded-2xl font-medium text-sm transition-all"
-                style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 border rounded-2xl font-semibold text-sm transition-all duration-300 bg-white dark:bg-zinc-900/50 hover:bg-[#FAF7F2] dark:hover:bg-zinc-900 border-[#E2E8F0] dark:border-zinc-800 text-[#4A5D70] dark:text-zinc-300 hover:text-[#112F4E] dark:hover:text-white"
               >
-                <MapPin className="w-4 h-4" />
-                Explorar o mapa sem conta
-                <ArrowRight className="w-4 h-4" />
+                <Compass className="w-4.5 h-4.5 text-[#1a8ccc] dark:text-[#38bdf8] shrink-0" />
+                Explorar o mapa anonimamente
+                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            {/* Terms */}
-            <p className="text-center text-xs leading-relaxed px-4" style={{ color: "var(--color-text-muted)" }}>
-              Ao continuar, você concorda com nossos{" "}
-              <a href="#" className="text-[#1a8ccc] font-medium underline underline-offset-2">
+            {/* Aceitação de Termos com links corretos */}
+            <p className="text-center text-xs leading-relaxed text-[#94A3B8] px-4 font-light">
+              Ao continuar e se autenticar, você concorda com os nossos <br />
+              <Link href="/termos?tab=termos" className="text-[#1a8ccc] dark:text-[#38bdf8] font-semibold hover:underline underline-offset-2">
                 Termos de Uso
-              </a>{" "}
-              e{" "}
-              <a href="#" className="text-[#1a8ccc] font-medium underline underline-offset-2">
+              </Link>
+              {" "}e{" "}
+              <Link href="/termos?tab=privacidade" className="text-[#1a8ccc] dark:text-[#38bdf8] font-semibold hover:underline underline-offset-2">
                 Política de Privacidade
-              </a>
+              </Link>
               .
             </p>
           </div>
         </div>
+
       </div>
     </div>
   );
