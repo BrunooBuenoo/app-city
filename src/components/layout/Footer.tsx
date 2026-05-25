@@ -3,9 +3,9 @@ import { MapPin, Trophy, Mail, Phone, ArrowRight } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-[#0F2A42] pt-20 pb-8 px-6 md:px-12 mt-auto relative overflow-hidden">
+    <footer className="bg-white dark:bg-zinc-950 pt-20 pb-8 px-6 md:px-12 mt-auto relative overflow-hidden border-t border-[#E2E8F0] dark:border-zinc-900 transition-colors duration-300">
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A1F33] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none opacity-0 dark:opacity-100 transition-opacity" />
 
       <div className="relative max-w-[1400px] mx-auto">
         {/* Main Grid */}
@@ -17,15 +17,15 @@ export function Footer() {
                 <MapPin className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-base font-bold text-white block leading-tight">
+                <span className="text-base font-bold text-[#112F4E] dark:text-white block leading-tight">
                   SAC Marília
                 </span>
-                <span className="text-[10px] text-[#94A3B8] font-medium tracking-wide">
+                <span className="text-[10px] text-[#4A5D70] dark:text-[#94A3B8] font-medium tracking-wide">
                   ao Contrário
                 </span>
               </div>
             </div>
-            <p className="text-[#94A3B8] font-light text-sm leading-relaxed">
+            <p className="text-[#4A5D70] dark:text-[#94A3B8] font-light text-sm leading-relaxed">
               Plataforma de gestão urbana participativa.
               Sua voz transforma a cidade.
             </p>
@@ -33,7 +33,7 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-5">
+            <h4 className="text-xs font-bold text-[#112F4E] dark:text-white uppercase tracking-widest mb-5">
               Plataforma
             </h4>
             <ul className="space-y-3">
@@ -45,7 +45,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-[#94A3B8] hover:text-white transition-colors flex items-center gap-1.5 group"
+                    className="text-sm text-[#4A5D70] dark:text-[#94A3B8] hover:text-[#112F4E] dark:hover:text-white transition-colors flex items-center gap-1.5 group"
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     {link.label}
@@ -57,7 +57,7 @@ export function Footer() {
 
           {/* Gamificação */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-5">
+            <h4 className="text-xs font-bold text-[#112F4E] dark:text-white uppercase tracking-widest mb-5">
               Gamificação
             </h4>
             <ul className="space-y-3">
@@ -68,7 +68,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-[#94A3B8] hover:text-white transition-colors flex items-center gap-2"
+                    className="text-sm text-[#4A5D70] dark:text-[#94A3B8] hover:text-[#112F4E] dark:hover:text-white transition-colors flex items-center gap-2"
                   >
                     <span>{link.icon}</span>
                     {link.label}
@@ -80,20 +80,20 @@ export function Footer() {
 
           {/* Portais */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-5">
+            <h4 className="text-xs font-bold text-[#112F4E] dark:text-white uppercase tracking-widest mb-5">
               Acesso Rápido
             </h4>
             <div className="space-y-3">
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-medium text-sm transition-all"
+                className="flex items-center gap-2 px-5 py-3 bg-[#FAF7F2] dark:bg-white/5 hover:bg-[#FAF7F2]/80 dark:hover:bg-white/10 border border-[#E2E8F0] dark:border-white/10 text-[#112F4E] dark:text-white rounded-xl font-medium text-sm transition-all"
               >
                 <span className="material-symbols-outlined text-[16px] text-[#94A3B8]">admin_panel_settings</span>
                 Portal Administrativo
               </Link>
               <Link
                 href="/usuario/dashboard"
-                className="flex items-center gap-2 px-5 py-3 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-xl font-medium text-sm transition-all shadow-sm"
+                className="flex items-center gap-2 px-5 py-3 bg-[#1a8ccc] dark:bg-[#0ea5e9] hover:bg-[#1572a6] dark:hover:bg-[#0284c7] text-white rounded-xl font-medium text-sm transition-all shadow-sm"
               >
                 <span className="material-symbols-outlined text-[16px]">person</span>
                 Portal do Cidadão
@@ -103,15 +103,18 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-[#64748B]">
+        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-[#94A3B8] dark:text-[#64748B]">
             © 2026 SAC Marília ao Contrário. Todos os direitos reservados.
           </p>
-          <div className="flex gap-6 text-sm text-[#64748B]">
-            <Link href="/termos" className="hover:text-white transition-colors">
+          <p className="text-sm text-[#94A3B8]/80 dark:text-[#64748B]/80 font-light">
+            Desenvolvido por <span className="font-semibold text-[#1a8ccc] dark:text-[#38bdf8]">Omnistring</span>
+          </p>
+          <div className="flex gap-6 text-sm text-[#94A3B8] dark:text-[#64748B]">
+            <Link href="/termos" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
               Termos de Uso
             </Link>
-            <Link href="/privacidade" className="hover:text-white transition-colors">
+            <Link href="/privacidade" className="hover:text-[#112F4E] dark:hover:text-white transition-colors">
               Privacidade
             </Link>
           </div>
