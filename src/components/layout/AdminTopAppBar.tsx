@@ -87,7 +87,7 @@ export default function AdminTopAppBar() {
             style={{ color: "var(--color-text-secondary)" }}
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2" style={{ ringColor: "var(--color-surface)" }} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-[var(--color-surface)]" />
           </button>
           <div className="h-8 w-px hidden sm:block" style={{ backgroundColor: "var(--color-border)" }} />
           <div

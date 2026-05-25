@@ -203,7 +203,7 @@ export default function AdminDashboard() {
         </div>
         <button className="p-2 rounded-lg transition-colors relative cursor-pointer" style={{ color: "var(--color-text-muted)" }}>
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2" style={{ ringColor: "var(--color-surface)" }} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-[var(--color-surface)]" />
         </button>
       </header>
 
