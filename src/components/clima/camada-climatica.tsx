@@ -16,7 +16,7 @@ interface CamadaClimaticaProps {
 export default function CamadaClimatica({ buttonsTop }: CamadaClimaticaProps) {
   const { isActive, weather } = useClima();
 
-  // 1. Efeito independente para o Ciclo Dia/Noite/Golden Hour
+
   useEffect(() => {
     const updateTimePeriod = () => {
       const hours = new Date().getHours();
