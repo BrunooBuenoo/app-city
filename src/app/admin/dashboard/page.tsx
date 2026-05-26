@@ -544,7 +544,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-3.5">
-                            <button className="p-1 rounded-md cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--color-text-muted)" }}>
+                            <button className="p-1 rounded-md cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" style={{ color: "var(--color-text-muted)" }}>
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
                           </td>

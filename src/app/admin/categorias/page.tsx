@@ -258,7 +258,7 @@ export default function Categorias() {
                   onMouseLeave={(e) => e.currentTarget.style.boxShadow = "var(--shadow-card)"}
                 >
                   {/* Hover Action Buttons */}
-                  <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleOpenEdit(cat)}
                       title="Editar Categoria"

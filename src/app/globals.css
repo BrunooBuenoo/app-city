@@ -220,3 +220,19 @@
 .maplibregl-popup-tip {
   display: none !important;
 }
+
+/* ─── Bell Shake Animation ─── */
+.animate-bell-shake {
+  animation: bell-shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+  transform-origin: top center;
+}
+
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(10deg); }
+  30% { transform: rotate(-10deg); }
+  45% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  75% { transform: rotate(2deg); }
+  85% { transform: rotate(-2deg); }
+}
