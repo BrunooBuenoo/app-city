@@ -3,40 +3,40 @@
 
 /* ─── Design Token System (CSS Custom Properties) ─── */
 :root {
-  /* Semantic surfaces */
-  --color-bg: #FAF7F2;
-  --color-bg-alt: #F5F2ED;
+  /* Semantic surfaces — neutral cool palette */
+  --color-bg: #F9FAFB;
+  --color-bg-alt: #F3F4F6;
   --color-surface: #FFFFFF;
-  --color-surface-dim: #EDE9E3;
-  --color-surface-variant: #F5F2ED;
-  --color-surface-container: #EDE9E3;
-  --color-surface-container-high: #E8E4DE;
+  --color-surface-dim: #F3F4F6;
+  --color-surface-variant: #F9FAFB;
+  --color-surface-container: #F3F4F6;
+  --color-surface-container-high: #E5E7EB;
   --color-surface-elevated: #FFFFFF;
 
   /* Text */
-  --color-text: #112F4E;
-  --color-text-secondary: #4A5D70;
-  --color-text-muted: #94A3B8;
+  --color-text: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
 
   /* Borders */
-  --color-border: #E2E8F0;
-  --color-border-light: #F5F2ED;
+  --color-border: #E5E7EB;
+  --color-border-light: #F3F4F6;
 
   /* Primary (kept as-is, works on both themes) */
   --color-primary: #1a8ccc;
   --color-primary-hover: #1572a6;
-  --color-primary-container: #E8F2F8;
+  --color-primary-container: #EBF5FB;
   --color-on-primary-container: #1a8ccc;
 
-  /* Shadows */
-  --shadow-card: 0 1px 3px rgba(17, 47, 78, 0.04), 0 1px 2px rgba(17, 47, 78, 0.02);
-  --shadow-card-hover: 0 4px 12px rgba(17, 47, 78, 0.06), 0 1px 3px rgba(17, 47, 78, 0.04);
-  --shadow-elevated: 0 8px 24px rgba(17, 47, 78, 0.06);
+  /* Shadows — very subtle, almost flat */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.05);
 
   /* Misc */
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --overlay-bg: rgba(0, 0, 0, 0.45);
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(229, 231, 235, 0.6);
+  --overlay-bg: rgba(0, 0, 0, 0.4);
 }
 
 .dark {
@@ -49,21 +49,21 @@
   --color-surface-container-high: #3B4A60;
   --color-surface-elevated: #253347;
 
-  --color-text: #E2E8F0;
+  --color-text: #F1F5F9;
   --color-text-secondary: #94A3B8;
   --color-text-muted: #64748B;
 
   --color-border: #334155;
   --color-border-light: #1E293B;
 
-  --color-primary-container: rgba(26, 140, 204, 0.15);
+  --color-primary-container: rgba(26, 140, 204, 0.12);
   --color-on-primary-container: #7CC8ED;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.25);
 
-  --glass-bg: rgba(15, 23, 42, 0.9);
+  --glass-bg: rgba(15, 23, 42, 0.95);
   --glass-border: rgba(51, 65, 85, 0.5);
   --overlay-bg: rgba(0, 0, 0, 0.6);
 }
@@ -83,7 +83,7 @@
 /* ─── Themed Card System ─── */
 .card-clean {
   background-color: var(--color-surface);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
 }
@@ -114,8 +114,8 @@
 
 /* ─── Glass Panel ─── */
 .glass-panel {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   background-color: var(--glass-bg);
   border-color: var(--glass-border);
 }
@@ -131,7 +131,7 @@
 
 /* ─── Status Badge Colors ─── */
 .badge-open {
-  @apply bg-[#E8F2F8] text-[#1a8ccc];
+  @apply bg-[#EBF5FB] text-[#1a8ccc];
 }
 .badge-progress {
   @apply bg-[#FEF3C7] text-[#B45309];

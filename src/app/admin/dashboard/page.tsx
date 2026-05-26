@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BarChart3, Bell, Calendar as CalendarIcon, TrendingUp, TrendingDown,
-  Inbox, Clock, CheckCircle, MoreHorizontal, Filter,
-  ReceiptText, PieChart, Info, ChevronLeft, ChevronRight,
-  Loader2,
+  TrendingUp, TrendingDown,
+  Clock, CheckCircle, MoreHorizontal,
+  Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
@@ -45,8 +44,6 @@ export default function AdminDashboard() {
     );
     return () => unsubscribe();
   }, []);
-
-  // Removed simulated notification — it was confusing UX
 
   // Filtro de data
   const filteredReclamacoes = reclamacoes.filter((r) => {
@@ -92,7 +89,7 @@ export default function AdminDashboard() {
   reclamacoes.forEach((r) => {
     if (!r.criadoEm) return;
     const date = r.criadoEm.toDate();
-    const month = date.getMonth(); // 0 a 11
+    const month = date.getMonth();
     monthlyCreated[month]++;
     if (r.status === "resolvido") {
       monthlyResolved[month]++;
@@ -187,8 +184,8 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--color-primary)" }} />
-        <p className="text-sm font-light" style={{ color: "var(--color-text-secondary)" }}>Carregando dados do painel...</p>
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--color-text-muted)" }} />
+        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>Carregando dados...</p>
       </div>
     );
   }
@@ -196,129 +193,134 @@ export default function AdminDashboard() {
   return (
     <>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--color-border-light)" }}>
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5" style={{ color: "var(--color-text)" }} />
-          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Dashboard Administrativo</h1>
+      <header className="flex items-center justify-between px-6 md:px-8 py-5 border-b" style={{ borderColor: "var(--color-border)" }}>
+        <div>
+          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Dashboard</h1>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+            Visão geral das ocorrências
+          </p>
         </div>
-        <button className="p-2 rounded-lg transition-colors relative cursor-pointer" style={{ color: "var(--color-text-muted)" }}>
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-[var(--color-surface)]" />
-        </button>
       </header>
 
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 md:px-8 pb-8 space-y-6">
         {/* Date Filter Pills */}
-        <div className="flex items-center justify-between pt-4 gap-4 flex-wrap">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {dateFilters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  activeFilter === filter.id
-                    ? "bg-[#1a8ccc] text-white shadow-sm"
-                    : "border"
-                }`}
-                style={activeFilter !== filter.id ? { backgroundColor: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" } : undefined}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-2 pt-5 overflow-x-auto no-scrollbar">
+          {dateFilters.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => setActiveFilter(filter.id)}
+              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all cursor-pointer whitespace-nowrap ${
+                activeFilter === filter.id
+                  ? "text-white shadow-sm"
+                  : "border"
+              }`}
+              style={
+                activeFilter === filter.id
+                  ? { backgroundColor: "#1a8ccc" }
+                  : { backgroundColor: "var(--color-surface)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" }
+              }
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Cards — Brightly style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Reclamações Filtradas", value: totalCount, color: "from-blue-50 to-blue-100/50", Icon: Inbox, trend: "Atualizado", up: true },
-            { label: "Em Aberto", value: abertoCount, color: "from-sky-50 to-sky-100/50", Icon: Clock, trend: `${pctAbertas}% do total`, up: true },
-            { label: "Em Progresso / Análise", value: emAndamentoCount, color: "from-amber-50 to-amber-100/50", Icon: Clock, trend: `${pctAndamento}% do total`, up: true },
-            { label: "Resolvidas", value: resolvidoCount, color: "from-green-50 to-green-100/50", Icon: CheckCircle, trend: `${pctResolvidas}% do total`, up: true },
+            { label: "Total de Reclamações", value: totalCount, pct: null, up: true },
+            { label: "Em Aberto", value: abertoCount, pct: pctAbertas, up: true },
+            { label: "Em Andamento", value: emAndamentoCount, pct: pctAndamento, up: true },
+            { label: "Resolvidas", value: resolvidoCount, pct: pctResolvidas, up: true },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>{stat.label}</p>
-                <stat.Icon className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
-              </div>
-              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>{stat.value}</p>
-              <div className="flex items-center gap-1 mt-1 text-[11px]" style={{ color: "var(--color-text-muted)" }}>
-                <span>{stat.trend}</span>
-              </div>
+            <div
+              key={stat.label}
+              className="p-5 rounded-xl border"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+            >
+              <p className="text-[13px] mb-3" style={{ color: "var(--color-text-muted)" }}>{stat.label}</p>
+              <p className="text-[32px] font-bold leading-none mb-2" style={{ color: "var(--color-text)" }}>{String(stat.value).padStart(2, "0")}</p>
+              {stat.pct !== null && (
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-[12px] font-medium text-emerald-500">{stat.pct}%</span>
+                  <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>do total</span>
+                </div>
+              )}
+              {stat.pct === null && (
+                <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>Período filtrado</span>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Status Distribution Progress Bar */}
-        <div className="p-5 rounded-xl border space-y-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
+        {/* Status Distribution — Slim bar */}
+        <div
+          className="p-5 rounded-xl border space-y-4"
+          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+        >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <PieChart className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
-              <h3 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Proporção por Status (Período)</h3>
-            </div>
-            <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>Total: {totalCount} relatos</span>
+            <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Proporção por Status</h3>
+            <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>Total: {totalCount} relatos</span>
           </div>
 
-          <div className="w-full h-3.5 rounded-full flex overflow-hidden border" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
-            <div className="bg-[#1a8ccc] h-full transition-all duration-500" style={{ width: `${pctAbertas}%` }} title={`Abertas: ${pctAbertas}%`} />
-            <div className="bg-[#F59E0B] h-full transition-all duration-500" style={{ width: `${pctAndamento}%` }} title={`Em Andamento: ${pctAndamento}%`} />
-            <div className="bg-[#10B981] h-full transition-all duration-500" style={{ width: `${pctResolvidas}%` }} title={`Resolvidas: ${pctResolvidas}%`} />
-            <div className="bg-[#EF4444] h-full transition-all duration-500" style={{ width: `${pctCriticas}%` }} title={`Críticas: ${pctCriticas}%`} />
+          <div className="w-full h-2 rounded-full flex overflow-hidden" style={{ backgroundColor: "var(--color-bg-alt)" }}>
+            <div className="bg-[#1a8ccc] h-full transition-all duration-500" style={{ width: `${pctAbertas}%` }} />
+            <div className="bg-[#F59E0B] h-full transition-all duration-500" style={{ width: `${pctAndamento}%` }} />
+            <div className="bg-[#10B981] h-full transition-all duration-500" style={{ width: `${pctResolvidas}%` }} />
+            <div className="bg-[#EF4444] h-full transition-all duration-500" style={{ width: `${pctCriticas}%` }} />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="flex flex-wrap gap-4">
             {[
               { color: "#1a8ccc", label: "Abertas", value: abertoCount, pct: pctAbertas },
               { color: "#F59E0B", label: "Em Progresso", value: emAndamentoCount, pct: pctAndamento },
               { color: "#10B981", label: "Resolvidas", value: resolvidoCount, pct: pctResolvidas },
               { color: "#EF4444", label: "Críticas", value: criticoCount, pct: pctCriticas },
             ].map((item) => (
-              <div key={item.label} className="p-3 rounded-lg border flex flex-col" style={{ backgroundColor: "var(--color-bg-alt)", borderColor: "var(--color-border)" }}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>{item.label}</span>
-                </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{item.value}</span>
-                  <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>({item.pct}%)</span>
-                </div>
+              <div key={item.label} className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+                  {item.label} <strong className="font-semibold" style={{ color: "var(--color-text)" }}>{item.value}</strong> ({item.pct}%)
+                </span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Charts — 2 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Chart 1: Criadas */}
-          <div className="p-5 rounded-xl border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#94A3B8]" />
-                <h3 className="text-sm font-semibold text-[#112F4E]">Volume Mensal de Relatos (Total)</h3>
-              </div>
-              <button className="p-1 hover:bg-[#FAF7F2] rounded transition-colors cursor-pointer">
-                <Info className="w-4 h-4 text-[#94A3B8]" />
-              </button>
-            </div>
-            <div className="h-[180px] flex items-end gap-1.5 px-1 pt-4">
+          <div
+            className="p-5 rounded-xl border"
+            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+          >
+            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Volume Mensal de Relatos</h3>
+            <div className="h-[160px] flex items-end gap-1.5 px-1">
               {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map((m, i) => {
                 const count = monthlyCreated[i];
-                const heightPct = Math.round((count / maxCreated) * 80) + 10; // min 10% to show bar
+                const heightPct = Math.round((count / maxCreated) * 80) + 10;
                 const hasValue = count > 0;
                 return (
                   <div key={m} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
                     {hasValue && (
-                      <span className="absolute bottom-full mb-1 bg-[#112F4E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                      <span
+                        className="absolute bottom-full mb-1 text-[10px] font-semibold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
+                        style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}
+                      >
                         {count}
                       </span>
                     )}
                     <div
-                      className={`w-full rounded-t transition-all ${
-                        hasValue ? "bg-[#1a8ccc] hover:bg-[#1572a6]" : "bg-[#1a8ccc]/10"
+                      className={`w-full rounded transition-all ${
+                        hasValue ? "bg-[#1a8ccc] hover:bg-[#1572a6]" : ""
                       }`}
-                      style={{ height: hasValue ? `${heightPct}%` : "8%" }}
+                      style={{
+                        height: hasValue ? `${heightPct}%` : "6%",
+                        backgroundColor: hasValue ? undefined : "var(--color-bg-alt)",
+                      }}
                     />
-                    <span className="text-[10px] text-[#94A3B8] font-light">{m}</span>
+                    <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{m}</span>
                   </div>
                 );
               })}
@@ -326,17 +328,12 @@ export default function AdminDashboard() {
           </div>
 
           {/* Chart 2: Resolvidas */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#94A3B8]" />
-                <h3 className="text-sm font-semibold text-[#112F4E]">Resoluções de Ocorrências</h3>
-              </div>
-              <button className="p-1 hover:bg-[#FAF7F2] rounded transition-colors cursor-pointer">
-                <Info className="w-4 h-4 text-[#94A3B8]" />
-              </button>
-            </div>
-            <div className="h-[180px] flex items-end gap-1.5 px-1 pt-4">
+          <div
+            className="p-5 rounded-xl border"
+            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+          >
+            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Resoluções de Ocorrências</h3>
+            <div className="h-[160px] flex items-end gap-1.5 px-1">
               {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map((m, i) => {
                 const count = monthlyResolved[i];
                 const heightPct = Math.round((count / maxResolved) * 80) + 10;
@@ -344,17 +341,23 @@ export default function AdminDashboard() {
                 return (
                   <div key={m} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
                     {hasValue && (
-                      <span className="absolute bottom-full mb-1 bg-[#112F4E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                      <span
+                        className="absolute bottom-full mb-1 text-[10px] font-semibold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
+                        style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}
+                      >
                         {count}
                       </span>
                     )}
                     <div
-                      className={`w-full rounded-t transition-all ${
-                        hasValue ? "bg-[#10B981] hover:bg-[#059669]" : "bg-[#10B981]/10"
+                      className={`w-full rounded transition-all ${
+                        hasValue ? "bg-[#10B981] hover:bg-[#059669]" : ""
                       }`}
-                      style={{ height: hasValue ? `${heightPct}%` : "8%" }}
+                      style={{
+                        height: hasValue ? `${heightPct}%` : "6%",
+                        backgroundColor: hasValue ? undefined : "var(--color-bg-alt)",
+                      }}
                     />
-                    <span className="text-[10px] text-[#94A3B8] font-light">{m}</span>
+                    <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{m}</span>
                   </div>
                 );
               })}
@@ -363,70 +366,67 @@ export default function AdminDashboard() {
         </div>
 
         {/* Bottom Details — Category Breakdown + Calendar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Category Breakdown */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-[#94A3B8]" />
-                  <h3 className="text-sm font-semibold text-[#112F4E]">Incidência por Categoria</h3>
-                </div>
-              </div>
-              <div className="space-y-3.5">
-                {categoryDistribution.map((cat) => (
-                  <div key={cat.label} className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="text-sm text-[#4A5D70] flex-1 truncate">{cat.label}</span>
-                    <div className="w-32 h-2.5 bg-[#FAF7F2] rounded-full overflow-hidden border border-[#E2E8F0]/30 shrink-0">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${cat.pct}%`, backgroundColor: cat.color }} />
-                    </div>
-                    <span className="text-xs font-bold text-[#112F4E] w-12 text-right">{cat.count} ({cat.pct}%)</span>
+          <div
+            className="p-5 rounded-xl border flex flex-col"
+            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+          >
+            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Incidência por Categoria</h3>
+            <div className="space-y-3">
+              {categoryDistribution.map((cat) => (
+                <div key={cat.label} className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="text-[13px] flex-1 truncate" style={{ color: "var(--color-text-secondary)" }}>{cat.label}</span>
+                  <div className="w-24 h-1.5 rounded-full overflow-hidden shrink-0" style={{ backgroundColor: "var(--color-bg-alt)" }}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${cat.pct}%`, backgroundColor: cat.color }} />
                   </div>
-                ))}
-              </div>
+                  <span className="text-[12px] font-medium w-16 text-right" style={{ color: "var(--color-text)" }}>{cat.count} ({cat.pct}%)</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Fully Interactive Calendar */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4 text-[#94A3B8]" />
-                <h3 className="text-sm font-semibold text-[#112F4E]">Registro Diário</h3>
-              </div>
-              <div className="flex items-center gap-1 border border-[#E2E8F0] rounded-lg p-0.5 bg-[#FAF7F2]">
+          {/* Calendar */}
+          <div
+            className="p-5 rounded-xl border"
+            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Registro Diário</h3>
+              <div className="flex items-center gap-1 border rounded-md p-0.5" style={{ borderColor: "var(--color-border)" }}>
                 <button
                   onClick={handlePrevMonth}
-                  className="p-1 hover:bg-white rounded transition-colors cursor-pointer"
+                  className="p-1 hover:bg-[var(--color-bg-alt)] rounded transition-colors cursor-pointer"
                 >
-                  <ChevronLeft className="w-4 h-4 text-[#4A5D70]" />
+                  <ChevronLeft className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
                 </button>
-                <span className="text-xs font-semibold text-[#112F4E] px-2 capitalize">{calMonthName}</span>
+                <span className="text-[12px] font-medium px-2 capitalize" style={{ color: "var(--color-text)" }}>{calMonthName}</span>
                 <button
                   onClick={handleNextMonth}
-                  className="p-1 hover:bg-white rounded transition-colors cursor-pointer"
+                  className="p-1 hover:bg-[var(--color-bg-alt)] rounded transition-colors cursor-pointer"
                 >
-                  <ChevronRight className="w-4 h-4 text-[#4A5D70]" />
+                  <ChevronRight className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-7 gap-1 text-center">
               {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
-                <div key={i} className="text-[10px] font-bold text-[#94A3B8] py-1">{d}</div>
+                <div key={i} className="text-[11px] font-medium py-1.5" style={{ color: "var(--color-text-muted)" }}>{d}</div>
               ))}
               {calendarDaysList.map((day, i) => {
                 const hasComplaint = day !== null && calendarComplaintDays.has(day);
                 return (
-                  <div key={i} className="h-8 flex items-center justify-center rounded-lg text-xs">
+                  <div key={i} className="h-8 flex items-center justify-center">
                     {day !== null ? (
                       <span
-                        className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
+                        className={`w-7 h-7 flex items-center justify-center rounded-md text-[12px] transition-colors ${
                           hasComplaint
-                            ? "bg-[#1a8ccc] text-white font-bold shadow-sm"
-                            : "text-[#4A5D70] hover:bg-[#FAF7F2]"
+                            ? "bg-[#1a8ccc] text-white font-semibold"
+                            : "hover:bg-[var(--color-bg-alt)]"
                         }`}
+                        style={!hasComplaint ? { color: "var(--color-text-secondary)" } : undefined}
                         title={hasComplaint ? `${day} de ${calMonthName} possui reclamações` : ""}
                       >
                         {day}
@@ -441,26 +441,26 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Complaints Table */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
-          <div className="p-4 flex items-center justify-between border-b border-[#E2E8F0]">
-            <div className="flex items-center gap-2">
-              <ReceiptText className="w-4 h-4 text-[#94A3B8]" />
-              <h3 className="text-sm font-semibold text-[#112F4E]">Ocorrências Recentes</h3>
-            </div>
-            <span className="text-xs font-medium text-[#94A3B8]">
-              Clique em uma linha para gerenciar
+        {/* Recent Complaints Table — Brightly style */}
+        <div
+          className="rounded-xl border overflow-hidden"
+          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+        >
+          <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: "var(--color-border)" }}>
+            <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Ocorrências Recentes</h3>
+            <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>
+              Clique para gerenciar
             </span>
           </div>
 
           {filteredReclamacoes.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[#94A3B8]">
-              Nenhuma reclamação encontrada para o filtro de data ativo.
+            <div className="p-10 text-center text-[13px]" style={{ color: "var(--color-text-muted)" }}>
+              Nenhuma reclamação encontrada para o filtro ativo.
             </div>
           ) : (
             <>
               {/* Mobile List View */}
-              <div className="md:hidden divide-y divide-[#F5F2ED]">
+              <div className="md:hidden divide-y" style={{ borderColor: "var(--color-border)" }}>
                 {filteredReclamacoes.slice(0, 6).map((row) => {
                   const cat = getCatDetails(row.categoria);
                   const st = getStatusDetails(row.status);
@@ -468,23 +468,24 @@ export default function AdminDashboard() {
                     <div
                       key={row.id}
                       onClick={() => router.push(`/admin/reclamacoes/${row.id}`)}
-                      className="p-4 flex items-center gap-3 active:bg-[#FAF7F2] transition-colors"
+                      className="px-4 py-3.5 flex items-center gap-3 cursor-pointer transition-colors"
+                      style={{ borderColor: "var(--color-border)" }}
                     >
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-sm border border-[#E2E8F0]/30"
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
                         style={{ backgroundColor: cat.bgLight, color: cat.color }}
                       >
                         {cat.letter}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[#112F4E] truncate">{row.titulo}</p>
-                        <p className="text-xs text-[#94A3B8] font-light">
+                        <p className="text-[13px] font-medium truncate" style={{ color: "var(--color-text)" }}>{row.titulo}</p>
+                        <p className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>
                           {row.endereco.split(",")[0]} · {formatDate(row.criadoEm)}
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: st.color }} />
-                        <span className="text-xs font-semibold" style={{ color: st.color }}>{st.label}</span>
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
+                        <span className="text-[12px] font-medium" style={{ color: st.color }}>{st.label}</span>
                       </div>
                     </div>
                   );
@@ -495,13 +496,13 @@ export default function AdminDashboard() {
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-[#E2E8F0] bg-[#FAF7F2]/60">
-                      {["Atividade / Título", "Data de Registro", "Endereço", "Status"].map((h) => (
-                        <th key={h} className="px-5 py-3 text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">{h}</th>
+                    <tr className="border-b" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)" }}>
+                      {["Título", "Data", "Endereço", "Status", ""].map((h) => (
+                        <th key={h} className="px-6 py-3 text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F5F2ED]">
+                  <tbody>
                     {filteredReclamacoes.slice(0, 10).map((row) => {
                       const cat = getCatDetails(row.categoria);
                       const st = getStatusDetails(row.status);
@@ -509,31 +510,42 @@ export default function AdminDashboard() {
                         <tr
                           key={row.id}
                           onClick={() => router.push(`/admin/reclamacoes/${row.id}`)}
-                          className="hover:bg-[#FAF7F2]/50 transition-colors cursor-pointer group"
+                          className="border-b cursor-pointer transition-colors group"
+                          style={{ borderColor: "var(--color-border)" }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-bg)"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                         >
-                          <td className="px-5 py-3.5">
+                          <td className="px-6 py-3.5">
                             <div className="flex items-center gap-3">
                               <div 
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-[#E2E8F0]/40 group-hover:scale-105 transition-transform"
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0"
                                 style={{ backgroundColor: cat.bgLight, color: cat.color }}
                               >
                                 {cat.letter}
                               </div>
                               <div>
-                                <span className="text-sm font-semibold text-[#112F4E] group-hover:text-[#1a8ccc] transition-colors">{row.titulo}</span>
-                                <span className="block text-[10px] text-[#94A3B8] mt-0.5">{row.categoria} {row.subcategoria ? `· ${row.subcategoria}` : ""}</span>
+                                <span className="text-[13px] font-medium" style={{ color: "var(--color-text)" }}>{row.titulo}</span>
+                                <span className="block text-[11px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>{row.categoria}{row.subcategoria ? ` · ${row.subcategoria}` : ""}</span>
                               </div>
                             </div>
                           </td>
-                          <td className="px-5 py-3.5 text-sm text-[#4A5D70] font-light">{formatDate(row.criadoEm)}</td>
-                          <td className="px-5 py-3.5 text-sm text-[#4A5D70] font-light truncate max-w-[240px]" title={row.endereco}>
+                          <td className="px-6 py-3.5 text-[13px]" style={{ color: "var(--color-text-secondary)" }}>{formatDate(row.criadoEm)}</td>
+                          <td className="px-6 py-3.5 text-[13px] truncate max-w-[200px]" style={{ color: "var(--color-text-secondary)" }} title={row.endereco}>
                             {row.endereco}
                           </td>
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-2">
-                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: st.color }} />
-                              <span className="text-sm font-semibold" style={{ color: st.color }}>{st.label}</span>
-                            </div>
+                          <td className="px-6 py-3.5">
+                            <span
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                              style={{ backgroundColor: `${st.color}12`, color: st.color }}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.color }} />
+                              {st.label}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <button className="p-1 rounded-md cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--color-text-muted)" }}>
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       );

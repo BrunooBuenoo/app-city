@@ -138,7 +138,7 @@ export default function MinhasReclamacoes() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {reclamacoes.map((c) => {
               const Icon = getCategoryIcon(c.categoria);
-              const meta = statusMeta[c.status] || { label: c.status, bg: "bg-[#FAF7F2]", text: "text-[#4A5D70]" };
+              const meta = statusMeta[c.status] || { label: c.status, bg: "bg-[#F3F4F6]", text: "text-[#6B7280]" };
               const cat = getCategoryByLabel(c.categoria);
               return (
                 <div key={c.id} className="p-5 rounded-2xl border flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-all" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}>
@@ -151,15 +151,15 @@ export default function MinhasReclamacoes() {
                           style={cat ? { backgroundColor: cat.bgLight, borderColor: "transparent" } : undefined}
                         >
                           <Icon 
-                            className="w-4.5 h-4.5 text-[#4A5D70]" 
-                            style={cat ? { color: cat.color } : undefined}
+                            className="w-4.5 h-4.5" 
+                            style={cat ? { color: cat.color } : { color: "var(--color-text-secondary)" }}
                           />
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-sm font-bold truncate" title={c.titulo} style={{ color: "var(--color-text)" }}>{c.titulo}</h4>
                           <p 
-                            className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold"
-                            style={cat ? { color: cat.color } : undefined}
+                            className="text-[10px] uppercase tracking-wider font-semibold"
+                            style={cat ? { color: cat.color } : { color: "var(--color-text-muted)" }}
                           >
                             {cat ? cat.label : c.categoria}
                           </p>

@@ -44,24 +44,24 @@ const config: Config = {
         "on-error": "#ffffff",
         "on-error-container": "#991B1B",
 
-        "background": "#FAF7F2",
-        "on-background": "#112F4E",
-        "surface": "#FAF7F2",
-        "on-surface": "#112F4E",
-        "on-surface-variant": "#4A5D70",
+        "background": "#F9FAFB",
+        "on-background": "#111827",
+        "surface": "#F9FAFB",
+        "on-surface": "#111827",
+        "on-surface-variant": "#6B7280",
 
         "surface-bright": "#FFFFFF",
-        "surface-dim": "#EDE9E3",
+        "surface-dim": "#F3F4F6",
         "surface-tint": "#1a8ccc",
-        "surface-variant": "#F5F2ED",
+        "surface-variant": "#F9FAFB",
         "surface-container-lowest": "#FFFFFF",
-        "surface-container-low": "#F5F2ED",
-        "surface-container": "#EDE9E3",
-        "surface-container-high": "#E8E4DE",
-        "surface-container-highest": "#DDD9D3",
+        "surface-container-low": "#F9FAFB",
+        "surface-container": "#F3F4F6",
+        "surface-container-high": "#E5E7EB",
+        "surface-container-highest": "#D1D5DB",
 
-        "outline": "#94A3B8",
-        "outline-variant": "#E2E8F0",
+        "outline": "#9CA3AF",
+        "outline-variant": "#E5E7EB",
 
         "inverse-surface": "#112F4E",
         "inverse-on-surface": "#FAF7F2",
@@ -111,9 +111,9 @@ const config: Config = {
         "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
       },
       boxShadow: {
-        "card": "0 1px 3px rgba(17, 47, 78, 0.04), 0 1px 2px rgba(17, 47, 78, 0.02)",
-        "card-hover": "0 4px 12px rgba(17, 47, 78, 0.06), 0 1px 3px rgba(17, 47, 78, 0.04)",
-        "elevated": "0 8px 24px rgba(17, 47, 78, 0.06)",
+        "card": "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "card-hover": "0 2px 8px rgba(0, 0, 0, 0.06)",
+        "elevated": "0 4px 12px rgba(0, 0, 0, 0.05)",
       }
     }
   },

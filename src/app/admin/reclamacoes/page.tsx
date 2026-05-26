@@ -175,7 +175,7 @@ export default function AdminReclamacoes() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F5F2ED]">
+              <tbody className="divide-y">
                 {filtered.map((r) => {
                   const cat = getCategoryByLabel(r.categoria);
                   const st = statusLabels[r.status] ?? { label: r.status, color: "#94A3B8" };
@@ -236,9 +236,12 @@ export default function AdminReclamacoes() {
                     <td className="px-4 py-3.5">
                       <Link
                         href={`/admin/reclamacoes/${r.id}`}
-                        className="p-1.5 hover:bg-[#FAF7F2] rounded-lg transition-colors inline-flex"
+                        className="p-1.5 rounded-lg transition-colors inline-flex"
+                        style={{ color: "var(--color-text-muted)" }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-bg-alt)"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                       >
-                        <Eye className="w-4 h-4 text-[#94A3B8]" />
+                        <Eye className="w-4 h-4" />
                       </Link>
                     </td>
                   </tr>
@@ -250,7 +253,7 @@ export default function AdminReclamacoes() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden divide-y divide-[#F5F2ED]">
+          <div className="md:hidden divide-y">
             {isLoading ? (
               <div className="p-12 text-center">
                 <Loader2 className="w-8 h-8 text-[#1a8ccc] mx-auto animate-spin" />
@@ -262,7 +265,9 @@ export default function AdminReclamacoes() {
               <Link
                 key={r.id}
                 href={`/admin/reclamacoes/${r.id}`}
-                className="p-4 flex items-center gap-3 hover:bg-[#FAFAF8] transition-colors"
+                className="p-4 flex items-center gap-3 transition-colors"
+                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.backgroundColor = "var(--color-bg-alt)"}
+                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.backgroundColor = "transparent"}
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -273,8 +278,8 @@ export default function AdminReclamacoes() {
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#112F4E] truncate">{r.titulo}</p>
-                  <p className="text-xs text-[#94A3B8]">
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{r.titulo}</p>
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
                     {r.endereco} · {r.concordos} concordos
                   </p>
                 </div>

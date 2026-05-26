@@ -809,7 +809,7 @@ function UserLocationManager({
           setUserLocation(loc);
         },
         (err) => {
-          console.error("Erro ao obter localização do usuário:", err);
+          console.warn("Geolocalização indisponível ou negada pelo usuário.");
         },
         { enableHighAccuracy: true, timeout: 5000 }
       );

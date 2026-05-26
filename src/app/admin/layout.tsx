@@ -14,10 +14,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex flex-1 overflow-hidden">
         <AdminSidebar isExpanded={false} onToggle={() => {}} />
-        <div className="flex-1 flex flex-col overflow-hidden md:p-2 md:pl-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <main
-            className="flex-1 md:rounded-2xl overflow-y-auto md:shadow-sm pt-16 md:pt-0 pb-4 md:pb-0"
-            style={{ backgroundColor: "var(--color-surface)" }}
+            className="flex-1 overflow-y-auto pt-16 md:pt-0"
+            style={{ backgroundColor: "var(--color-bg)" }}
           >
             {children}
           </main>
