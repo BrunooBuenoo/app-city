@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmationModal from "@/components/ui/modal/ConfirmationModal";
-import { CATEGORIES } from "@/utils/categories";
+import { useCategorias } from "@/hooks/useCategorias";
 import { useAuth } from "@/contexts/AuthContext";
 import { criarReclamacao, uploadFotoReclamacao } from "@/services/firebase";
 import { db } from "@/services/firebase/config";
@@ -29,6 +29,7 @@ function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
 export default function NovaReclamacao() {
   const router = useRouter();
   const { user, profile, isLoggedIn, loading } = useAuth();
+  const { categorias: CATEGORIES, subcategoriasMap: subcategorias } = useCategorias();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcat, setSelectedSubcat] = useState<number>(0);
@@ -254,99 +255,6 @@ export default function NovaReclamacao() {
     if (e.target.files) {
       setFotos(Array.from(e.target.files).slice(0, 3));
     }
-  };
-
-  const subcategorias: Record<string, string[]> = {
-    saude: [
-      "Demora no atendimento",
-      "Falta de médicos",
-      "Falta de remédios",
-      "Unidade de saúde precária",
-      "Equipamentos quebrados",
-      "Atendimento desumano",
-      "Outros",
-    ],
-    transporte: [
-      "Ônibus atrasado",
-      "Ponto de ônibus quebrado",
-      "Transporte lotado",
-      "Falta de acessibilidade",
-      "Sinalização ruim",
-      "Trânsito excessivo",
-      "Outros",
-    ],
-    infraestrutura: [
-      "Buraco na rua",
-      "Calçada quebrada",
-      "Praça abandonada",
-      "Asfalto deteriorado",
-      "Ponte danificada",
-      "Falta de manutenção pública",
-      "Outros",
-    ],
-    seguranca: [
-      "Área perigosa",
-      "Falta de policiamento",
-      "Vandalismo",
-      "Furto/roubo frequente",
-      "Terreno abandonado",
-      "Ponto de tráfico",
-      "Outros",
-    ],
-    educacao: [
-      "Escola danificada",
-      "Falta de professores",
-      "Merenda ruim",
-      "Sala sem estrutura",
-      "Falta de materiais",
-      "Transporte escolar ruim",
-      "Outros",
-    ],
-    limpeza: [
-      "Lixo acumulado",
-      "Entulho irregular",
-      "Coleta atrasada",
-      "Terreno sujo",
-      "Rua sem limpeza",
-      "Bueiro entupido",
-      "Outros",
-    ],
-    meio_ambiente: [
-      "Queimada",
-      "Árvore caída",
-      "Desmatamento",
-      "Poluição",
-      "Maus-tratos animais",
-      "Descarte irregular",
-      "Outros",
-    ],
-    iluminacao: [
-      "Poste apagado",
-      "Poste piscando",
-      "Fiação exposta",
-      "Poste danificado",
-      "Rua escura",
-      "Curto elétrico",
-      "Outros",
-    ],
-    saneamento: [
-      "Esgoto aberto",
-      "Vazamento de água",
-      "Mau cheiro",
-      "Enchente",
-      "Água contaminada",
-      "Cano rompido",
-      "Outros",
-    ],
-    bem_estar_animal: [
-      "Animal abandonado",
-      "Maus-tratos",
-      "Animal ferido",
-      "Animal perdido",
-      "Falta de resgate",
-      "Carcaça na rua",
-      "Outros",
-    ],
   };
 
   const currentSubcats = selectedCategory ? subcategorias[selectedCategory] ?? [] : [];

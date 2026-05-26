@@ -73,6 +73,21 @@ service cloud.firestore {
       }
     }
 
+    // ─── Categorias ───
+    match /categorias/{categoriaId} {
+      // Temporariamente liberado leitura e escrita pública para permitir a carga inicial (seeding) automática
+      allow read, write: if true;
+    }
+
+    // ─── Configurações (Gamificação, etc.) ───
+    match /configuracoes/{configId} {
+      // Qualquer pessoa pode ler as regras de XP (necessário para a pontuação)
+      allow read: if true;
+
+      // Apenas administradores podem atualizar as regras
+      allow write: if isAdmin();
+    }
+
     // ─── Catch-all: negar tudo que não foi explicitamente permitido ───
     match /{document=**} {
       allow read, write: if false;

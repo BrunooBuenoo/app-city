@@ -19,7 +19,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./config";
 import { adicionarPontosUsuario } from "./auth";
-import { RECOMPENSAS } from "@/utils/gamification";
+import { obterRecompensasDb } from "./gamificacao";
 
 // ----- Types -----
 
@@ -104,7 +104,8 @@ export async function criarReclamacao(
 
   // Atribuição de pontos de gamificação (+10 pontos por criar)
   if (data.autorId) {
-    await adicionarPontosUsuario(data.autorId, RECOMPENSAS.CRIAR_RECLAMACAO);
+    const recompensas = await obterRecompensasDb();
+    await adicionarPontosUsuario(data.autorId, recompensas.CRIAR_RECLAMACAO);
   }
 
   return docRef.id;
@@ -194,16 +195,17 @@ export async function atualizarStatus(
 
   // Se o novo status for "resolvido" e antes não era "resolvido"
   if (novoStatus === "resolvido" && reclamacaoAnterior && reclamacaoAnterior.status !== "resolvido") {
+    const recompensas = await obterRecompensasDb();
     // 1. Recompensa o criador (+50 pontos)
     if (reclamacaoAnterior.autorId) {
-      await adicionarPontosUsuario(reclamacaoAnterior.autorId, RECOMPENSAS.CRIADOR_RESOLVIDO);
+      await adicionarPontosUsuario(reclamacaoAnterior.autorId, recompensas.CRIADOR_RESOLVIDO);
     }
 
     // 2. Recompensa todos os apoiadores (votantes "concordo", +30 pontos)
     const votantes = reclamacaoAnterior.votantes ?? {};
     const promessas = Object.entries(votantes).map(async ([uid, voto]) => {
       if (voto === "concordo") {
-        await adicionarPontosUsuario(uid, RECOMPENSAS.VOTANTE_RESOLVIDO);
+        await adicionarPontosUsuario(uid, recompensas.VOTANTE_RESOLVIDO);
       }
     });
     await Promise.all(promessas);
@@ -250,6 +252,7 @@ export async function votar(
 
   const votoAnterior = votantes[userId];
   const tipoAnterior = votoAnterior ? getVotoTipo(votoAnterior) : null;
+  const recompensas = await obterRecompensasDb();
   let deltaPontos = 0;
 
   if (tipoAnterior === tipo) {
@@ -257,7 +260,7 @@ export async function votar(
     delete votantes[userId];
     if (tipo === "concordo") {
       concordos--;
-      deltaPontos = -RECOMPENSAS.CONCORDAR;
+      deltaPontos = -recompensas.CONCORDAR;
     } else {
       discordos--;
     }
@@ -265,7 +268,7 @@ export async function votar(
     // Desfaz voto anterior se existir
     if (tipoAnterior === "concordo") {
       concordos--;
-      deltaPontos -= RECOMPENSAS.CONCORDAR;
+      deltaPontos -= recompensas.CONCORDAR;
     }
     if (tipoAnterior === "discordo") discordos--;
     // Aplica novo voto (formato rico com nome/foto)
@@ -276,7 +279,7 @@ export async function votar(
     };
     if (tipo === "concordo") {
       concordos++;
-      deltaPontos += RECOMPENSAS.CONCORDAR;
+      deltaPontos += recompensas.CONCORDAR;
     } else {
       discordos++;
     }

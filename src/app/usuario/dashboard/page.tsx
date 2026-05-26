@@ -18,7 +18,7 @@ import {
   RANKS,
   calcularNivel,
 } from "@/utils/gamification";
-import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
+import { useCategorias } from "@/hooks/useCategorias";
 import InsigniaBadge from "@/components/ui/InsigniaBadge";
 
 const dateFilters = [
@@ -28,12 +28,13 @@ const dateFilters = [
   { id: "total", label: "Todo o período" },
 ];
 
-const categoryColors: Record<string, string> = Object.fromEntries(
-  CATEGORIES.map((cat) => [cat.label, cat.color])
-);
-
 export default function UsuarioDashboard() {
   const { user, profile, isLoggedIn, loading } = useAuth();
+  const { categorias: CATEGORIES } = useCategorias();
+
+  const categoryColors = useMemo(() => {
+    return Object.fromEntries(CATEGORIES.map((cat) => [cat.label, cat.color]));
+  }, [CATEGORIES]);
   const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
 

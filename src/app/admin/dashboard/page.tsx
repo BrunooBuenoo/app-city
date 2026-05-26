@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
-import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
+import { useCategorias } from "@/hooks/useCategorias";
 
 const dateFilters = [
   { id: "hoje", label: "Hoje" },
@@ -21,6 +21,7 @@ const dateFilters = [
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { categorias: CATEGORIES, obterCategoriaPorLabel: getCategoryByLabel } = useCategorias();
   const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
 

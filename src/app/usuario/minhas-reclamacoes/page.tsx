@@ -10,7 +10,7 @@ import {
   MapPin, Calendar, ThumbsUp, ChevronRight, Loader2,
   School, Bus, TreePine, PawPrint, Activity
 } from "lucide-react";
-import { CATEGORIES, getCategoryByLabel } from "@/utils/categories";
+import { useCategorias } from "@/hooks/useCategorias";
 
 const categoryIconMap: Record<string, any> = {
   saude: Activity,
@@ -25,17 +25,6 @@ const categoryIconMap: Record<string, any> = {
   bem_estar_animal: PawPrint,
 };
 
-const getCategoryIcon = (categoryLabel: string) => {
-  const cleanLabel = (categoryLabel || "").toLowerCase().trim();
-  const cat = CATEGORIES.find(
-    (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
-  );
-  if (cat && categoryIconMap[cat.id]) {
-    return categoryIconMap[cat.id];
-  }
-  return HelpCircle;
-};
-
 const statusMeta: Record<string, { label: string; bg: string; text: string }> = {
   aberto: { label: "Aberto", bg: "bg-[#E8F2F8]", text: "text-[#1a8ccc]" },
   em_analise: { label: "Em Análise", bg: "bg-[#F3E8FF]", text: "text-[#8B5CF6]" },
@@ -47,6 +36,18 @@ const statusMeta: Record<string, { label: string; bg: string; text: string }> = 
 export default function MinhasReclamacoes() {
   const router = useRouter();
   const { user, isLoggedIn, loading } = useAuth();
+  const { categorias: CATEGORIES, obterCategoriaPorLabel: getCategoryByLabel } = useCategorias();
+
+  const getCategoryIcon = (categoryLabel: string) => {
+    const cleanLabel = (categoryLabel || "").toLowerCase().trim();
+    const cat = CATEGORIES.find(
+      (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
+    );
+    if (cat && categoryIconMap[cat.id]) {
+      return categoryIconMap[cat.id];
+    }
+    return HelpCircle;
+  };
 
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);

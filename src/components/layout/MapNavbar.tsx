@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, Menu, X, LogIn, Info, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
-import { CATEGORIES } from "@/utils/categories";
+import { useCategorias } from "@/hooks/useCategorias";
 import ThemeToggle from "./ThemeToggle";
 
 interface MapNavbarProps {
@@ -42,6 +42,7 @@ export default function MapNavbar({
   onAddressSelect,
 }: MapNavbarProps) {
   const { user, profile, isLoggedIn, loading } = useAuth();
+  const { categorias: CATEGORIES } = useCategorias();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);

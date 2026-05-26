@@ -25,3 +25,16 @@ export {
   type Concordante,
   type VotoData,
 } from "./reclamacoes";
+export {
+  obterCategoriasDb,
+  salvarCategoriaDb,
+  excluirCategoriaDb,
+  inicializarCategoriasPadrao,
+  type CategoryDb,
+} from "./categorias";
+export {
+  obterRecompensasDb,
+  salvarRecompensasDb,
+  atualizarPontosUsuarioDb,
+  type RecompensasConfig,
+} from "./gamificacao";

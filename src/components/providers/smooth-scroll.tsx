@@ -22,6 +22,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     isTouch || 
     pathname === "/" || 
     pathname.startsWith("/usuario") || 
+    pathname.startsWith("/admin") || 
     pathname.startsWith("/reclamacao");
 
   if (shouldDisableLenis) {
