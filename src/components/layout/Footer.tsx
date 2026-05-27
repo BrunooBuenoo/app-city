@@ -12,19 +12,19 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md">
+            <Link href="/" className="flex items-center gap-3 mb-4 group inline-flex">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
                 <MapPin className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <span className="text-base font-bold text-[#112F4E] dark:text-white block leading-tight">
+              <div className="text-left">
+                <span className="text-base font-bold text-[#112F4E] dark:text-white block leading-none">
                   SAC Marília
                 </span>
-                <span className="text-[10px] text-[#4A5D70] dark:text-[#94A3B8] font-medium tracking-wide">
+                <span className="text-xs font-bold text-[#112F4E] dark:text-zinc-300 tracking-wide">
                   ao Contrário
                 </span>
               </div>
-            </div>
+            </Link>
             <p className="text-[#4A5D70] dark:text-[#94A3B8] font-light text-sm leading-relaxed">
               Plataforma de gestão urbana participativa.
               Sua voz transforma a cidade.

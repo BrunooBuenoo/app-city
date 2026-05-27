@@ -90,15 +90,20 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
       style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
     >
       {/* Cabeçalho do Sidebar com Logo + Sino de Notificações */}
-      <div className="flex items-center justify-between px-5 mb-6 relative" ref={notificationsRef}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#1a8ccc] flex items-center justify-center shrink-0">
-            <Shield className="w-4 h-4 text-white" />
+      <div className="flex items-center justify-between px-4 mb-6 relative" ref={notificationsRef}>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all shrink-0">
+            <MapPin className="w-4.5 h-4.5 text-white" />
           </div>
-          <span className="text-[15px] font-bold tracking-tight" style={{ color: "var(--color-text)" }}>
-            SAC Marília
-          </span>
-        </div>
+          <div className="text-left leading-none">
+            <span className="text-xs font-extrabold block" style={{ color: "var(--color-text)" }}>
+              SAC Marília
+            </span>
+            <span className="text-[10px] font-bold tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
+              ao Contrário
+            </span>
+          </div>
+        </Link>
 
         {/* Sino de Notificações com Badge e Shake */}
         <button

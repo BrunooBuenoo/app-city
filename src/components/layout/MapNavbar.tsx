@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Menu, X, LogIn, Info, LogOut, User } from "lucide-react";
+import { Search, Menu, X, LogIn, Info, LogOut, User, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 import { useCategorias } from "@/hooks/useCategorias";
@@ -148,13 +148,18 @@ export default function MapNavbar({
       <div>
         <div className="bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3">
           {/* Logo */}
-          <Link href="/" className="shrink-0 flex items-center gap-2">
-            <span className="text-xs font-bold text-[#112F4E] dark:text-zinc-100 leading-tight whitespace-nowrap hidden sm:block">
-              Sac do Marília<br />ao Contrário
-            </span>
-            <span className="text-[10px] font-bold text-[#112F4E] dark:text-zinc-100 leading-tight whitespace-nowrap sm:hidden">
-              SAC
-            </span>
+          <Link href="/" className="shrink-0 flex items-center gap-2 md:gap-3 group">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow shrink-0">
+              <MapPin className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            </div>
+            <div className="hidden sm:block text-left">
+              <span className="text-xs md:text-sm font-bold text-[#112F4E] dark:text-zinc-100 leading-none block">
+                SAC Marília
+              </span>
+              <span className="text-xs md:text-sm font-bold text-[#112F4E] dark:text-zinc-100 tracking-wide">
+                ao Contrário
+              </span>
+            </div>
           </Link>
 
           {/* Search with autocomplete */}
