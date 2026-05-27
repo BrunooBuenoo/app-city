@@ -1,7 +1,5 @@
 import {
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
@@ -12,15 +10,6 @@ import { calcularNivel } from "@/utils/gamification";
 
 // ----- Auth Operations -----
 
-const isLocalhost = () => 
-  typeof window !== "undefined" && 
-  (window.location.hostname === "localhost" || 
-   window.location.hostname === "127.0.0.1" ||
-   window.location.hostname.startsWith("192.168."));
-
-let isProcessingRedirect = false;
-
-// Helper isolado para processar a criação/atualização de perfil no Firestore
 async function processUserProfile(user: User, forceAdmin?: boolean) {
   const profileRef = doc(db, "users", user.uid);
   const profileSnap = await getDoc(profileRef);
@@ -55,51 +44,11 @@ async function processUserProfile(user: User, forceAdmin?: boolean) {
   }
 }
 
-export async function signInWithGoogle(forceAdmin?: boolean): Promise<User | null> {
-  if (typeof window !== "undefined") {
-    if (forceAdmin) {
-      sessionStorage.setItem("sac_admin_login", "true");
-    } else {
-      sessionStorage.removeItem("sac_admin_login");
-    }
-  }
-
-  if (isLocalhost()) {
-    // No ambiente local/localhost, usamos Popup para evitar o bloqueio de cookies de terceiros
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    await processUserProfile(user, forceAdmin);
-    return user;
-  } else {
-    // Em produção (custom domain), usamos Redirect para abrir em tela cheia na própria aba (melhor UX)
-    await signInWithRedirect(auth, googleProvider);
-    return null;
-  }
-}
-
-export async function handleRedirectResult(): Promise<User | null> {
-  if (isLocalhost()) return null;
-  if (isProcessingRedirect) return null;
-
-  isProcessingRedirect = true;
-  try {
-    const result = await getRedirectResult(auth);
-    if (!result) return null;
-
-    const user = result.user;
-
-    // Recupera o estado de admin do sessionStorage se existir
-    let forceAdmin = false;
-    if (typeof window !== "undefined") {
-      forceAdmin = sessionStorage.getItem("sac_admin_login") === "true";
-      sessionStorage.removeItem("sac_admin_login");
-    }
-
-    await processUserProfile(user, forceAdmin);
-    return user;
-  } finally {
-    isProcessingRedirect = false;
-  }
+export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
+  const result = await signInWithPopup(auth, googleProvider);
+  const user = result.user;
+  await processUserProfile(user, forceAdmin);
+  return user;
 }
 
 export async function signOutUser(): Promise<void> {

@@ -14,7 +14,7 @@ import {
   Trophy,
   CheckCircle
 } from "lucide-react";
-import { signInWithGoogle, handleRedirectResult, getUserProfile } from "@/services/firebase";
+import { signInWithGoogle, getUserProfile } from "@/services/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
@@ -24,35 +24,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState("");
-
-  // Processa o resultado do redirect do Google no carregamento da página
-  useEffect(() => {
-    const processRedirect = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const user = await handleRedirectResult();
-        if (user) {
-          const userProfile = await getUserProfile(user.uid);
-          if (userProfile?.role === "admin") {
-            router.push("/admin/dashboard");
-          } else if (userProfile?.perfilCompleto) {
-            router.push("/usuario/dashboard");
-          } else {
-            router.push("/completar-perfil");
-          }
-        } else {
-          setIsLoading(false);
-        }
-      } catch (err: any) {
-        console.error("Error handling redirect result:", err);
-        setError("Não foi possível concluir a autenticação. Tente novamente.");
-        setIsLoading(false);
-      }
-    };
-
-    processRedirect();
-  }, [router]);
 
   // Se já logado de antemão, redireciona de forma inteligente
   useEffect(() => {
@@ -67,12 +38,15 @@ export default function Login() {
     }
   }, [loading, isLoggedIn, profile, router]);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
     setError("");
-    try {
-      const user = await signInWithGoogle(isAdminLogin);
-      if (user) {
+
+    // Chamamos signInWithGoogle de forma síncrona dentro do evento de clique.
+    // Isso garante que o navegador reconheça como uma ação confiável do usuário,
+    // abrindo o pop-up instantaneamente FOCADO NO TOPO da tela do usuário.
+    signInWithGoogle(isAdminLogin)
+      .then(async (user) => {
         const userProfile = await getUserProfile(user.uid);
         if (userProfile?.role === "admin") {
           router.push("/admin/dashboard");
@@ -81,12 +55,12 @@ export default function Login() {
         } else {
           router.push("/completar-perfil");
         }
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError("Não foi possível realizar o login com o Google. Tente novamente.");
-      setIsLoading(false);
-    }
+      })
+      .catch((err: any) => {
+        console.error("Login error:", err);
+        setError("Não foi possível realizar o login com o Google. Tente novamente.");
+        setIsLoading(false);
+      });
   };
 
   return (
