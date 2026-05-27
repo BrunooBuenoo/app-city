@@ -44,6 +44,8 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
 
   const menuItems = [
     { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },
+    { href: "/admin/criadores", icon: Users, label: "Criadores" },
+    { href: "/admin/vinculos", icon: ClipboardList, label: "Vinculos" },
     { href: "/representante/dashboard", icon: Building2, label: "Representantes" },
     { href: "/admin/categorias", icon: FolderOpen, label: "Categorias" },
   ];

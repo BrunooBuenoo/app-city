@@ -9,7 +9,7 @@ import LoginRequiredModal from "@/components/ui/modal/LoginRequiredModal";
 import ParceriaModal from "@/components/ui/modal/ParceriaModal";
 import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
-import { onEstabelecimentosChange, listarCupons, resgatarCupom, type Estabelecimento, type Cupom } from "@/services/firebase";
+import { listarCriadoresAtivosDoEstabelecimento, onEstabelecimentosChange, listarCupons, resgatarCupom, type CreatorLinkWithCreator, type Estabelecimento, type Cupom } from "@/services/firebase";
 import { findClusteredComplaints, getClusterCounts } from "@/utils/clustering";
 import { Tag, MapPin, Compass, Trophy, Star, Phone, Loader2, Sparkles, X, Store } from "lucide-react";
 import CamadaClimatica from "@/components/clima/camada-climatica";
@@ -795,7 +795,9 @@ export default function Home() {
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<Estabelecimento | null>(null);
   const [cupons, setCupons] = useState<Cupom[]>([]);
+  const [creatorsVinculados, setCreatorsVinculados] = useState<CreatorLinkWithCreator[]>([]);
   const [loadingCupons, setLoadingCupons] = useState(false);
+  const [loadingCreators, setLoadingCreators] = useState(false);
   const [showCuponsModal, setShowCuponsModal] = useState(false);
   const [resgateSucessoCodigo, setResgateSucessoCodigo] = useState<string | null>(null);
   const [resgatandoId, setResgatandoId] = useState<string | null>(null);
@@ -904,8 +906,25 @@ export default function Home() {
   const handleVerCupons = async (estab: Estabelecimento) => {
     setSelectedEstabelecimento(estab);
     setLoadingCupons(true);
+    setLoadingCreators(true);
     setShowCuponsModal(true);
     setResgateSucessoCodigo(null);
+    setCreatorsVinculados([]);
+
+    if (estab.id.startsWith("mock-")) {
+      setLoadingCreators(false);
+    } else {
+      listarCriadoresAtivosDoEstabelecimento(estab.id)
+        .then((list) => {
+          setCreatorsVinculados(list);
+        })
+        .catch((err) => {
+          console.error("Erro ao listar criadores vinculados:", err);
+        })
+        .finally(() => {
+          setLoadingCreators(false);
+        });
+    }
 
     if (estab.id.startsWith("mock-")) {
       // Cupons mockados para locais turísticos de São Paulo
@@ -1538,6 +1557,49 @@ export default function Home() {
                   )}
                 </div>
               )}
+
+              {/* Criadores vinculados */}
+              <div className="px-6 pt-5 pb-3.5 border-b border-slate-100 dark:border-zinc-800 text-left">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#1a8ccc] flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Criadores vinculados
+                </span>
+
+                {loadingCreators ? (
+                  <div className="flex items-center gap-2 pt-3 text-xs text-slate-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Carregando criadores desta curadoria...
+                  </div>
+                ) : creatorsVinculados.length === 0 ? (
+                  <p className="pt-3 text-xs text-slate-500 dark:text-zinc-400">
+                    Ainda nao ha criadores ativos vinculados a este estabelecimento.
+                  </p>
+                ) : (
+                  <div className="pt-3 flex flex-wrap gap-2.5">
+                    {creatorsVinculados.map(({ id, creator, destaque }) => (
+                      <Link
+                        key={id}
+                        href={`/${creator.slug}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                      >
+                        {creator.avatarUrl ? (
+                          <img src={creator.avatarUrl} alt={creator.nomePublico} className="w-6 h-6 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1a8ccc]/10 text-[10px] font-black text-[#1a8ccc]">
+                            {creator.nomePublico.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span>{creator.nomePublico}</span>
+                        {destaque && (
+                          <span className="rounded-full bg-[#1a8ccc]/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-[#1a8ccc]">
+                            destaque
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Lista de Cupons */}
               <div className="p-6 max-h-[350px] overflow-y-auto space-y-4">

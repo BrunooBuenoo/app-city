@@ -7,6 +7,8 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { auth, db, googleProvider } from "./config";
 
+export type UserRole = "admin" | "empresa" | "parceiro" | "criador" | "usuario";
+
 // ----- Auth Operations -----
 
 async function processUserProfile(user: User, forceAdmin?: boolean) {
@@ -26,7 +28,7 @@ async function processUserProfile(user: User, forceAdmin?: boolean) {
       faixaEtaria: "",
       genero: "",
       perfilCompleto: shouldBeAdmin ? true : false,
-      funcao: shouldBeAdmin ? "admin" : "usuario", // "admin" | "empresa" | "parceiro" | "usuario"
+      funcao: shouldBeAdmin ? "admin" : "usuario",
       empresaId: "",
       criadoEm: serverTimestamp(),
       atualizadoEm: serverTimestamp(),
@@ -67,7 +69,7 @@ export interface UserProfile {
   faixaEtaria: string;
   genero: string;
   perfilCompleto: boolean;
-  funcao: "admin" | "empresa" | "parceiro" | "usuario";
+  funcao: UserRole;
   empresaId?: string;
   pontos?: number;
   nivel?: string;

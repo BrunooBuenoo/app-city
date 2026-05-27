@@ -35,6 +35,8 @@ export default function Login() {
         router.push("/empresa/dashboard");
       } else if (profile.funcao === "parceiro") {
         router.push("/parceiro/dashboard");
+      } else if (profile.funcao === "criador") {
+        router.push("/criador/dashboard");
       } else if (profile.perfilCompleto) {
         router.push("/usuario/dashboard");
       } else {
@@ -57,6 +59,8 @@ export default function Login() {
           router.push("/empresa/dashboard");
         } else if (userProfile?.funcao === "parceiro") {
           router.push("/parceiro/dashboard");
+        } else if (userProfile?.funcao === "criador") {
+          router.push("/criador/dashboard");
         } else if (userProfile?.perfilCompleto) {
           router.push("/usuario/dashboard");
         } else {

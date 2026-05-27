@@ -6,16 +6,30 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
 import { MapPin, Gift, Percent, Star, Users, Building, ShieldCheck, Tag, ArrowRight, Sparkles, Compass, Store, TrendingUp, MessageSquare } from "lucide-react";
-import { listarEstabelecimentos, type Estabelecimento } from "@/services/firebase";
+
+type PublicMapEstabelecimento = {
+  id: string;
+  nome: string;
+  categoria: string;
+  latitude: number;
+  longitude: number;
+  logoUrl: string;
+  endereco: string;
+};
 
 export default function Sobre() {
-  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
+  const [estabelecimentos, setEstabelecimentos] = useState<PublicMapEstabelecimento[]>([]);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
-    listarEstabelecimentos({ status: "ativo" })
-      .then((data) => {
+    fetch("/api/publico/mapa", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Falha ao carregar mapa publico: ${response.status}`);
+        }
+
+        const data = await response.json();
         if (active && Array.isArray(data)) {
           setEstabelecimentos(data);
         }
@@ -69,19 +83,19 @@ export default function Sobre() {
       num: "1",
       color: "#1a8ccc",
       title: "Explore o Mapa",
-      desc: "Navegue pelo nosso mapa 3D interativo e encontre dezenas de lojas, restaurantes, salões e serviços credenciados próximos a você em São Paulo.",
+      desc: "Navegue pelo mapa e descubra restaurantes, hoteis, cafeterias, atracoes e experiencias indicadas por quem realmente vive a cidade.",
     },
     {
       num: "2",
       color: "#F59E0B",
-      title: "Resgate o Cupom",
-      desc: "Escolha a vantagem ou desconto de sua preferência no estabelecimento e gere seu cupom digital em apenas um clique no celular.",
+      title: "Escolha seu proximo lugar",
+      desc: "Abra os pins, compare opcoes, veja categorias e encontre lugares novos para viver experiencias reais por todo o Brasil.",
     },
     {
       num: "3",
       color: "#10B981",
-      title: "Apresente no Caixa",
-      desc: "Apresente o código gerado ao atendente no momento do pagamento e aproveite seu desconto exclusivo. Economia simples e imediata!",
+      title: "Viva a experiencia",
+      desc: "Saia do scroll infinito e transforme descoberta digital em memoria real, passeio, refeicao, viagem ou encontro no mundo fisico.",
     },
   ];
 
@@ -94,17 +108,17 @@ export default function Sobre() {
         <section className="relative w-full max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center overflow-visible">
           <div className="flex flex-col gap-8 text-center lg:text-left z-10">
             <div className="inline-flex items-center w-fit mx-auto lg:mx-0 px-5 py-2.5 rounded-full bg-[#E8F2F8] dark:bg-[#1a8ccc]/10 text-[#1a8ccc] dark:text-[#38bdf8] text-sm font-bold tracking-wide uppercase">
-              Economia local inteligente
+              Descoberta real com curadoria humana
             </div>
             
             <h2 className="text-5xl md:text-6xl lg:text-[4.2rem] font-semibold text-[#112F4E] dark:text-zinc-100 tracking-tight leading-[1.05]">
-              Navegando SP <br className="hidden lg:block" />
-              <span className="text-[#F59E0B] italic font-serif">Passeios & Atrações</span>.
+              O mundo real ainda <br className="hidden lg:block" />
+              <span className="text-[#F59E0B] italic font-serif">esta la fora</span>
             </h2>
             
             <p className="text-lg md:text-xl text-[#4A5D70] dark:text-zinc-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-              <span className="font-bold text-[#1a8ccc] dark:text-[#38bdf8] block mb-2">Busque os melhores estabelecimentos e atrações!</span>
-              Descubra novos passeios e encontre os melhores restaurantes, lojas, pontos turísticos e locais incríveis para visitar no Estado de São Paulo. Resgate cupons de desconto e aproveite tudo economizando!
+              <span className="font-bold text-[#1a8ccc] dark:text-[#38bdf8] block mb-2">Descubra restaurantes, hoteis, atracoes, cafeterias e experiencias incriveis atraves de pessoas que realmente vivem cada cidade.</span>
+              Explore o mapa, encontre novos lugares e viva experiencias reais por todo o Brasil.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-4">
@@ -116,11 +130,11 @@ export default function Sobre() {
                 Navegar
               </Link>
               <Link
-                href="#anunciantes"
+                href="#criadores"
                 className="flex items-center justify-center gap-2 px-8 py-5 bg-white dark:bg-zinc-900 border-2 border-[#E2E8F0] dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full text-lg font-semibold shadow-sm hover:border-[#1a8ccc] dark:hover:border-zinc-300 hover:-translate-y-1 transition-all min-w-[180px]"
               >
-                <Store className="w-5 h-5 text-slate-500 shrink-0 animate-pulse" />
-                Divulgar
+                <Users className="w-5 h-5 text-slate-500 shrink-0 animate-pulse" />
+                Sou criador
               </Link>
             </div>
           </div>
@@ -157,9 +171,9 @@ export default function Sobre() {
         <section className="w-full bg-white dark:bg-zinc-900 py-12 px-6 border-y border-[#E2E8F0] dark:border-zinc-800 relative z-20 transition-colors duration-300">
           <div className="max-w-[1000px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
-              { label: "Membros Participantes", value: "1.500+", icon: Users },
-              { label: "Parceiros Comerciais", value: "80+", icon: Building },
-              { label: "Descontos Concedidos", value: "3.200+", icon: Percent },
+              { label: "Lugares para descobrir", value: "1.500+", icon: MapPin },
+              { label: "Criadores mapeando cidades", value: "80+", icon: Users },
+              { label: "Experiencias conectadas", value: "3.200+", icon: Sparkles },
             ].map((stat) => (
               <div key={stat.label} className="flex flex-col items-center text-center">
                 <stat.icon className="w-8 h-8 text-[#1a8ccc] dark:text-[#38bdf8] mb-3" />
@@ -180,15 +194,15 @@ export default function Sobre() {
                   COMO FUNCIONA
                 </p>
                 <h2 className="text-4xl md:text-5xl font-medium text-[#112F4E] dark:text-zinc-100 leading-tight mb-6">
-                  Como economizar com o
+                  Como descobrir melhor o
                   <br />
-                  nosso Clube
+                  que existe ao seu redor
                 </h2>
                 <p className="text-[#4A5D70] dark:text-zinc-400 text-lg font-light leading-relaxed mb-8 max-w-md">
-                  Garantir vantagens reais para as suas compras cotidianas nunca foi tão simples e intuitivo.
+                  A Vizoor junta mapa, contexto local e curadoria humana para transformar descoberta em experiencia presencial.
                 </p>
                 <Link href="/" className="bg-[#1a8ccc] dark:bg-[#0ea5e9] hover:bg-[#1572a6] dark:hover:bg-[#0284c7] text-white font-medium px-8 py-4 rounded-full w-fit transition-all hover:-translate-y-1 shadow-sm">
-                  Explorar Descontos
+                  Explorar o mapa
                 </Link>
               </div>
 
@@ -243,7 +257,7 @@ export default function Sobre() {
           </div>
         </section>
 
-        {/* ─── Parcerias Multicategorias ─── */}
+        {/* ─── Categorias do Mapa ─── */}
         <section className="w-full bg-[#FAF7F2] dark:bg-zinc-950 py-24 px-6 md:px-12 transition-colors duration-300">
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
@@ -252,20 +266,20 @@ export default function Sobre() {
                 Variedade
               </div>
               <h2 className="text-4xl md:text-5xl font-medium text-[#112F4E] dark:text-zinc-100 tracking-tight leading-tight mb-4">
-                Categorias de Benefícios
+                Categorias do mapa
               </h2>
               <p className="text-lg text-[#4A5D70] dark:text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
-                Temos parceiros credenciados em 5 grandes eixos para cobrir todas as suas necessidades diárias.
+                A Vizoor organiza o mundo real em categorias simples para voce descobrir lugares, experiencias e servicos com mais contexto.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {[
-                { label: "Alimentação", color: "#F59E0B", icon: Gift, desc: "Restaurantes, lanchonetes, padarias e cafés credenciados." },
-                { label: "Automotivo", color: "#38BDF8", icon: Compass, desc: "Oficinas, postos de combustíveis, lava-rápidos e autopeças." },
-                { label: "Saúde & Beleza", color: "#10B981", icon: ShieldCheck, desc: "Salões de beleza, barbearias, academias, clínicas e farmácias." },
-                { label: "Comércio & Varejo", color: "#6366F1", icon: Tag, desc: "Lojas de roupas, calçados, eletrônicos, móveis e presentes." },
-                { label: "Educação & Serviços", color: "#8B5CF6", icon: Star, desc: "Escolas, cursos de idiomas, papelarias, consultorias e utilidades." },
+                { label: "Alimentação", color: "#F59E0B", icon: Gift, desc: "Restaurantes, lanchonetes, padarias, bares e cafeterias para descobrir na cidade." },
+                { label: "Automotivo", color: "#38BDF8", icon: Compass, desc: "Postos, oficinas, lava-rapidos e servicos automotivos uteis no percurso." },
+                { label: "Saúde & Beleza", color: "#10B981", icon: ShieldCheck, desc: "Academias, estudios, saloes, clinicas e enderecos de bem-estar." },
+                { label: "Comércio & Varejo", color: "#6366F1", icon: Tag, desc: "Lojas, galerias, boutiques e pontos comerciais para explorar e comprar." },
+                { label: "Educação & Serviços", color: "#8B5CF6", icon: Star, desc: "Cursos, escolas, papelarias, espacos culturais e servicos do dia a dia." },
               ].map((cat, i) => (
                 <div
                   key={i}
@@ -286,9 +300,101 @@ export default function Sobre() {
                       className="text-[10px] font-bold uppercase tracking-wider"
                       style={{ color: cat.color }}
                     >
-                      Ver Parceiros
+                      Explorar categoria
                     </span>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="criadores" className="w-full bg-white dark:bg-zinc-900 py-24 px-6 md:px-12 transition-colors duration-300 border-t border-slate-100 dark:border-zinc-800">
+          <div className="max-w-[1200px] mx-auto grid lg:grid-cols-[1.05fr_0.95fr] gap-14 items-center">
+            <div className="space-y-8 text-left">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E8F2F8] dark:bg-[#1a8ccc]/10 text-[#1a8ccc] dark:text-[#38bdf8] text-sm font-bold tracking-wide uppercase">
+                <Users className="w-4 h-4" />
+                Para criadores de conteudo
+              </div>
+
+              <h2 className="text-4xl md:text-5xl font-semibold text-[#112F4E] dark:text-zinc-100 tracking-tight leading-tight">
+                Sua audiencia ja confia em voce. <span className="text-[#F59E0B] italic font-serif">Agora ela pode explorar com voce.</span>
+              </h2>
+
+              <p className="text-lg text-[#4A5D70] dark:text-zinc-400 font-light leading-relaxed">
+                Crie sua pagina dedicada, publique sua curadoria no mapa, destaque os lugares que realmente fazem parte da sua rotina e transforme recomendacao em descoberta geografica.
+              </p>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  "Pagina publica com slug proprio dentro da Vizoor.",
+                  "Curadoria com mapa, destaques, roteiro e favoritos.",
+                  "Links sociais e identidade editorial do criador.",
+                  "Conexao entre audiencia, cidade e experiencia real.",
+                ].map((item) => (
+                  <div key={item} className="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-4 py-4 text-sm leading-6 text-slate-600 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300">
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <Link
+                  href="/login"
+                  className="flex items-center justify-center gap-2 px-8 py-4.5 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-full font-medium transition-all shadow-md hover:-translate-y-0.5 text-base"
+                >
+                  <Sparkles className="w-4.5 h-4.5" />
+                  Quero criar minha pagina
+                </Link>
+                <Link
+                  href="/criador/dashboard"
+                  className="flex items-center justify-center gap-2 px-8 py-4.5 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full font-medium shadow-sm hover:border-[#1a8ccc] dark:hover:border-zinc-300 active:scale-[0.98] transition-all text-base"
+                >
+                  <ArrowRight className="w-4.5 h-4.5" />
+                  Ver area do criador
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  title: "Mapa curado",
+                  desc: "Mostre no mapa os lugares que voce recomenda de verdade.",
+                  icon: Compass,
+                  color: "#1a8ccc",
+                },
+                {
+                  title: "Destaques editoriais",
+                  desc: "Organize ordem, destaque e notas para dar contexto as suas escolhas.",
+                  icon: Star,
+                  color: "#F59E0B",
+                },
+                {
+                  title: "Roteiro e favoritos",
+                  desc: "Monte percursos, selecoes e listas de referencia para sua comunidade.",
+                  icon: Tag,
+                  color: "#10B981",
+                },
+                {
+                  title: "Perfil publico forte",
+                  desc: "Reforce sua identidade com bio, capa, links externos e redes sociais.",
+                  icon: MessageSquare,
+                  color: "#8B5CF6",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="p-6 rounded-3xl border border-slate-250 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl hover:-translate-y-1 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.02)] text-left space-y-3"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                    style={{ backgroundColor: `${item.color}15`, color: item.color }}
+                  >
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-[#112F4E] dark:text-zinc-100">{item.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 font-light leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -307,15 +413,15 @@ export default function Sobre() {
               <div className="space-y-8 text-left">
                 <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E8F2F8] dark:bg-[#1a8ccc]/10 text-[#1a8ccc] dark:text-[#38bdf8] text-sm font-bold tracking-wide uppercase">
                   <TrendingUp className="w-4 h-4 text-[#1a8ccc] dark:text-[#38bdf8]" />
-                  Aumente suas vendas
+                  Para estabelecimentos
                 </div>
 
                 <h2 className="text-4xl md:text-5xl font-semibold text-[#112F4E] dark:text-zinc-100 tracking-tight leading-tight">
-                  Anuncie seu estabelecimento em nossa plataforma e <span className="text-[#F59E0B] italic font-serif">aumente suas vendas</span>!
+                  Coloque seu estabelecimento onde as pessoas <span className="text-[#F59E0B] italic font-serif">estao realmente procurando</span>.
                 </h2>
 
                 <p className="text-lg text-[#4A5D70] dark:text-zinc-400 font-light leading-relaxed">
-                  O Navegando SP conecta diretamente estabelecimentos comerciais do Estado de São Paulo a milhares de consumidores engajados. Destaque sua marca, crie vantagens competitivas e acompanhe o crescimento real da sua clientela local.
+                  A Vizoor conecta seu lugar a consumidores em busca de experiencias reais e a criadores que influenciam escolhas no territorio. Ganhe visibilidade, contexto e presenca qualificada no mapa.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
@@ -339,7 +445,7 @@ export default function Sobre() {
                 </div>
               </div>
 
-              {/* Grid de Benefícios Comerciais */}
+              {/* Grid de valor para estabelecimentos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   {
@@ -349,8 +455,8 @@ export default function Sobre() {
                     color: "#1a8ccc",
                   },
                   {
-                    title: "Cupons Dinâmicos",
-                    desc: "Crie e gerencie campanhas de descontos ou cupons promocionais em segundos para atrair mais visitas.",
+                    title: "Campanhas e ativações",
+                    desc: "Crie acoes comerciais, promocoes e chamadas contextuais para atrair mais visitas qualificadas.",
                     icon: Gift,
                     color: "#F59E0B",
                   },
@@ -395,24 +501,30 @@ export default function Sobre() {
           <div className="relative max-w-[1000px] mx-auto text-center space-y-10">
             <div className="space-y-6">
               <h2 className="text-3xl md:text-5xl font-medium text-[#112F4E] dark:text-white leading-tight">
-                Pronto para fazer parte do <span className="text-[#F59E0B] dark:text-[#fbbf24]">Navegando SP</span>?
+                Pronto para fazer parte da <span className="text-[#F59E0B] dark:text-[#fbbf24]">Vizoor</span>?
               </h2>
               <p className="text-base md:text-lg text-[#4A5D70] dark:text-[#94A3B8] font-light max-w-2xl mx-auto leading-relaxed">
-                Quer você seja um consumidor em busca das melhores parcerias e cupons ou um comerciante pronto para ver seu estabelecimento em destaque no mapa e decolar suas vendas, nós temos o caminho ideal para você.
+                Primeiro para quem quer viver a cidade de verdade, depois para quem a traduz em curadoria e por fim para quem quer ser encontrado no momento certo.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-              {/* Botão para Consumidor */}
               <Link
                 href="/"
                 className="flex items-center justify-center gap-2 px-10 py-5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-lg font-semibold hover:bg-[#1572a6] dark:hover:bg-[#0284c7] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all w-full sm:w-auto"
               >
                 <Compass className="w-5 h-5 animate-spin-slow" />
-                Explorar Parcerias
+                Explorar o mapa
               </Link>
-              
-              {/* Botão para Anunciante */}
+
+              <Link
+                href="#criadores"
+                className="flex items-center justify-center gap-2 px-10 py-5 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all w-full sm:w-auto"
+              >
+                <Users className="w-5 h-5" />
+                Sou criador
+              </Link>
+
               <a
                 href="https://wa.me/5511999999999?text=Ol%C3%A1!%20Gostaria%20de%20anunciar%20minha%20empresa%20no%20Navegando%20SP."
                 target="_blank"

@@ -20,6 +20,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./config";
 
+const GLOBAL_ESTABLISHMENTS_COLLECTION = "establishments";
+
 // ----- Types -----
 
 export interface Estabelecimento {
@@ -90,6 +92,53 @@ function docToEstabelecimento(id: string, data: DocumentData): Estabelecimento {
   };
 }
 
+function buildEstabelecimentoConstraints(filtros?: {
+  status?: string;
+  categoria?: string;
+  empresaId?: string;
+}): QueryConstraint[] {
+  const constraints: QueryConstraint[] = [];
+
+  if (filtros?.status) {
+    constraints.push(where("status", "==", filtros.status));
+  }
+  if (filtros?.categoria) {
+    constraints.push(where("categoria", "==", filtros.categoria));
+  }
+  if (filtros?.empresaId) {
+    constraints.push(where("empresaId", "==", filtros.empresaId));
+  }
+
+  return constraints;
+}
+
+function mergeEstabelecimentos(...listas: Estabelecimento[][]): Estabelecimento[] {
+  const merged = new Map<string, Estabelecimento>();
+
+  for (const lista of listas) {
+    for (const estabelecimento of lista) {
+      merged.set(estabelecimento.id, estabelecimento);
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
+async function syncGlobalEstabelecimento(
+  estabId: string,
+  data: Partial<Estabelecimento> & { empresaId: string }
+): Promise<void> {
+  await setDoc(
+    doc(db, GLOBAL_ESTABLISHMENTS_COLLECTION, estabId),
+    {
+      ...data,
+      id: estabId,
+      atualizadoEm: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
 // ----- Estabelecimentos Operations -----
 
 export async function criarEstabelecimento(
@@ -106,6 +155,12 @@ export async function criarEstabelecimento(
 
   // Atualiza com o ID inserido
   await updateDoc(docRef, { id: docRef.id });
+  await syncGlobalEstabelecimento(docRef.id, {
+    ...data,
+    empresaId,
+    status: "pendente_aprovacao",
+    criadoEm: Timestamp.now(),
+  });
   return docRef.id;
 }
 
@@ -115,11 +170,20 @@ export async function aprovarEstabelecimento(empresaId: string, estabId: string)
     status: "ativo",
     aprovadoEm: serverTimestamp(),
   });
+  await syncGlobalEstabelecimento(estabId, {
+    empresaId,
+    status: "ativo",
+    aprovadoEm: Timestamp.now(),
+  });
 }
 
 export async function rejeitarOuSuspenderEstabelecimento(empresaId: string, estabId: string, status: "suspenso" | "pendente_aprovacao"): Promise<void> {
   const docRef = doc(db, "empresas", empresaId, "estabelecimentos", estabId);
   await updateDoc(docRef, {
+    status,
+  });
+  await syncGlobalEstabelecimento(estabId, {
+    empresaId,
     status,
   });
 }
@@ -130,31 +194,27 @@ export async function listarEstabelecimentos(filtros?: {
   empresaId?: string;
 }): Promise<Estabelecimento[]> {
   if (filtros?.empresaId) {
-    // Busca direto de uma empresa
-    const colRef = collection(db, "empresas", filtros.empresaId, "estabelecimentos");
-    const constraints: QueryConstraint[] = [];
-    if (filtros.status) {
-      constraints.push(where("status", "==", filtros.status));
-    }
-    if (filtros.categoria) {
-      constraints.push(where("categoria", "==", filtros.categoria));
-    }
-    const q = query(colRef, ...constraints);
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
+    const constraints = buildEstabelecimentoConstraints(filtros);
+    const [globalSnap, empresaSnap] = await Promise.all([
+      getDocs(query(collection(db, GLOBAL_ESTABLISHMENTS_COLLECTION), ...constraints)),
+      getDocs(query(collection(db, "empresas", filtros.empresaId, "estabelecimentos"), ...constraints.filter((constraint) => constraint.type !== "where" || (constraint as any)?._field?.segments?.[0] !== "empresaId"))),
+    ]);
+
+    return mergeEstabelecimentos(
+      empresaSnap.docs.map((d) => docToEstabelecimento(d.id, d.data())),
+      globalSnap.docs.map((d) => docToEstabelecimento(d.id, d.data()))
+    );
   } else {
-    // Busca global usando Collection Group Query
-    const colGroupRef = collectionGroup(db, "estabelecimentos");
-    const constraints: QueryConstraint[] = [];
-    if (filtros?.status) {
-      constraints.push(where("status", "==", filtros.status));
-    }
-    if (filtros?.categoria) {
-      constraints.push(where("categoria", "==", filtros.categoria));
-    }
-    const q = query(colGroupRef, ...constraints);
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
+    const constraints = buildEstabelecimentoConstraints(filtros);
+    const [globalSnap, legacySnap] = await Promise.all([
+      getDocs(query(collection(db, GLOBAL_ESTABLISHMENTS_COLLECTION), ...constraints)),
+      getDocs(query(collectionGroup(db, "estabelecimentos"), ...constraints)),
+    ]);
+
+    return mergeEstabelecimentos(
+      legacySnap.docs.map((d) => docToEstabelecimento(d.id, d.data())),
+      globalSnap.docs.map((d) => docToEstabelecimento(d.id, d.data()))
+    );
   }
 }
 
@@ -163,18 +223,41 @@ export function onEstabelecimentosChange(
   callback: (estabelecimentos: Estabelecimento[]) => void,
   onError?: (error: any) => void
 ) {
-  const q = query(collectionGroup(db, "estabelecimentos"), where("status", "==", "ativo"));
-  return onSnapshot(
-    q,
+  let globalItems: Estabelecimento[] = [];
+  let legacyItems: Estabelecimento[] = [];
+
+  const emit = () => {
+    callback(mergeEstabelecimentos(legacyItems, globalItems));
+  };
+
+  const unsubscribeGlobal = onSnapshot(
+    query(collection(db, GLOBAL_ESTABLISHMENTS_COLLECTION), where("status", "==", "ativo")),
     (snap) => {
-      const items = snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
-      callback(items);
+      globalItems = snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
+      emit();
     },
     (error) => {
-      console.error("Firestore onEstabelecimentosChange error:", error);
+      console.error("Firestore onEstabelecimentosChange global error:", error);
       if (onError) onError(error);
     }
   );
+
+  const unsubscribeLegacy = onSnapshot(
+    query(collectionGroup(db, "estabelecimentos"), where("status", "==", "ativo")),
+    (snap) => {
+      legacyItems = snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
+      emit();
+    },
+    (error) => {
+      console.error("Firestore onEstabelecimentosChange legacy error:", error);
+      if (onError) onError(error);
+    }
+  );
+
+  return () => {
+    unsubscribeGlobal();
+    unsubscribeLegacy();
+  };
 }
 
 // ----- Cupons Operations -----

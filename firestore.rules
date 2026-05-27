@@ -33,6 +33,22 @@ service cloud.firestore {
         && (getUsuarioData().funcao == "parceiro" && getUsuarioData().empresaId == empresaId);
     }
 
+    function isCriador() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && getUsuarioData().funcao == "criador";
+    }
+
+    function isOwnerOfCreatorResourceByUserId(userId) {
+      return isCriador() && request.auth.uid == userId;
+    }
+
+    function isOwnerOfCreatorDoc(creatorId) {
+      return isCriador()
+        && exists(/databases/$(database)/documents/creators/$(creatorId))
+        && get(/databases/$(database)/documents/creators/$(creatorId)).data.userId == request.auth.uid;
+    }
+
     // ─── Coleção usuarios ───
     match /usuarios/{userId} {
       allow read: if isAuthenticated();
@@ -79,9 +95,40 @@ service cloud.firestore {
       }
     }
 
+      // ─── Coleção global de establishments ───
+      match /establishments/{estabId} {
+        allow read: if true;
+        allow create: if isAdmin()
+          || (request.resource.data.empresaId is string && isEmpresa(request.resource.data.empresaId));
+        allow update: if isAdmin()
+          || (resource.data.empresaId is string && isEmpresa(resource.data.empresaId))
+          || (request.resource.data.empresaId is string && isEmpresa(request.resource.data.empresaId));
+        allow delete: if isAdmin();
+      }
+
     // ─── Categorias ───
     match /categorias/{categoriaId} {
       allow read, write: if true;
+    }
+
+    // ─── Coleção creators ───
+    match /creators/{creatorId} {
+      allow read: if true;
+      allow create: if isAdmin() || isOwnerOfCreatorResourceByUserId(request.resource.data.userId);
+      allow update: if isAdmin()
+        || isOwnerOfCreatorDoc(creatorId)
+        || isOwnerOfCreatorResourceByUserId(request.resource.data.userId);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Coleção creator_establishments ───
+    match /creator_establishments/{linkId} {
+      allow read: if true;
+      allow create: if isAdmin()
+        || (request.resource.data.creatorId is string && isOwnerOfCreatorDoc(request.resource.data.creatorId));
+      allow update: if isAdmin()
+        || (resource.data.creatorId is string && isOwnerOfCreatorDoc(resource.data.creatorId));
+      allow delete: if isAdmin();
     }
 
     // ─── Catch-all: negar tudo que não foi explicitamente permitido ───
