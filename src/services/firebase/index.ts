@@ -1,6 +1,7 @@
 export { auth, db, storage, googleProvider } from "./config";
 export {
   signInWithGoogle,
+  handleRedirectResult,
   signOutUser,
   onAuthChange,
   getUserProfile,

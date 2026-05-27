@@ -1,5 +1,7 @@
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
@@ -10,23 +12,19 @@ import { calcularNivel } from "@/utils/gamification";
 
 // ----- Auth Operations -----
 
-export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
-  const result = await signInWithPopup(auth, googleProvider);
-  const user = result.user;
+const isLocalhost = () => 
+  typeof window !== "undefined" && 
+  (window.location.hostname === "localhost" || 
+   window.location.hostname === "127.0.0.1" ||
+   window.location.hostname.startsWith("192.168."));
 
-  // Verifica se o perfil já existe no Firestore
+let isProcessingRedirect = false;
+
+// Helper isolado para processar a criação/atualização de perfil no Firestore
+async function processUserProfile(user: User, forceAdmin?: boolean) {
   const profileRef = doc(db, "users", user.uid);
   const profileSnap = await getDoc(profileRef);
 
-  /**
-   * NOTA DE SEGURANÇA: A detecção de admin por email (contains "admin") é um mecanismo
-   * temporário para desenvolvimento. Em produção, isso DEVE ser substituído por:
-   * - Firebase Custom Claims (via Admin SDK no backend)
-   * - Ou uma lista de emails admin no Firestore protegida por regras de segurança
-   *
-   * O checkbox "Entrar como Administrador" na tela de login apenas seta `forceAdmin=true`,
-   * mas a verdadeira proteção está nas Firestore Rules que verificam `role == "admin"`.
-   */
   const shouldBeAdmin = forceAdmin || user.email?.toLowerCase().includes("admin");
 
   if (!profileSnap.exists()) {
@@ -55,8 +53,53 @@ export async function signInWithGoogle(forceAdmin?: boolean): Promise<User> {
       atualizadoEm: serverTimestamp(),
     }, { merge: true });
   }
+}
 
-  return user;
+export async function signInWithGoogle(forceAdmin?: boolean): Promise<User | null> {
+  if (typeof window !== "undefined") {
+    if (forceAdmin) {
+      sessionStorage.setItem("sac_admin_login", "true");
+    } else {
+      sessionStorage.removeItem("sac_admin_login");
+    }
+  }
+
+  if (isLocalhost()) {
+    // No ambiente local/localhost, usamos Popup para evitar o bloqueio de cookies de terceiros
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    await processUserProfile(user, forceAdmin);
+    return user;
+  } else {
+    // Em produção (custom domain), usamos Redirect para abrir em tela cheia na própria aba (melhor UX)
+    await signInWithRedirect(auth, googleProvider);
+    return null;
+  }
+}
+
+export async function handleRedirectResult(): Promise<User | null> {
+  if (isLocalhost()) return null;
+  if (isProcessingRedirect) return null;
+
+  isProcessingRedirect = true;
+  try {
+    const result = await getRedirectResult(auth);
+    if (!result) return null;
+
+    const user = result.user;
+
+    // Recupera o estado de admin do sessionStorage se existir
+    let forceAdmin = false;
+    if (typeof window !== "undefined") {
+      forceAdmin = sessionStorage.getItem("sac_admin_login") === "true";
+      sessionStorage.removeItem("sac_admin_login");
+    }
+
+    await processUserProfile(user, forceAdmin);
+    return user;
+  } finally {
+    isProcessingRedirect = false;
+  }
 }
 
 export async function signOutUser(): Promise<void> {

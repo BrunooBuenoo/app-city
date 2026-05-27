@@ -14,7 +14,7 @@ import {
   Trophy,
   CheckCircle
 } from "lucide-react";
-import { signInWithGoogle, getUserProfile } from "@/services/firebase";
+import { signInWithGoogle, handleRedirectResult, getUserProfile } from "@/services/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
@@ -25,7 +25,36 @@ export default function Login() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState("");
 
-  // Se já logado, redireciona de forma inteligente
+  // Processa o resultado do redirect do Google no carregamento da página
+  useEffect(() => {
+    const processRedirect = async () => {
+      setIsLoading(true);
+      setError("");
+      try {
+        const user = await handleRedirectResult();
+        if (user) {
+          const userProfile = await getUserProfile(user.uid);
+          if (userProfile?.role === "admin") {
+            router.push("/admin/dashboard");
+          } else if (userProfile?.perfilCompleto) {
+            router.push("/usuario/dashboard");
+          } else {
+            router.push("/completar-perfil");
+          }
+        } else {
+          setIsLoading(false);
+        }
+      } catch (err: any) {
+        console.error("Error handling redirect result:", err);
+        setError("Não foi possível concluir a autenticação. Tente novamente.");
+        setIsLoading(false);
+      }
+    };
+
+    processRedirect();
+  }, [router]);
+
+  // Se já logado de antemão, redireciona de forma inteligente
   useEffect(() => {
     if (!loading && isLoggedIn && profile) {
       if (profile.role === "admin") {
@@ -43,17 +72,19 @@ export default function Login() {
     setError("");
     try {
       const user = await signInWithGoogle(isAdminLogin);
-      const userProfile = await getUserProfile(user.uid);
-      if (userProfile?.role === "admin") {
-        router.push("/admin/dashboard");
-      } else if (userProfile?.perfilCompleto) {
-        router.push("/usuario/dashboard");
-      } else {
-        router.push("/completar-perfil");
+      if (user) {
+        const userProfile = await getUserProfile(user.uid);
+        if (userProfile?.role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (userProfile?.perfilCompleto) {
+          router.push("/usuario/dashboard");
+        } else {
+          router.push("/completar-perfil");
+        }
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError("Não foi possível fazer login. Tente novamente.");
+      setError("Não foi possível realizar o login com o Google. Tente novamente.");
       setIsLoading(false);
     }
   };
