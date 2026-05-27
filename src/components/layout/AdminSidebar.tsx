@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3, ClipboardList, FileText, FolderOpen, Users,
-  LogOut, MapPin, Shield, Bell, CheckCheck, Trash2, X,
+  LogOut, MapPin, Shield, Bell, CheckCheck, Trash2, X, Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import VizoorLogo from "@/components/ui/VizoorLogo";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 interface AdminSidebarProps {
@@ -43,11 +44,8 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
 
   const menuItems = [
     { href: "/admin/dashboard", icon: BarChart3, label: "Dashboard" },
-    { href: "/admin/mapa", icon: MapPin, label: "Mapa" },
-    { href: "/admin/reclamacoes", icon: ClipboardList, label: "Reclamações" },
-    { href: "/admin/relatorios", icon: FileText, label: "Relatórios" },
+    { href: "/representante/dashboard", icon: Building2, label: "Representantes" },
     { href: "/admin/categorias", icon: FolderOpen, label: "Categorias" },
-    { href: "/admin/usuarios", icon: Users, label: "Usuários" },
   ];
 
   const userPhoto = profile?.foto || user?.photoURL || "";
@@ -91,18 +89,8 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
     >
       {/* Cabeçalho do Sidebar com Logo + Sino de Notificações */}
       <div className="flex items-center justify-between px-4 mb-6 relative" ref={notificationsRef}>
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all shrink-0">
-            <MapPin className="w-4.5 h-4.5 text-white" />
-          </div>
-          <div className="text-left leading-none">
-            <span className="text-xs font-extrabold block" style={{ color: "var(--color-text)" }}>
-              SAC Marília
-            </span>
-            <span className="text-[10px] font-bold tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
-              ao Contrário
-            </span>
-          </div>
+        <Link href="/" className="flex items-center group">
+          <VizoorLogo height={26} />
         </Link>
 
         {/* Sino de Notificações com Badge e Shake */}
@@ -125,7 +113,7 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
           )}
         </button>
 
-        {/* DROPDOWN POPOVER DE NOTIFICAÇÕES DESKTOP (Elegante Glassmorphism que abre para o lado) */}
+        {/* DROPDOWN POPOVER DE NOTIFICAÇÕES DESKTOP */}
         {isNotificationsOpen && (
           <div 
             className="absolute left-full top-0 ml-2.5 w-80 rounded-2xl border shadow-2xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-left-3 duration-200 backdrop-blur-md"
@@ -168,7 +156,7 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
                     className={`p-3.5 flex items-start gap-3 transition-colors relative group cursor-pointer ${
                       !item.lida ? "bg-[#1a8ccc]/5" : "hover:bg-[var(--color-bg-alt)]"
                     }`}
-                    onClick={() => handleNotifClick(item.id, item.link)}
+                    onClick={() => handleNotifClick(item.id, "/admin/dashboard")}
                   >
                     {/* Indicador de Não Lido */}
                     {!item.lida && (
@@ -209,11 +197,11 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
             {/* Footer */}
             <div className="px-4 py-2 border-t text-center" style={{ borderColor: "var(--color-border)" }}>
               <Link
-                href="/admin/reclamacoes"
+                href="/admin/dashboard"
                 onClick={() => setIsNotificationsOpen(false)}
                 className="text-[11px] font-bold text-[#1a8ccc] hover:underline cursor-pointer block"
               >
-                Ver todos os relatos
+                Ver todas as aprovações pendentes
               </Link>
             </div>
           </div>
@@ -288,7 +276,7 @@ export default function AdminSidebar({ isExpanded, onToggle }: AdminSidebarProps
               {userName}
             </p>
             <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>
-              Administrador
+              Administrador da Plataforma
             </p>
           </div>
         </div>

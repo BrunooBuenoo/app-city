@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import VizoorLogo from "@/components/ui/VizoorLogo";
 import { 
   Shield, 
   MapPin, 
@@ -28,8 +29,12 @@ export default function Login() {
   // Se já logado de antemão, redireciona de forma inteligente
   useEffect(() => {
     if (!loading && isLoggedIn && profile) {
-      if (profile.role === "admin") {
+      if (profile.funcao === "admin") {
         router.push("/admin/dashboard");
+      } else if (profile.funcao === "empresa") {
+        router.push("/empresa/dashboard");
+      } else if (profile.funcao === "parceiro") {
+        router.push("/parceiro/dashboard");
       } else if (profile.perfilCompleto) {
         router.push("/usuario/dashboard");
       } else {
@@ -43,13 +48,15 @@ export default function Login() {
     setError("");
 
     // Chamamos signInWithGoogle de forma síncrona dentro do evento de clique.
-    // Isso garante que o navegador reconheça como uma ação confiável do usuário,
-    // abrindo o pop-up instantaneamente FOCADO NO TOPO da tela do usuário.
     signInWithGoogle(isAdminLogin)
       .then(async (user) => {
         const userProfile = await getUserProfile(user.uid);
-        if (userProfile?.role === "admin") {
+        if (userProfile?.funcao === "admin") {
           router.push("/admin/dashboard");
+        } else if (userProfile?.funcao === "empresa") {
+          router.push("/empresa/dashboard");
+        } else if (userProfile?.funcao === "parceiro") {
+          router.push("/parceiro/dashboard");
         } else if (userProfile?.perfilCompleto) {
           router.push("/usuario/dashboard");
         } else {
@@ -73,20 +80,20 @@ export default function Login() {
           className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 text-[#4A5D70] dark:text-zinc-300 hover:text-[#112F4E] dark:hover:text-zinc-100 border border-[#E2E8F0] dark:border-zinc-800 backdrop-blur-md text-xs font-semibold shadow-sm hover:shadow transition-all"
         >
           <ChevronLeft className="w-4 h-4" />
-          Conhecer o SAC
+          Conhecer o Clube
         </Link>
         
         <div className="pointer-events-auto bg-white/80 dark:bg-zinc-900/80 border border-[#E2E8F0] dark:border-zinc-800 rounded-xl p-1 backdrop-blur-md shadow-sm">
           <ThemeToggle />
         </div>
       </div>
-
+      
       {/* Barra estética fina no topo da página */}
       <div className="w-full h-1.5 bg-gradient-to-r from-[#1a8ccc] via-[#10B981] to-[#F59E0B] relative z-40" />
 
       <div className="flex-1 flex flex-col lg:flex-row">
         
-        {/* ─── Coluna Esquerda: Branding & Ilustração Hero (Victor no Dinossauro) ─── */}
+        {/* ─── Coluna Esquerda: Branding & Ilustração Hero ─── */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#112F4E] to-[#1E4E80] dark:from-zinc-950 dark:to-zinc-900 p-16 flex-col justify-between relative overflow-hidden border-r border-[#E2E8F0]/10 dark:border-zinc-800/40">
           
           {/* Círculos decorativos fluidos de vidro no fundo */}
@@ -96,41 +103,31 @@ export default function Login() {
           {/* Logo do App */}
           <div className="relative z-10">
             <Link href="/" className="flex items-center gap-3 group w-fit">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md">
-                <MapPin className="w-5.5 h-5.5 text-white animate-bounce" />
-              </div>
-              <div>
-                <span className="text-base font-bold text-white block leading-tight tracking-wide">
-                  SAC Marília
-                </span>
-                <span className="text-[10px] text-white/50 font-medium tracking-widest uppercase">
-                  ao Contrário
-                </span>
-              </div>
+              <VizoorLogo height={36} inverted />
             </Link>
           </div>
 
           {/* Conteúdo Informativo */}
           <div className="relative z-10 space-y-10 my-auto max-w-lg">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-widest shadow-sm">
-              Mudando a Cidade Juntos
+              Apoie o comércio local e economize
             </div>
 
             <h1 className="text-4xl xl:text-5xl font-medium text-white leading-[1.1] tracking-tight">
-              Sua voz transforma <br />
-              <span className="text-[#38BDF8] italic font-serif">Marília.</span>
+              Os melhores cupons de <br />
+              <span className="text-[#38BDF8] italic font-serif">São Paulo.</span>
             </h1>
             
             <p className="text-white/60 text-lg font-light leading-relaxed">
-              Mapeie problemas públicos, colabore com relatos de vizinhos, acumule XP e conquiste patentes cívicas de cidadão exemplar.
+              Aproveite benefícios e patrocínios incríveis no comércio do Estado de São Paulo. Resgate cupons exclusivos de restaurantes, clínicas, oficinas e muito mais.
             </p>
 
             {/* Diferenciais da Plataforma */}
             <div className="space-y-4 pt-4">
               {[
-                { Icon: MapPin, text: "Marque no mapa e reporte em minutos", color: "text-[#38BDF8] bg-[#38BDF8]/10" },
-                { Icon: Users, text: "Colaboração comunitária via Concordos", color: "text-[#34D399] bg-[#34D399]/10" },
-                { Icon: Trophy, text: "Suba de nível e ganhe prestígio cívico", color: "text-amber-400 bg-amber-400/10" },
+                { Icon: MapPin, text: "Encontre parceiros comerciais de todas as categorias no mapa", color: "text-[#38BDF8] bg-[#38BDF8]/10" },
+                { Icon: Users, text: "Resgate cupons e descontos exclusivos diretamente no balcão", color: "text-[#34D399] bg-[#34D399]/10" },
+                { Icon: Trophy, text: "Descubra novos locais parceiros perto de você", color: "text-amber-400 bg-amber-400/10" },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-lg ${item.color} flex items-center justify-center shrink-0`}>
@@ -145,15 +142,15 @@ export default function Login() {
           {/* Rodapé do Painel Esquerdo */}
           <div className="relative z-10">
             <p className="text-white/30 text-xs">
-              © 2026 SAC Marília ao Contrário. Desenvolvido por Omnistring.
+              © 2026 Navegando SP. Todos os direitos reservados.
             </p>
           </div>
 
-          {/* Ilustração icônica da Hero: Victor no Dinossauro flutuando no rodapé do painel */}
+          {/* Ilustração icônica da Hero */}
           <div className="absolute bottom-0 right-0 z-30 pointer-events-none translate-y-[20%] translate-x-[5%] scale-90 xl:scale-100 origin-bottom-right transition-transform duration-300">
             <img 
               src="/image/victor.png" 
-              alt="Victor no Dinossauro" 
+              alt="Navegando SP" 
               className="w-[280px] xl:w-[350px] h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.3)] animate-[float_6s_ease-in-out_infinite]"
               style={{
                 filter: "drop-shadow(0 20px 40px rgba(0, 0, 0, 0.25))"
@@ -176,17 +173,7 @@ export default function Login() {
             {/* Logo do App visível apenas no Mobile */}
             <div className="lg:hidden text-center mb-4">
               <div className="inline-flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-md">
-                  <MapPin className="w-5.5 h-5.5 text-white" />
-                </div>
-                <div className="text-left">
-                  <span className="text-base font-bold text-[#112F4E] dark:text-white block leading-tight">
-                    SAC Marília
-                  </span>
-                  <span className="text-[9px] text-[#4A5D70] dark:text-[#94A3B8] font-bold tracking-widest uppercase">
-                    ao Contrário
-                  </span>
-                </div>
+                <VizoorLogo height={36} />
               </div>
             </div>
 
@@ -196,14 +183,14 @@ export default function Login() {
                 Bem-vindo de volta
               </h2>
               <p className="text-sm md:text-base font-light leading-relaxed text-[#4A5D70] dark:text-zinc-400">
-                Entre de forma instantânea com sua conta Google para gerenciar suas solicitações de zeladoria urbana.
+                Entre de forma instantânea com sua conta Google para acessar seus cupons de descontos e mapa comercial.
               </p>
             </div>
 
             {/* Controles de Autenticação */}
             <div className="space-y-4">
               
-              {/* Checkbox Admin - Redesenhado Premium */}
+              {/* Checkbox Admin */}
               <label 
                 className="flex items-center gap-3 px-4 py-3.5 border rounded-2xl cursor-pointer transition-all duration-300 select-none bg-white dark:bg-zinc-900 border-[#E2E8F0] dark:border-zinc-800 hover:border-[#1a8ccc] dark:hover:border-zinc-700 shadow-sm"
               >
@@ -218,10 +205,11 @@ export default function Login() {
                     Entrar como Administrador
                   </span>
                   <span className="text-[10px] text-[#94A3B8] font-light">
-                    Apenas para moderadores cívicos
+                    Apenas para moderadores gerais
                   </span>
                 </div>
               </label>
+
 
               {/* Botão de Login com Google - Premium */}
               <button

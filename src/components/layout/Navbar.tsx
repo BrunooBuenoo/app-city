@@ -5,11 +5,12 @@ import { Menu, X, ChevronRight, MapPin, Trophy, LogIn, Info } from "lucide-react
 import Link from "next/link"
 import Image from "next/image"
 import ThemeToggle from "./ThemeToggle"
+import VizoorLogo from "@/components/ui/VizoorLogo"
 
 const navLinks = [
-  { label: "Mapa", href: "/", icon: "map" },
-  { label: "Conheça o SAC", href: "/sobre", icon: "info" },
-  { label: "Ranking", href: "/usuario/ranking", icon: "emoji_events" },
+  { label: "Navegar", href: "/", icon: "map" },
+  { label: "Divulgar", href: "/sobre#anunciantes", icon: "storefront" },
+  { label: "Sobre Nós", href: "/sobre", icon: "info" },
 ]
 
 export function Navbar() {
@@ -36,17 +37,7 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                <MapPin className="w-5 h-5 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100 leading-none block">
-                  SAC Marília
-                </span>
-                <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100 tracking-wide">
-                  ao Contrário
-                </span>
-              </div>
+              <VizoorLogo height={30} />
             </Link>
 
             {/* Desktop Nav */}
@@ -74,10 +65,10 @@ export function Navbar() {
                 Login
               </Link>
               <Link
-                href="/"
+                href="/sobre#anunciantes"
                 className="flex items-center gap-1.5 px-5 py-2.5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white text-sm font-semibold rounded-xl hover:bg-[#1572a6] dark:hover:bg-[#0284c7] shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
               >
-                Reportar Problema
+                Divulgar
               </Link>
             </div>
 
@@ -110,7 +101,7 @@ export function Navbar() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center">
                   <MapPin className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100">SAC Marília</span>
+                <span className="text-sm font-bold text-[#112F4E] dark:text-zinc-100">Navegando SP</span>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -154,11 +145,11 @@ export function Navbar() {
                 Login
               </Link>
               <Link
-                href="/"
+                href="/sobre#anunciantes"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-2 w-full py-3 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white text-sm font-semibold rounded-xl hover:bg-[#1572a6] dark:hover:bg-[#0284c7] transition-all"
               >
-                Reportar Problema
+                Divulgar
               </Link>
             </div>
           </div>

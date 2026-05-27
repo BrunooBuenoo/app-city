@@ -98,7 +98,7 @@ export default function CompletarPerfil() {
             Complete seu perfil
           </h2>
           <p className="text-[#4A5D70] font-light leading-relaxed">
-            Estamos quase lá! Personalize sua conta para começar a monitorar sua cidade.
+            Estamos quase lá! Personalize sua conta para começar a aproveitar os melhores patrocínios e parcerias comerciais no Estado de São Paulo.
           </p>
         </section>
 

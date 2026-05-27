@@ -5,73 +5,19 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
-import { MapPin, ThumbsUp, CheckCircle2, Trophy, Users, FileText, Flame, Eye, Shield, ShieldAlert, Award, PlusCircle } from "lucide-react";
-import { type Reclamacao } from "@/services/firebase";
-import { getCategoryByLabel } from "@/utils/categories";
-
-// Patent ranks data (keep in sync with gamification.ts)
-const RANKS_DISPLAY = [
-  { level: 1, name: "Observador", icon: Eye, minXP: 0, color: "#94A3B8", gradient: "from-slate-200 to-slate-300", desc: "Comece participando. Crie sua primeira reclamação." },
-  { level: 2, name: "Colaborador", icon: Users, minXP: 50, color: "#1a8ccc", gradient: "from-sky-200 to-blue-300", desc: "Concorde com reclamações e ajude a comunidade." },
-  { level: 3, name: "Guardião", icon: Shield, minXP: 150, color: "#8B5CF6", gradient: "from-purple-200 to-violet-300", desc: "Sua participação ativa está fazendo diferença!" },
-  { level: 4, name: "Protetor", icon: ShieldAlert, minXP: 400, color: "#F59E0B", gradient: "from-amber-200 to-yellow-300", desc: "Cidadão exemplar com grande impacto na cidade." },
-  { level: 5, name: "Herói da Cidade", icon: Trophy, minXP: 1000, color: "#EF4444", gradient: "from-rose-200 to-red-300", desc: "O mais alto nível. Você é um verdadeiro herói!" },
-];
-
-const stats = [
-  { label: "Cidadãos Ativos", value: "500+", icon: Users },
-  { label: "Reclamações Registradas", value: "1.200+", icon: FileText },
-  { label: "Problemas Resolvidos", value: "340+", icon: CheckCircle2 },
-];
-
-// Descobrir a região com mais reclamações (célula de grade geográfica mais densa)
-const findDensestRegion = (recs: Reclamacao[]): [number, number] => {
-  if (recs.length === 0) return [-49.9458, -22.2139]; // Centro padrão de Marília
-
-  // Tamanho da grade (aprox. 1km x 1km)
-  const gridSize = 0.01;
-  const grid: Record<string, Reclamacao[]> = {};
-
-  recs.forEach((rec) => {
-    if (!rec.latitude || !rec.longitude) return;
-    const latBin = Math.floor(rec.latitude / gridSize);
-    const lngBin = Math.floor(rec.longitude / gridSize);
-    const key = `${latBin},${lngBin}`;
-    if (!grid[key]) grid[key] = [];
-    grid[key].push(rec);
-  });
-
-  // Achar a célula com mais reclamações
-  let densestKey = "";
-  let maxCount = 0;
-
-  Object.entries(grid).forEach(([key, list]) => {
-    if (list.length > maxCount) {
-      maxCount = list.length;
-      densestKey = key;
-    }
-  });
-
-  if (!densestKey) return [-49.9458, -22.2139];
-
-  const densestList = grid[densestKey];
-  // Tirar a média das coordenadas do cluster mais denso para achar o centroide
-  const sumLat = densestList.reduce((sum, r) => sum + r.latitude, 0);
-  const sumLng = densestList.reduce((sum, r) => sum + r.longitude, 0);
-  return [sumLng / densestList.length, sumLat / densestList.length];
-};
+import { MapPin, Gift, Percent, Star, Users, Building, ShieldCheck, Tag, ArrowRight, Sparkles, Compass, Store, TrendingUp, MessageSquare } from "lucide-react";
+import { listarEstabelecimentos, type Estabelecimento } from "@/services/firebase";
 
 export default function Sobre() {
-  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
-    fetch("/api/publico/mapa")
-      .then((res) => res.json())
+    listarEstabelecimentos({ status: "ativo" })
       .then((data) => {
         if (active && Array.isArray(data)) {
-          setReclamacoes(data);
+          setEstabelecimentos(data);
         }
       })
       .catch((err) => console.error("Erro ao carregar dados de mapa públicos:", err));
@@ -98,9 +44,46 @@ export default function Sobre() {
     };
   }, []);
 
-  const mapCenter = useMemo(() => {
-    return findDensestRegion(reclamacoes);
-  }, [reclamacoes]);
+  // Centro padrão de São Paulo
+  const mapCenter = useMemo<[number, number]>(() => {
+    if (estabelecimentos.length > 0) {
+      const sumLat = estabelecimentos.reduce((sum, r) => sum + r.latitude, 0);
+      const sumLng = estabelecimentos.reduce((sum, r) => sum + r.longitude, 0);
+      return [sumLng / estabelecimentos.length, sumLat / estabelecimentos.length];
+    }
+    return [-46.6333, -23.5505];
+  }, [estabelecimentos]);
+
+  // Cores de pin por categoria
+  const getCategoryColor = (categoria: string) => {
+    if (categoria === "alimentacao") return "#F59E0B";
+    if (categoria === "automotivo") return "#38BDF8";
+    if (categoria === "saude_beleza") return "#10B981";
+    if (categoria === "comercio_varejo") return "#6366F1";
+    if (categoria === "educacao_servicos") return "#8B5CF6";
+    return "#64748B";
+  };
+
+  const steps = [
+    {
+      num: "1",
+      color: "#1a8ccc",
+      title: "Explore o Mapa",
+      desc: "Navegue pelo nosso mapa 3D interativo e encontre dezenas de lojas, restaurantes, salões e serviços credenciados próximos a você em São Paulo.",
+    },
+    {
+      num: "2",
+      color: "#F59E0B",
+      title: "Resgate o Cupom",
+      desc: "Escolha a vantagem ou desconto de sua preferência no estabelecimento e gere seu cupom digital em apenas um clique no celular.",
+    },
+    {
+      num: "3",
+      color: "#10B981",
+      title: "Apresente no Caixa",
+      desc: "Apresente o código gerado ao atendente no momento do pagamento e aproveite seu desconto exclusivo. Economia simples e imediata!",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] dark:bg-zinc-950 flex flex-col text-[#112F4E] dark:text-zinc-100 transition-colors duration-300">
@@ -111,31 +94,33 @@ export default function Sobre() {
         <section className="relative w-full max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center overflow-visible">
           <div className="flex flex-col gap-8 text-center lg:text-left z-10">
             <div className="inline-flex items-center w-fit mx-auto lg:mx-0 px-5 py-2.5 rounded-full bg-[#E8F2F8] dark:bg-[#1a8ccc]/10 text-[#1a8ccc] dark:text-[#38bdf8] text-sm font-bold tracking-wide uppercase">
-              Transformando a nossa cidade
+              Economia local inteligente
             </div>
             
-            <h2 className="text-5xl md:text-6xl lg:text-[5rem] font-medium text-[#112F4E] dark:text-zinc-100 tracking-tight leading-[1.05]">
-              Cuidando de <br className="hidden lg:block" />
-              <span className="text-[#1a8ccc] dark:text-[#38bdf8] italic font-serif">Marília</span>, Juntos.
+            <h2 className="text-5xl md:text-6xl lg:text-[4.2rem] font-semibold text-[#112F4E] dark:text-zinc-100 tracking-tight leading-[1.05]">
+              Navegando SP <br className="hidden lg:block" />
+              <span className="text-[#F59E0B] italic font-serif">Passeios & Atrações</span>.
             </h2>
             
             <p className="text-lg md:text-xl text-[#4A5D70] dark:text-zinc-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-              Sua voz faz a diferença. Reporte problemas de infraestrutura, acompanhe solicitações e ajude a construir uma cidade melhor para todos.
+              <span className="font-bold text-[#1a8ccc] dark:text-[#38bdf8] block mb-2">Busque os melhores estabelecimentos e atrações!</span>
+              Descubra novos passeios e encontre os melhores restaurantes, lojas, pontos turísticos e locais incríveis para visitar no Estado de São Paulo. Resgate cupons de desconto e aproveite tudo economizando!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-4">
               <Link
                 href="/"
-                className="flex items-center justify-center gap-2 px-8 py-5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-lg font-medium hover:bg-[#1572a6] dark:hover:bg-[#0284c7] hover:-translate-y-1 transition-all shadow-md hover:shadow-lg"
+                className="flex items-center justify-center gap-2 px-8 py-5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-lg font-semibold hover:bg-[#1572a6] dark:hover:bg-[#0284c7] hover:-translate-y-1 transition-all shadow-md hover:shadow-lg min-w-[180px]"
               >
-                <MapPin className="w-5 h-5" />
-                Reportar Problema
+                <Compass className="w-5 h-5 animate-spin-slow" />
+                Navegar
               </Link>
               <Link
-                href="/"
-                className="flex items-center justify-center gap-2 px-8 py-5 bg-white dark:bg-zinc-900 border-2 border-[#E2E8F0] dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full text-lg font-medium shadow-sm hover:border-[#112F4E] dark:hover:border-zinc-300 hover:-translate-y-1 transition-all"
+                href="#anunciantes"
+                className="flex items-center justify-center gap-2 px-8 py-5 bg-white dark:bg-zinc-900 border-2 border-[#E2E8F0] dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full text-lg font-semibold shadow-sm hover:border-[#1a8ccc] dark:hover:border-zinc-300 hover:-translate-y-1 transition-all min-w-[180px]"
               >
-                Ver Mapa
+                <Store className="w-5 h-5 text-slate-500 shrink-0 animate-pulse" />
+                Divulgar
               </Link>
             </div>
           </div>
@@ -147,15 +132,15 @@ export default function Sobre() {
           >
             <div className="absolute inset-0">
               <Map center={mapCenter} zoom={13}>
-                {reclamacoes.map((rec) => {
-                  const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+                {estabelecimentos.map((estab) => {
+                  const color = getCategoryColor(estab.categoria);
                   return (
-                    <MapMarker key={rec.id} longitude={rec.longitude} latitude={rec.latitude}>
+                    <MapMarker key={estab.id} longitude={estab.longitude} latitude={estab.latitude}>
                       <MarkerContent>
                         <div 
                           className="w-5 h-5 rounded-full border-2 border-white shadow-md animate-pulse cursor-pointer hover:scale-125 transition-transform" 
-                          style={{ backgroundColor: cat.color }}
-                          title={rec.titulo}
+                          style={{ backgroundColor: color }}
+                          title={estab.nome}
                         />
                       </MarkerContent>
                     </MapMarker>
@@ -165,24 +150,21 @@ export default function Sobre() {
             </div>
           </div>
 
-          {/* Victor no Dinossauro */}
-          <div className="absolute bottom-0 right-0 z-30 pointer-events-none translate-y-[30%] sm:translate-y-[25%] md:translate-y-[20%] lg:translate-y-[15%] translate-x-[5%] sm:translate-x-[3%] md:translate-x-0">
-            <img 
-              src="/image/victor.png" 
-              alt="Victor no Dinossauro" 
-              className="w-[180px] sm:w-[240px] md:w-[350px] lg:w-[450px] xl:w-[550px] h-auto object-contain"
-            />
-          </div>
+          {/* Removido o mascote Dino de Marília */}
         </section>
 
         {/* ─── Stats Counter ─── */}
         <section className="w-full bg-white dark:bg-zinc-900 py-12 px-6 border-y border-[#E2E8F0] dark:border-zinc-800 relative z-20 transition-colors duration-300">
           <div className="max-w-[1000px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {stats.map((stat) => (
+            {[
+              { label: "Membros Participantes", value: "1.500+", icon: Users },
+              { label: "Parceiros Comerciais", value: "80+", icon: Building },
+              { label: "Descontos Concedidos", value: "3.200+", icon: Percent },
+            ].map((stat) => (
               <div key={stat.label} className="flex flex-col items-center text-center">
                 <stat.icon className="w-8 h-8 text-[#1a8ccc] dark:text-[#38bdf8] mb-3" />
                 <p className="text-4xl md:text-5xl font-bold text-[#112F4E] dark:text-zinc-100 tracking-tight">{stat.value}</p>
-                <p className="text-sm text-[#94A3B8] dark:text-zinc-550 font-medium mt-1">{stat.label}</p>
+                <p className="text-sm text-[#94A3B8] dark:text-zinc-500 font-medium mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -198,15 +180,15 @@ export default function Sobre() {
                   COMO FUNCIONA
                 </p>
                 <h2 className="text-4xl md:text-5xl font-medium text-[#112F4E] dark:text-zinc-100 leading-tight mb-6">
-                  Um processo simples
+                  Como economizar com o
                   <br />
-                  e transparente
+                  nosso Clube
                 </h2>
                 <p className="text-[#4A5D70] dark:text-zinc-400 text-lg font-light leading-relaxed mb-8 max-w-md">
-                  Entenda como a sua solicitação entra para o radar comunitário e ganha força para cobrar soluções eficientes.
+                  Garantir vantagens reais para as suas compras cotidianas nunca foi tão simples e intuitivo.
                 </p>
                 <Link href="/" className="bg-[#1a8ccc] dark:bg-[#0ea5e9] hover:bg-[#1572a6] dark:hover:bg-[#0284c7] text-white font-medium px-8 py-4 rounded-full w-fit transition-all hover:-translate-y-1 shadow-sm">
-                  Reportar Agora
+                  Explorar Descontos
                 </Link>
               </div>
 
@@ -217,15 +199,17 @@ export default function Sobre() {
                   <path d="M 680 185 L 700 180" strokeWidth="3" strokeDasharray="8 8" fill="none" className="text-[#1a8ccc] dark:text-[#38bdf8] stroke-current opacity-40 dark:opacity-30" />
                 </svg>
 
-                {[
-                  { left: "10%", bottom: "10%", num: "1", color: "#1a8ccc", title: "Reporte o Problema", desc: "Tire uma foto, descreva o que aconteceu e marque no mapa. Em menos de 2 minutos." },
-                  { left: "40%", top: "35%", num: "2", color: "#F59E0B", title: "Acompanhe o Status", desc: "Receba notificações e interaja com a comunidade dando \"Concordo\" em relatos próximos." },
-                  { right: "5%", top: "5%", num: "3", color: "#10B981", title: "Problema Resolvido", desc: "A cobrança comunitária surte efeito e as melhorias urbanas são conquistadas." },
-                ].map((step) => (
+                {steps.map((step) => (
                   <div
                     key={step.num}
                     className="absolute flex flex-col items-start transition-transform hover:-translate-y-2 duration-300"
-                    style={{ left: step.left, right: step.right, top: step.top, bottom: step.bottom }}
+                    style={
+                      step.num === "1"
+                        ? { left: "10%", bottom: "10%" }
+                        : step.num === "2"
+                        ? { left: "40%", top: "35%" }
+                        : { right: "5%", top: "5%" }
+                    }
                   >
                     <span className="absolute -left-12 -top-20 text-[180px] font-bold text-[#F1F5F9] dark:text-zinc-800/25 select-none pointer-events-none leading-none">{step.num}</span>
                     <div className="relative z-10 w-5 h-5 rounded-full mb-4 shadow-md dark:shadow-zinc-950/50" style={{ backgroundColor: step.color }} />
@@ -240,13 +224,14 @@ export default function Sobre() {
               {/* Mobile Timeline */}
               <div className="lg:hidden flex flex-col gap-12 mt-12 relative px-4">
                 <div className="absolute left-10 top-8 bottom-8 w-1 bg-[#E8F2F8] dark:bg-zinc-800 rounded-full" />
-                {[
-                  { color: "text-[#1a8ccc] dark:text-[#38bdf8]", bg: "bg-[#E8F2F8] dark:bg-[#1a8ccc]/25", title: "Reporte o Problema", desc: "Tire uma foto, descreva o que aconteceu e marque no mapa." },
-                  { color: "text-[#F59E0B] dark:text-[#fbbf24]", bg: "bg-[#FEF3C7] dark:bg-[#F59E0B]/25", title: "Acompanhe o Status", desc: "Receba notificações e interaja com a comunidade." },
-                  { color: "text-[#10B981] dark:text-[#34d399]", bg: "bg-[#D1FAE5] dark:bg-[#10B981]/25", title: "Problema Resolvido", desc: "A cobrança comunitária surte efeito e a melhoria urbana é realizada." },
-                ].map((step, i) => (
+                {steps.map((step, i) => (
                   <div key={i} className="flex gap-6 relative z-10">
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold shrink-0 text-xl shadow-sm ${step.bg} ${step.color}`}>{i + 1}</div>
+                    <div 
+                      className="w-14 h-14 rounded-full flex items-center justify-center font-bold shrink-0 text-xl shadow-sm"
+                      style={{ backgroundColor: `${step.color}15`, color: step.color }}
+                    >
+                      {step.num}
+                    </div>
                     <div>
                       <h3 className="text-xl font-bold text-[#112F4E] dark:text-zinc-100 mb-2 mt-3">{step.title}</h3>
                       <p className="text-[#4A5D70] dark:text-zinc-400 text-base leading-relaxed font-light">{step.desc}</p>
@@ -258,123 +243,185 @@ export default function Sobre() {
           </div>
         </section>
 
-        {/* ─── Patentes / Gamificação ─── */}
-        <section id="patentes" className="w-full bg-[#FAF7F2] dark:bg-zinc-950 py-24 px-6 md:px-12 scroll-mt-20 transition-colors duration-300">
+        {/* ─── Parcerias Multicategorias ─── */}
+        <section className="w-full bg-[#FAF7F2] dark:bg-zinc-950 py-24 px-6 md:px-12 transition-colors duration-300">
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FEF3C7] dark:bg-[#F59E0B]/10 text-[#D97706] dark:text-amber-400 text-sm font-bold tracking-wide uppercase mb-6">
-                <Trophy className="w-4 h-4" />
-                Gamificação
+                <Sparkles className="w-4 h-4" />
+                Variedade
               </div>
               <h2 className="text-4xl md:text-5xl font-medium text-[#112F4E] dark:text-zinc-100 tracking-tight leading-tight mb-4">
-                Níveis de Cidadão
+                Categorias de Benefícios
               </h2>
               <p className="text-lg text-[#4A5D70] dark:text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
-                Quanto mais você participa, mais sobe de patente. Cada concordância, cada reclamação resolvida conta pontos que elevam seu nível na comunidade.
+                Temos parceiros credenciados em 5 grandes eixos para cobrir todas as suas necessidades diárias.
               </p>
             </div>
 
-            {/* XP Rules */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-              {[
-                { icon: PlusCircle, label: "Criar reclamação", xp: "+5 XP" },
-                { icon: ThumbsUp, label: "Concordar", xp: "+1 XP" },
-                { icon: CheckCircle2, label: "Concordo resolvido", xp: "+10 XP" },
-                { icon: Award, label: "Sua reclamação resolvida", xp: "+20 XP" },
-              ].map((rule) => (
-                <div key={rule.label} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-[#E2E8F0] dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-[#E8F2F8] dark:bg-zinc-800/80 text-[#1a8ccc] dark:text-[#38bdf8] flex items-center justify-center mb-3">
-                    <rule.icon className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs text-[#4A5D70] dark:text-zinc-400 font-medium mb-1">{rule.label}</p>
-                  <p className="text-sm font-bold text-[#1a8ccc] dark:text-[#38bdf8]">{rule.xp}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Rank Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {RANKS_DISPLAY.map((rank, i) => (
+              {[
+                { label: "Alimentação", color: "#F59E0B", icon: Gift, desc: "Restaurantes, lanchonetes, padarias e cafés credenciados." },
+                { label: "Automotivo", color: "#38BDF8", icon: Compass, desc: "Oficinas, postos de combustíveis, lava-rápidos e autopeças." },
+                { label: "Saúde & Beleza", color: "#10B981", icon: ShieldCheck, desc: "Salões de beleza, barbearias, academias, clínicas e farmácias." },
+                { label: "Comércio & Varejo", color: "#6366F1", icon: Tag, desc: "Lojas de roupas, calçados, eletrônicos, móveis e presentes." },
+                { label: "Educação & Serviços", color: "#8B5CF6", icon: Star, desc: "Escolas, cursos de idiomas, papelarias, consultorias e utilidades." },
+              ].map((cat, i) => (
                 <div
-                  key={rank.level}
-                  className={`relative p-6 rounded-2xl border shadow-sm text-center transition-all hover:-translate-y-1 hover:shadow-md ${
-                    i === 4
-                      ? "border-amber-200 dark:border-amber-900/50 bg-gradient-to-b from-[#FEF3C7] to-white dark:from-[#FEF3C7]/15 dark:to-zinc-900"
-                      : "border-[#E2E8F0] dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                  }`}
+                  key={i}
+                  className="p-6 rounded-2xl border border-[#E2E8F0] dark:border-zinc-800 bg-white dark:bg-zinc-900 text-center flex flex-col justify-between hover:-translate-y-1 transition-all"
                 >
-                  {i === 4 && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#F59E0B] text-white text-[9px] font-bold uppercase tracking-wider rounded-full shadow-sm">
-                      Max Level
+                  <div>
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm"
+                      style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
+                    >
+                      <cat.icon className="w-6 h-6" />
                     </div>
-                  )}
-                  <div className="w-14 h-14 rounded-2xl bg-[#E8F2F8] dark:bg-zinc-800 text-[#1a8ccc] dark:text-[#38bdf8] flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <rank.icon className="w-7 h-7" style={{ color: rank.color }} />
+                    <h3 className="text-base font-bold text-[#112F4E] dark:text-zinc-100 mb-2">{cat.label}</h3>
+                    <p className="text-xs text-[#94A3B8] dark:text-zinc-400 font-light leading-relaxed">{cat.desc}</p>
                   </div>
-                  <h3 className="text-base font-bold text-[#112F4E] dark:text-zinc-100 mb-1">{rank.name}</h3>
-                  <div className="flex items-center justify-center gap-1 mb-3">
-                    <Flame className="w-3.5 h-3.5" style={{ color: rank.color }} />
-                    <span className="text-sm font-bold" style={{ color: rank.color }}>
-                      {rank.minXP}+ XP
+                  <div className="mt-4 pt-4 border-t border-dashed border-zinc-100 dark:border-zinc-800/80">
+                    <span 
+                      className="text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: cat.color }}
+                    >
+                      Ver Parceiros
                     </span>
                   </div>
-                  <p className="text-xs text-[#94A3B8] dark:text-zinc-400 font-light leading-relaxed">{rank.desc}</p>
-                  {/* Level indicator */}
-                  <div className="mt-3 flex items-center justify-center gap-1">
-                    {[...Array(5)].map((_, j) => (
-                      <div
-                        key={j}
-                        className={`w-2 h-2 rounded-full ${j <= i ? "" : "bg-[#E2E8F0] dark:bg-zinc-700 opacity-20"}`}
-                        style={{ backgroundColor: j <= i ? rank.color : undefined }}
-                      />
-                    ))}
-                  </div>
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            {/* CTA */}
-            <div className="text-center mt-12">
-              <Link
-                href="/usuario/ranking"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-base font-medium hover:bg-[#1572a6] dark:hover:bg-[#0284c7] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all"
-              >
-                <Trophy className="w-5 h-5" />
-                Ver Ranking Completo
-              </Link>
+        {/* ─── Seção Para Anunciantes / Parceiros ─── */}
+        <section id="anunciantes" className="w-full bg-white dark:bg-zinc-900 py-24 px-6 md:px-12 transition-colors duration-300 relative overflow-hidden border-t border-slate-100 dark:border-zinc-800">
+          <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-gradient-to-br from-[#1a8ccc]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute right-0 top-0 w-[200px] h-[200px] bg-gradient-to-bl from-[#F59E0B]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+          <div className="max-w-[1200px] mx-auto z-10 relative">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              
+              {/* Informações Persuasivas */}
+              <div className="space-y-8 text-left">
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E8F2F8] dark:bg-[#1a8ccc]/10 text-[#1a8ccc] dark:text-[#38bdf8] text-sm font-bold tracking-wide uppercase">
+                  <TrendingUp className="w-4 h-4 text-[#1a8ccc] dark:text-[#38bdf8]" />
+                  Aumente suas vendas
+                </div>
+
+                <h2 className="text-4xl md:text-5xl font-semibold text-[#112F4E] dark:text-zinc-100 tracking-tight leading-tight">
+                  Anuncie seu estabelecimento em nossa plataforma e <span className="text-[#F59E0B] italic font-serif">aumente suas vendas</span>!
+                </h2>
+
+                <p className="text-lg text-[#4A5D70] dark:text-zinc-400 font-light leading-relaxed">
+                  O Navegando SP conecta diretamente estabelecimentos comerciais do Estado de São Paulo a milhares de consumidores engajados. Destaque sua marca, crie vantagens competitivas e acompanhe o crescimento real da sua clientela local.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <a
+                    href="https://wa.me/5511999999999?text=Ol%C3%A1!%20Gostaria%20de%20anunciar%20meu%20estabelecimento%20no%20mapa%20do%20Navegando%20SP."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 px-8 py-4.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium transition-all shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] hover:-translate-y-0.5 cursor-pointer text-base"
+                  >
+                    <MessageSquare className="w-4.5 h-4.5 fill-white text-emerald-500 shrink-0" />
+                    Quero Anunciar via WhatsApp
+                  </a>
+
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center gap-2 px-8 py-4.5 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 text-[#112F4E] dark:text-zinc-200 rounded-full font-medium shadow-sm hover:border-[#1a8ccc] dark:hover:border-zinc-300 active:scale-[0.98] transition-all text-base"
+                  >
+                    <Store className="w-4.5 h-4.5 text-slate-500" />
+                    Área do Parceiro
+                  </Link>
+                </div>
+              </div>
+
+              {/* Grid de Benefícios Comerciais */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  {
+                    title: "Vitrine 3D Interativa",
+                    desc: "Seu comércio em destaque no mapa visualizado por milhares de consumidores qualificados em SP.",
+                    icon: Store,
+                    color: "#1a8ccc",
+                  },
+                  {
+                    title: "Cupons Dinâmicos",
+                    desc: "Crie e gerencie campanhas de descontos ou cupons promocionais em segundos para atrair mais visitas.",
+                    icon: Gift,
+                    color: "#F59E0B",
+                  },
+                  {
+                    title: "Menu & Serviços Online",
+                    desc: "Anexe links diretos para seu cardápio digital ou liste seus serviços em destaque no pin do seu local.",
+                    icon: Compass,
+                    color: "#10B981",
+                  },
+                  {
+                    title: "Painel de Controle",
+                    desc: "Gerencie suas filiais, altere dados de contato e acompanhe o número total de cupons resgatados no caixa.",
+                    icon: ShieldCheck,
+                    color: "#8B5CF6",
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-6 rounded-3xl border border-slate-250 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl hover:-translate-y-1 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.02)] text-left space-y-3"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                      style={{ backgroundColor: `${item.color}15`, color: item.color }}
+                    >
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-sm font-bold text-[#112F4E] dark:text-zinc-100">{item.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 font-light leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+
             </div>
           </div>
         </section>
 
         {/* ─── CTA Final ─── */}
         <section className="w-full bg-gradient-to-br from-[#E8F2F8] to-[#FAF7F2] dark:from-zinc-900 dark:to-zinc-950 py-20 px-6 md:px-12 relative overflow-hidden transition-colors duration-300">
-          {/* Decorative circles */}
           <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-[#1a8ccc]/5 dark:bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute top-0 left-1/4 w-[200px] h-[200px] bg-[#1a8ccc]/5 dark:bg-white/5 rounded-full -translate-y-1/2" />
 
-          <div className="relative max-w-[900px] mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-medium text-[#112F4E] dark:text-white leading-tight mb-6">
-              Pronto para fazer a<br />
-              <span className="text-[#1a8ccc] dark:text-[#38BDF8]">diferença</span>?
-            </h2>
-            <p className="text-lg text-[#4A5D70] dark:text-[#94A3B8] font-light max-w-xl mx-auto mb-10 leading-relaxed">
-              Junte-se a centenas de cidadãos que já estão transformando Marília. 
-              Cada reclamação é um passo para uma cidade melhor.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="relative max-w-[1000px] mx-auto text-center space-y-10">
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-5xl font-medium text-[#112F4E] dark:text-white leading-tight">
+                Pronto para fazer parte do <span className="text-[#F59E0B] dark:text-[#fbbf24]">Navegando SP</span>?
+              </h2>
+              <p className="text-base md:text-lg text-[#4A5D70] dark:text-[#94A3B8] font-light max-w-2xl mx-auto leading-relaxed">
+                Quer você seja um consumidor em busca das melhores parcerias e cupons ou um comerciante pronto para ver seu estabelecimento em destaque no mapa e decolar suas vendas, nós temos o caminho ideal para você.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
+              {/* Botão para Consumidor */}
               <Link
                 href="/"
-                className="flex items-center justify-center gap-2 px-10 py-5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-lg font-medium hover:bg-[#1572a6] dark:hover:bg-[#0284c7] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all"
+                className="flex items-center justify-center gap-2 px-10 py-5 bg-[#1a8ccc] dark:bg-[#0ea5e9] text-white rounded-full text-lg font-semibold hover:bg-[#1572a6] dark:hover:bg-[#0284c7] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all w-full sm:w-auto"
               >
-                <MapPin className="w-5 h-5" />
-                Começar Agora
+                <Compass className="w-5 h-5 animate-spin-slow" />
+                Explorar Parcerias
               </Link>
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-2 px-10 py-5 bg-white dark:bg-white/10 border border-[#E2E8F0] dark:border-white/20 text-[#112F4E] dark:text-white rounded-full text-lg font-medium hover:bg-[#FAF7F2] dark:hover:bg-white/20 hover:-translate-y-1 transition-all"
+              
+              {/* Botão para Anunciante */}
+              <a
+                href="https://wa.me/5511999999999?text=Ol%C3%A1!%20Gostaria%20de%20anunciar%20minha%20empresa%20no%20Navegando%20SP."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-10 py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all w-full sm:w-auto cursor-pointer"
               >
-                Fazer Login
-              </Link>
+                <MessageSquare className="w-5 h-5 fill-white text-emerald-500 shrink-0 animate-bounce" style={{ animationDuration: '3s' }} />
+                Anunciar Estabelecimento
+              </a>
             </div>
           </div>
         </section>

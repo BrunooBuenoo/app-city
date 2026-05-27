@@ -8,23 +8,23 @@ export {
   type UserProfile,
 } from "./auth";
 export {
-  criarReclamacao,
-  getReclamacao,
-  listarReclamacoes,
-  onReclamacoesChange,
-  atualizarStatus,
-  getTimeline,
-  votar,
-  getConcordantes,
-  uploadFotoReclamacao,
-  adicionarComentario,
-  listarComentarios,
-  onComentariosChange,
-  type Reclamacao,
-  type TimelineEvent,
-  type Concordante,
-  type VotoData,
-} from "./reclamacoes";
+  criarEstabelecimento,
+  aprovarEstabelecimento,
+  rejeitarOuSuspenderEstabelecimento,
+  listarEstabelecimentos,
+  onEstabelecimentosChange,
+  criarCupom,
+  alternarStatusCupom,
+  listarCupons,
+  resgatarCupom,
+  validarResgate,
+  listarResgatesDoUsuario,
+  listarResgatesDoEstabelecimento,
+  uploadLogoEstabelecimento,
+  type Estabelecimento,
+  type Cupom,
+  type Resgate,
+} from "./estabelecimentos";
 export {
   obterCategoriasDb,
   salvarCategoriaDb,
@@ -32,9 +32,4 @@ export {
   inicializarCategoriasPadrao,
   type CategoryDb,
 } from "./categorias";
-export {
-  obterRecompensasDb,
-  salvarRecompensasDb,
-  atualizarPontosUsuarioDb,
-  type RecompensasConfig,
-} from "./gamificacao";
+

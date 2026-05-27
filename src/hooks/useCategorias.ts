@@ -25,7 +25,7 @@ const CATEGORIES_FALLBACK: CategoryDb[] = CATEGORIES.map((cat, index) => {
   };
 });
 
-const STORAGE_KEY = "sac_marilia_categorias_cache";
+const STORAGE_KEY = "navegandosp_categorias_cache";
 
 export function useCategorias() {
   const [categorias, setCategorias] = useState<CategoryDb[]>(() => {

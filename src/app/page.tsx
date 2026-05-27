@@ -6,24 +6,111 @@ import { useRouter } from "next/navigation";
 import { Map, MapMarker, MarkerContent, MapControls, MapPopup, useMap } from "@/components/ui/map";
 import MapNavbar from "@/components/layout/MapNavbar";
 import LoginRequiredModal from "@/components/ui/modal/LoginRequiredModal";
+import ParceriaModal from "@/components/ui/modal/ParceriaModal";
 import { getCategoryByLabel } from "@/utils/categories";
 import { useAuth } from "@/contexts/AuthContext";
-import { onReclamacoesChange, votar, type Reclamacao } from "@/services/firebase";
+import { onEstabelecimentosChange, listarCupons, resgatarCupom, type Estabelecimento, type Cupom } from "@/services/firebase";
 import { findClusteredComplaints, getClusterCounts } from "@/utils/clustering";
-import { ThumbsUp, AlertTriangle, TrendingUp, Loader2 } from "lucide-react";
+import { Tag, MapPin, Compass, Trophy, Star, Phone, Loader2, Sparkles, X, Store } from "lucide-react";
 import CamadaClimatica from "@/components/clima/camada-climatica";
 import BotaoClima from "@/components/clima/botao-clima";
 import { ClimaProvider } from "@/contexts/ClimaContext";
 import { cn } from "@/lib/utils";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  aberto: { label: "Aberto", color: "#1a8ccc" },
-  em_analise: { label: "Em Análise", color: "#8B5CF6" },
-  em_andamento: { label: "Em Andamento", color: "#F59E0B" },
-  resolvido: { label: "Resolvido", color: "#10B981" },
-  critico: { label: "Crítico", color: "#EF4444" },
+  pendente_aprovacao: { label: "Pendente", color: "#F59E0B" },
+  ativo: { label: "Ativo", color: "#10B981" },
+  suspenso: { label: "Suspenso", color: "#EF4444" },
 };
-// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem (Atualizado para trigger de deploy)
+
+const ESTABELECIMENTOS_MOCKADOS: Estabelecimento[] = [
+  {
+    id: "mock-masp",
+    empresaId: "empresa-mock-masp",
+    nome: "MASP - Museu de Arte de SP",
+    descricao: "O Museu de Arte de São Paulo Assis Chateaubriand é um marco na Avenida Paulista. Famoso por seu vão livre de 74 metros sustentado por colunas vermelhas, abriga um acervo fabuloso de obras de arte ocidentais e exposições deslumbrantes.",
+    categoria: "educacao_servicos",
+    logoUrl: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=150&auto=format&fit=crop&q=80",
+    bannerUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&auto=format&fit=crop&q=80",
+    latitude: -23.5614,
+    longitude: -46.6559,
+    endereco: "Av. Paulista, 1578 - Bela Vista, São Paulo - SP",
+    telefone: "(11) 3149-5959",
+    status: "ativo",
+    criadoEm: null,
+    cardapioUrl: "https://masp.org.br/exposicoes",
+    servicos: "Terça-feira grátis: 10h às 20h. Quarta a Domingo: 10h às 18h. Segunda-feira: Fechado.",
+  },
+  {
+    id: "mock-pinacoteca",
+    empresaId: "empresa-mock-pina",
+    nome: "Pinacoteca de São Paulo",
+    descricao: "O museu de artes visuais mais antigo do estado de São Paulo, fundado in 1905. O icônico edifício de tijolos projetado por Ramos de Azevedo na Praça da Luz abriga um dos acervos mais expressivos de arte brasileira do país.",
+    categoria: "educacao_servicos",
+    logoUrl: "https://images.unsplash.com/photo-1580136579312-94651dfd596d?w=150&auto=format&fit=crop&q=80",
+    bannerUrl: "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?w=600&auto=format&fit=crop&q=80",
+    latitude: -23.5342,
+    longitude: -46.6341,
+    endereco: "Praça da Luz, 2 - Luz, São Paulo - SP",
+    telefone: "(11) 3324-1000",
+    status: "ativo",
+    criadoEm: null,
+    cardapioUrl: "https://pinacoteca.org.br/programacao",
+    servicos: "Quarta a Segunda: 10h às 18h. Quinta-feira grátis das 18h às 20h. Terça-feira: Fechado.",
+  },
+  {
+    id: "mock-zoologico",
+    empresaId: "empresa-mock-zoo",
+    nome: "Zoológico de São Paulo",
+    descricao: "Com mais de 3.000 animais, o Zoológico de São Paulo é o maior do Brasil. Está inserido em uma exuberante reserva preservada de Mata Atlântica e promove diversão educativa, conscientização e conservação ambiental para toda a família.",
+    categoria: "educacao_servicos",
+    logoUrl: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=150&auto=format&fit=crop&q=80",
+    bannerUrl: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=600&auto=format&fit=crop&q=80",
+    latitude: -23.6508,
+    longitude: -46.6214,
+    endereco: "Av. Miguel Estéfano, 4241 - Água Funda, São Paulo - SP",
+    telefone: "(11) 4967-0700",
+    status: "ativo",
+    criadoEm: null,
+    cardapioUrl: "https://zoologico.com.br/ingressos",
+    servicos: "Diariamente: 09h às 17h (Entrada permitida até as 16h). Passeios noturnos guiados sob agendamento.",
+  },
+  {
+    id: "mock-mercadao",
+    empresaId: "empresa-mock-merc",
+    nome: "Mercado Municipal de São Paulo (Mercadão)",
+    descricao: "Famoso no mundo inteiro, o Mercadão é um verdadeiro polo gastronômico no centro da cidade. Conhecido por seus vitrais maravilhosos, boxes de frutas exóticas raras e o lendário sanduíche gigante de mortadela quente com queijo.",
+    categoria: "alimentacao",
+    logoUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&auto=format&fit=crop&q=80",
+    bannerUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80",
+    latitude: -23.5417,
+    longitude: -46.6289,
+    endereco: "Rua da Cantareira, 306 - Centro Histórico, São Paulo - SP",
+    telefone: "(11) 3313-3365",
+    status: "ativo",
+    criadoEm: null,
+    cardapioUrl: "https://www.instagram.com/oportaldomercadao/",
+    servicos: "Segunda a Sábado: 06h às 18h. Domingo e Feriados: 06h às 16h. Estacionamento privado no local.",
+  },
+  {
+    id: "mock-ibirapuera",
+    empresaId: "empresa-mock-ibira",
+    nome: "Parque do Ibirapuera",
+    descricao: "Considerado o pulmão verde da capital paulista e o parque urbano mais visitado da América Latina. Oferece ciclovias, lagos, museus de renome (como o MAM), auditórios de Oscar Niemeyer e uma vasta área de piquenique sob as árvores.",
+    categoria: "saude_beleza",
+    logoUrl: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=150&auto=format&fit=crop&q=80",
+    bannerUrl: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=600&auto=format&fit=crop&q=80",
+    latitude: -23.5874,
+    longitude: -46.6558,
+    endereco: "Av. Pedro Álvares Cabral - Vila Mariana, São Paulo - SP",
+    telefone: "(11) 3889-6100",
+    status: "ativo",
+    criadoEm: null,
+    cardapioUrl: "https://parqueibirapuera.org",
+    servicos: "Aberto diariamente das 05h às 00h. Entrada totalmente gratuita. Aluguel de bicicletas nos portões 3 e 4.",
+  },
+];
+// Subcomponente encapsulado para cada Pin 3D para isolar o estado de erro de imagem
 function MapPin3D({
   rec,
   pinColor,
@@ -33,9 +120,10 @@ function MapPin3D({
   setShowLoginModal,
   offsetX = 0, // Desvio lateral horizontal
   offsetY = 0, // Deslocamento vertical dinâmico
-  isHot = false, // Se o pin pertence ao Top 3 e está "Em Alta"
+  isHot = false, // Se o pin pertence aos destaques
+  onVerCupons,
 }: {
-  rec: Reclamacao;
+  rec: Estabelecimento;
   pinColor: string;
   cat: any;
   isLoggedIn: boolean;
@@ -44,19 +132,13 @@ function MapPin3D({
   offsetX?: number;
   offsetY?: number;
   isHot?: boolean;
+  onVerCupons: (rec: Estabelecimento) => void;
 }) {
   const [imgError, setImgError] = useState(false);
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number; scale: number; rot: number; delay: number }[]>([]);
-  const [isElasticActive, setIsElasticActive] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-  const temFoto = rec.fotos && rec.fotos.length > 0 && !imgError;
-  const fotoUrl = temFoto ? rec.fotos[0] : "";
-  const totalConcordos = rec.concordos ?? 0;
-  const userVotoObj = user ? rec.votantes?.[user.uid] : null;
-  const userVotouConcordo = userVotoObj
-    ? (typeof userVotoObj === "string" ? userVotoObj === "concordo" : (userVotoObj as any)?.tipo === "concordo")
-    : false;
+  const temFoto = rec.logoUrl && !imgError;
+  const fotoUrl = temFoto ? rec.logoUrl : "";
 
   return (
     <MapMarker 
@@ -87,7 +169,7 @@ function MapPin3D({
             }}
           />
 
-          {/* ANÉIS DE CALOR DOURADOS / ÂMBAR PULSANTES (Top 3) */}
+          {/* ANÉIS PULSANTES DE DESTAQUE */}
           {isHot && (
             <>
               <div
@@ -98,19 +180,10 @@ function MapPin3D({
                   pointerEvents: "none",
                 }}
               />
-              <div
-                className="absolute w-12 h-12 rounded-full border-[2.5px] border-orange-400 animate-ping opacity-45"
-                style={{
-                  transform: "translateY(-4px) rotateX(75deg)",
-                  animationDuration: "2s",
-                  animationDelay: "0.8s",
-                  pointerEvents: "none",
-                }}
-              />
             </>
           )}
 
-          {/* HASTE DE CONEXÃO RADIAL (PONTILHADA VERMELHA) */}
+          {/* HASTE DE CONEXÃO RADIAL (PONTILHADA) */}
           {offsetY > 0 && (() => {
             const d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
             const graus = Math.atan2(offsetX, offsetY) * (180 / Math.PI);
@@ -118,10 +191,10 @@ function MapPin3D({
               <div
                 className="absolute origin-bottom animate-scale-up"
                 style={{
-                  height: `${d - 4}px`, // d - 4 para deixar um respiro na ponta do pin
-                  bottom: "2px", // Fixado no centro geométrico
+                  height: `${d - 4}px`,
+                  bottom: "2px",
                   left: "50%",
-                  borderLeft: "2px dashed #EF4444",
+                  borderLeft: "2px dashed #F59E0B",
                   transform: `translateX(-50%) rotate(${graus}deg)`,
                   opacity: 0.85,
                   pointerEvents: "none"
@@ -134,14 +207,13 @@ function MapPin3D({
           <div
             className="relative flex flex-col items-center transition-transform duration-400 ease-out origin-bottom group-hover:-translate-y-2 group-hover:scale-[1.03]"
             style={{
-              transform: `translate(${offsetX}px, ${-offsetY}px)`, // Removemos o -22px para que a ponta alinhe corretamente com a linha pontilhada
+              transform: `translate(${offsetX}px, ${-offsetY}px)`,
               zIndex: isHot ? 40 : 10,
             }}
           >
             <div className="cursor-pointer pointer-events-auto">
               {/* SHAPE DO TEARDROP */}
               <div className="relative w-[44px] h-[44px] flex items-center justify-center">
-                {/* O formato de gota d'água */}
                 <div 
                   className="absolute inset-0 rounded-[50%_50%_50%_4px] rotate-[-45deg] border-[2.5px] border-white transition-colors duration-300"
                   style={{ 
@@ -157,9 +229,9 @@ function MapPin3D({
                   {temFoto ? (
                     <img
                       src={fotoUrl}
-                      alt={rec.titulo}
+                      alt={rec.nome}
                       onError={() => {
-                        console.warn(`Falha ao carregar imagem para a reclamação ${rec.id}. Ativando fallback.`);
+                        console.warn(`Falha ao carregar imagem para o estabelecimento ${rec.id}.`);
                         setImgError(true);
                       }}
                       className="w-full h-full object-cover scale-105"
@@ -173,7 +245,7 @@ function MapPin3D({
               </div>
             </div>
 
-            {/* MINI BADGE DE CATEGORIA NO CANTO SUPERIOR ESQUERDO (Para pins com foto para fácil identificação) */}
+            {/* MINI BADGE DE CATEGORIA NO CANTO SUPERIOR ESQUERDO */}
             {temFoto && (
               <div
                 className="absolute -top-3 -left-5 z-20 flex items-center justify-center w-6 h-6 rounded-full border text-white shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d hover:scale-110 transition-transform cursor-pointer"
@@ -190,87 +262,20 @@ function MapPin3D({
               </div>
             )}
 
-            {/* BOTÃO / PÍLULA DE CONCORDÂNCIA 3D FLUTUANTE */}
+            {/* PÍLULA DE DESCONTOS/CUPONS FLUTUANTE */}
             <button
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!isLoggedIn) {
-                  setShowLoginModal(true);
-                  return;
-                }
-                if (user) {
-                  // Disparar animação elástica e partículas
-                  setIsElasticActive(true);
-                  setTimeout(() => setIsElasticActive(false), 600);
-
-                  const newParticles = Array.from({ length: 6 }).map((_, i) => ({
-                    id: Math.random(),
-                    x: (Math.random() - 0.5) * 36,
-                    y: -15 - Math.random() * 15,
-                    scale: 0.6 + Math.random() * 0.6,
-                    rot: Math.round((Math.random() - 0.5) * 60),
-                    delay: i * 60,
-                  }));
-                  setParticles((prev) => [...prev, ...newParticles]);
-                  setTimeout(() => {
-                    setParticles((prev) => prev.filter(p => !newParticles.find(np => np.id === p.id)));
-                  }, 1200);
-
-                  try {
-                    await votar(rec.id, user.uid, "concordo");
-                  } catch (err) {
-                    console.error("Erro ao votar:", err);
-                  }
-                }
+                onVerCupons(rec);
               }}
-              className={cn(
-                "absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d cursor-pointer",
-                isElasticActive && "animate-elastic",
-                isHot && "animate-pulse"
-              )}
+              className="absolute -top-3 -right-5 z-20 flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-zinc-900 border rounded-full text-[9px] font-extrabold shadow-[0_6px_12px_rgba(0,0,0,0.15)] select-none transform-style-3d cursor-pointer border-[#10B981] text-[#10B981] hover:scale-105 active:scale-95 transition-all"
               style={{
-                backgroundColor: userVotouConcordo ? `${pinColor}12` : (isHot ? "#FFFBEB" : "#ffffff"),
-                color: userVotouConcordo ? pinColor : (isHot ? "#D97706" : "#112F4E"),
-                borderColor: pinColor, // Contorno segue sempre a cor da reclamação
-                transform: "translateZ(8px)",
-                boxShadow: userVotouConcordo
-                  ? `0 4px 10px ${pinColor}33, 0 2px 4px rgba(0,0,0,0.1)`
-                  : (isHot 
-                      ? `0 0 12px rgba(245,158,11,0.3), 0 4px 8px rgba(245,158,11,0.15)`
-                      : `0 4px 8px rgba(0,0,0,0.1)`)
+                transform: "translateZ(8px)"
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill={userVotouConcordo ? pinColor : "none"}
-                stroke={pinColor}
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-2.5 h-2.5 transition-colors duration-300"
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
-              <span>{totalConcordos}</span>
-
-              {/* Renderização de Partículas de Corações */}
-              {particles.map((p) => (
-                <span
-                  key={p.id}
-                  className="absolute text-[12px] text-red-500 pointer-events-none select-none animate-float-heart"
-                  style={{
-                    left: `calc(50% + ${p.x}px)`,
-                    top: `${p.y}px`,
-                    transform: `scale(${p.scale}) rotate(${p.rot}deg)`,
-                    animationDelay: `${p.delay}ms`,
-                    zIndex: 50,
-                  }}
-                >
-                  ❤️
-                </span>
-              ))}
+              <Tag className="w-2.5 h-2.5 text-[#10B981]" />
+              <span>Cupons</span>
             </button>
 
           </div>
@@ -286,6 +291,7 @@ function MapPin3D({
           temFoto={temFoto} 
           fotoUrl={fotoUrl} 
           onClose={() => setShowPopup(false)} 
+          onVerCupons={onVerCupons}
           offsetY={offsetY} 
           offsetX={offsetX} 
         />
@@ -302,15 +308,17 @@ function QuickViewPopup({
   temFoto,
   fotoUrl,
   onClose,
+  onVerCupons,
   offsetY = 0,
   offsetX = 0,
 }: {
-  rec: Reclamacao;
+  rec: Estabelecimento;
   cat: any;
   pinColor: string;
   temFoto: boolean;
   fotoUrl: string;
   onClose: () => void;
+  onVerCupons: (rec: Estabelecimento) => void;
   offsetY?: number;
   offsetX?: number;
 }) {
@@ -322,55 +330,92 @@ function QuickViewPopup({
       offset={offsetY > 0 ? [offsetX, -offsetY - 20] : 30}
       className="p-0 border-none bg-transparent shadow-none"
     >
-      <div className="w-[280px] sm:w-[300px] bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-zinc-800 pointer-events-auto">
-        {/* Foto header */}
-        {temFoto ? (
-          <div className="h-[140px] w-full relative">
-            <img src={fotoUrl} alt={rec.titulo} className="w-full h-full object-cover" />
+      <div className="w-[280px] sm:w-[300px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-zinc-800 pointer-events-auto">
+        {rec.bannerUrl ? (
+          <div className="h-[120px] w-full relative">
+            <img src={rec.bannerUrl} alt={rec.nome} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <button 
               onClick={onClose}
-              className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-md"
+              className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-md cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
             <div className="absolute bottom-3 left-3 right-3 text-white flex items-center gap-2">
-              <div className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center" style={{ backgroundColor: pinColor }}>
-                <span className="material-symbols-outlined text-[14px]">{cat.icon}</span>
-              </div>
-              <span className="text-sm font-bold truncate flex-1">{rec.titulo}</span>
+              {temFoto && (
+                <img src={fotoUrl} className="w-8 h-8 rounded-full border border-white object-cover bg-white shrink-0" alt="logo" />
+              )}
+              <span className="text-sm font-bold truncate flex-1">{rec.nome}</span>
             </div>
           </div>
         ) : (
           <div className="p-4 pb-3 border-b border-slate-100 dark:border-zinc-800 flex items-start gap-3 relative" style={{ backgroundColor: `${pinColor}10` }}>
             <button 
               onClick={onClose}
-              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
-            <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-white shadow-sm mt-1" style={{ backgroundColor: pinColor }}>
-              <span className="material-symbols-outlined">{cat.icon}</span>
-            </div>
-            <h3 className="font-bold text-slate-800 dark:text-zinc-100 flex-1 line-clamp-2 pr-4">{rec.titulo}</h3>
+            {temFoto ? (
+              <img src={fotoUrl} className="w-10 h-10 rounded-full object-cover border bg-white shrink-0" alt="logo" />
+            ) : (
+              <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-white shadow-sm mt-1" style={{ backgroundColor: pinColor }}>
+                <span className="material-symbols-outlined">{cat.icon}</span>
+              </div>
+            )}
+            <h3 className="font-bold text-slate-800 dark:text-zinc-100 flex-1 line-clamp-2 pr-4">{rec.nome}</h3>
           </div>
         )}
 
         {/* Content */}
-        <div className="p-4 space-y-3">
-          <p className="text-[13px] leading-snug text-slate-500 dark:text-zinc-400 line-clamp-3">
-            {rec.descricao || "Sem descrição disponível para esta ocorrência."}
+        <div className="p-4 space-y-3 text-left">
+          <p className="text-[13px] leading-snug text-slate-600 dark:text-zinc-300 line-clamp-3 font-light">
+            {rec.descricao || "Nenhuma descrição disponível para este parceiro."}
           </p>
+
+          <div className="text-[11px] text-slate-500 dark:text-zinc-400 space-y-1.5">
+            {rec.telefone && (
+              <div className="flex items-center gap-1.5">
+                <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                <span>{rec.telefone}</span>
+              </div>
+            )}
+            {rec.endereco && (
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                <span className="truncate">{rec.endereco}</span>
+              </div>
+            )}
+            {rec.cardapioUrl && (
+              <div className="flex items-center gap-1.5 text-blue-500 font-bold">
+                <span className="material-symbols-outlined text-[13px] shrink-0">restaurant_menu</span>
+                <a href={rec.cardapioUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">Visualizar Cardápio</a>
+              </div>
+            )}
+            {rec.servicos && (
+              <div className="flex items-start gap-1.5 text-purple-500 font-bold">
+                <span className="material-symbols-outlined text-[13px] shrink-0 mt-0.5">design_services</span>
+                <span className="line-clamp-2">Serviços: {rec.servicos}</span>
+              </div>
+            )}
+          </div>
           
           <div className="flex justify-between items-center pt-2">
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" style={{ backgroundColor: `${statusLabels[rec.status]?.color || "#94A3B8"}20`, color: statusLabels[rec.status]?.color || "#94A3B8" }}>
               {statusLabels[rec.status]?.label || "Desconhecido"}
             </span>
             
-            <Link href={`/reclamacao/${rec.id}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group/link">
-              Ver Detalhes 
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onVerCupons(rec);
+              }}
+              className="text-xs font-bold text-[#10B981] hover:text-[#059669] flex items-center gap-1 group/link cursor-pointer"
+            >
+              Ver Benefícios 
               <span className="material-symbols-outlined text-[14px] group-hover/link:translate-x-0.5 transition-transform">arrow_forward</span>
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -378,160 +423,9 @@ function QuickViewPopup({
   );
 }
 
-// Subcomponente premium para agrupar marcadores idênticos no mesmo local
-function MapMultiPin3D({
-  reclamacoes,
-  isLoggedIn,
-  user,
-  setShowLoginModal,
-  topReclamacoesIds,
-}: {
-  reclamacoes: Reclamacao[];
-  isLoggedIn: boolean;
-  user: any;
-  setShowLoginModal: (show: boolean) => void;
-  topReclamacoesIds?: Set<string>;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Usamos o primeiro como âncora geográfica
-  const ancor = reclamacoes[0];
-  const totalReclamacoes = reclamacoes.length;
-  const pinColor = "#8B5CF6"; // Roxo elegante para aglomerados (clusters) multi-tema
 
-  // Se estiver expandido, renderizamos todos os pins empilhados verticalmente + botão de fechar na base!
-  if (isExpanded) {
-    return (
-      <>
-        {/* Renderiza cada reclamação com um desvio lateral e vertical radial (espalhamento em leque) */}
-        {reclamacoes.map((rec, i) => {
-          const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
-          const pinColor = cat.color;
 
-          // Fórmula de dispersão radial (leque) uniforme
-          const minAngle = -50;
-          const maxAngle = 50;
-          const total = reclamacoes.length;
-
-          let angle = 0;
-          if (total > 1) {
-            angle = minAngle + (i * (maxAngle - minAngle)) / (total - 1);
-          }
-          const rad = angle * (Math.PI / 180);
-
-          const radius = 80; // Raio de dispersão
-          const baseHeight = 55; // Altura de base para não sobrepor o botão de fechar
-
-          const offsetX = Math.round(Math.sin(rad) * radius);
-          const offsetY = Math.round(baseHeight + Math.cos(rad) * radius);
-
-          return (
-            <MapPin3D
-              key={`expanded-${rec.id}`}
-              rec={rec}
-              pinColor={pinColor}
-              cat={cat}
-              isLoggedIn={isLoggedIn}
-              user={user}
-              setShowLoginModal={setShowLoginModal}
-              offsetX={offsetX}
-              offsetY={offsetY}
-              isHot={topReclamacoesIds?.has(rec.id)}
-            />
-          );
-        })}
-
-        {/* Botão de fechar sutil na base geográfica no chão */}
-        <MapMarker longitude={ancor.longitude} latitude={ancor.latitude}>
-          <MarkerContent>
-            <div className="relative flex flex-col items-center">
-              {/* SOMBRA 3D NO CHÃO DO MAPA */}
-              <div
-                className="absolute bottom-1 w-6 h-1.5 bg-black/35 rounded-full blur-[1.5px] transition-all"
-                style={{ transform: "rotateX(60deg) translateZ(-2px)", pointerEvents: "none" }}
-              />
-              <button
-                type="button"
-                onClick={() => setIsExpanded(false)}
-                className="w-8 h-8 rounded-full bg-[#EF4444] border-2 border-white text-white shadow-elevated flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer animate-scale-up z-30"
-                style={{
-                  transform: "translateY(28px) translateZ(10px)",
-                }}
-                title="Recolher relatos"
-              >
-                <span className="material-symbols-outlined text-[16px] font-bold">close</span>
-              </button>
-            </div>
-          </MarkerContent>
-        </MapMarker>
-      </>
-    );
-  }
-
-  // Se estiver fechado (estado inicial), renderiza o MultiPin roxo com a contagem acumulada
-  return (
-    <MapMarker longitude={ancor.longitude} latitude={ancor.latitude}>
-      <MarkerContent>
-        <div
-          onClick={() => setIsExpanded(true)}
-          className="relative flex flex-col items-center select-none group perspective-[1000px] pb-3"
-          title="Clique para expandir relatos deste local"
-        >
-          {/* SOMBRA 3D NO CHÃO DO MAPA */}
-          {/* SOMBRA 3D NO CHÃO DO MAPA */}
-          <div
-            className="absolute w-8 h-2 bg-black/50 blur-[3px] transition-all duration-300 group-hover:scale-125 group-hover:blur-[4px] group-hover:opacity-30"
-            style={{ transform: "translateY(2px) rotateX(65deg)", pointerEvents: "none" }}
-          />
-
-          {/* ANEL PULSANTE DUPLO VERMELHO DE EMERGÊNCIA */}
-          <div
-            className="absolute w-10 h-10 rounded-full border-[2.5px] animate-ping opacity-35"
-            style={{
-              borderColor: "#EF4444",
-              transform: "translateY(-4px) rotateX(75deg)",
-              animationDuration: "1.8s",
-              pointerEvents: "none"
-            }}
-          />
-
-          {/* CORPO FLUTUANTE DO PIN MULTIPLO AMPLIADO */}
-          <div
-            className="relative flex flex-col items-center transition-transform duration-400 ease-out origin-bottom group-hover:-translate-y-2 group-hover:scale-[1.03]"
-            style={{
-              zIndex: 30,
-            }}
-          >
-            {/* SHAPE DO TEARDROP VERMELHO */}
-            <div className="relative w-[50px] h-[50px] flex items-center justify-center">
-              {/* O formato de gota d'água */}
-              <div 
-                className="absolute inset-0 rounded-[50%_50%_50%_4px] rotate-[-45deg] border-[2.5px] border-white transition-colors duration-300 bg-gradient-to-tr from-[#B91C1C] to-[#EF4444]"
-                style={{ 
-                  boxShadow: `inset 2px 2px 4px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,0,0,0.15), 0 10px 18px -4px rgba(239, 68, 68, 0.5), 0 4px 6px -2px rgba(0,0,0,0.2)` 
-                }}
-              />
-              
-              {/* Círculo Interno com o conteúdo */}
-              <div 
-                className="absolute inset-[4px] rounded-full bg-transparent flex items-center justify-center overflow-hidden z-10"
-              >
-                <div className="flex flex-col items-center justify-center text-white select-none">
-                  <span className="material-symbols-outlined text-[28px] animate-pulse drop-shadow-md">warning</span>
-                </div>
-              </div>
-            </div>
-
-            {/* BADGE DE NÚMERO SUPERIOR DIREITO */}
-            <div className="absolute -top-1 -right-2 z-20 flex items-center justify-center min-w-[28px] h-[28px] px-1.5 rounded-full bg-[#112F4E] border-2 border-white text-[11px] font-black text-white shadow-md animate-bounce">
-              {totalReclamacoes}
-            </div>
-          </div>
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
-}
 
 // Subcomponente dedicado a salvar o estado de visualização do mapa (viewport) no localStorage
 function MapViewportPersistence() {
@@ -555,7 +449,7 @@ function MapViewportPersistence() {
           pitch,
         };
 
-        localStorage.setItem("appmarilia:map_viewport", JSON.stringify(viewport));
+        localStorage.setItem("navegandosp:map_viewport", JSON.stringify(viewport));
       } catch (err) {
         console.error("[MapViewportPersistence] Erro ao salvar viewport:", err);
       }
@@ -578,13 +472,15 @@ function MapContent({
   clusterCounts,
   flyToTarget,
   setFlyToTarget,
+  onVerCupons,
 }: {
-  reclamacoes: Reclamacao[];
-  filteredReclamacoes: Reclamacao[];
+  reclamacoes: Estabelecimento[];
+  filteredReclamacoes: Estabelecimento[];
   clusteredIds: Set<string>;
   clusterCounts: Map<string, number>;
   flyToTarget: { lng: number; lat: number; id: string } | null;
   setFlyToTarget: (v: { lng: number; lat: number; id: string } | null) => void;
+  onVerCupons: (rec: Estabelecimento) => void;
 }) {
   const { map, isLoaded } = useMap();
   const [bouncingPin, setBouncingPin] = useState<string | null>(null);
@@ -633,6 +529,7 @@ function MapContent({
             cat={cat} 
             pinColor={pinColor} 
             isBouncing={isBouncing} 
+            onVerCupons={onVerCupons}
           />
         );
       })}
@@ -640,25 +537,28 @@ function MapContent({
   );
 }
 
-// COMPONENTE DO PIN SIMPLES (USADO ANTES DO ZOOM DE CLUSTERS ABRIR)
+// COMPONENTE DO PIN SIMPLES
 function SimpleMapPin({
   rec,
   isInCluster,
   neighborCount,
   cat,
   pinColor,
-  isBouncing
+  isBouncing,
+  onVerCupons,
 }: {
-  rec: Reclamacao;
+  rec: Estabelecimento;
   isInCluster: boolean;
   neighborCount: number;
   cat: any;
   pinColor: string;
   isBouncing: boolean;
+  onVerCupons: (rec: Estabelecimento) => void;
 }) {
   const [showPopup, setShowPopup] = useState(false);
-  const temFoto = rec.fotos && rec.fotos.length > 0;
-  const fotoUrl = temFoto ? rec.fotos[0] : "";
+  const [imgError, setImgError] = useState(false);
+  const temFoto = rec.logoUrl && !imgError;
+  const fotoUrl = temFoto ? rec.logoUrl : "";
 
   return (
     <MapMarker 
@@ -671,10 +571,9 @@ function SimpleMapPin({
     >
       <MarkerContent>
         <div className={`relative group cursor-pointer pointer-events-auto ${isBouncing ? "animate-bounce" : ""}`}>
-          {/* Alert icon for clustered */}
           {isInCluster && (
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-lg flex items-center gap-0.5 whitespace-nowrap z-20">
-              <AlertTriangle className="w-2.5 h-2.5" />
+              <Star className="w-2.5 h-2.5 text-white" />
               {neighborCount}
             </div>
           )}
@@ -697,6 +596,7 @@ function SimpleMapPin({
           temFoto={temFoto} 
           fotoUrl={fotoUrl} 
           onClose={() => setShowPopup(false)} 
+          onVerCupons={onVerCupons}
           offsetY={0} 
           offsetX={0} 
         />
@@ -889,13 +789,21 @@ function MapAutoRecenter({
 
 export default function Home() {
   const router = useRouter();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, profile, user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [showParceriaModal, setShowParceriaModal] = useState(false);
+  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
+  const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<Estabelecimento | null>(null);
+  const [cupons, setCupons] = useState<Cupom[]>([]);
+  const [loadingCupons, setLoadingCupons] = useState(false);
+  const [showCuponsModal, setShowCuponsModal] = useState(false);
+  const [resgateSucessoCodigo, setResgateSucessoCodigo] = useState<string | null>(null);
+  const [resgatandoId, setResgatandoId] = useState<string | null>(null);
+
   const [flyToTarget, setFlyToTarget] = useState<{ lng: number; lat: number; id: string } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Viewport inicial persistida no cliente para evitar erros de hidratação (SSR) e saltos visuais
+  // Viewport inicial persistida no cliente
   const [initialViewport, setInitialViewport] = useState<{
     center: [number, number];
     zoom: number;
@@ -903,7 +811,7 @@ export default function Home() {
     pitch: number;
   } | null>(null);
 
-  // Estados para recolher/expandir seções (foco no mapa no mobile)
+  // Estados para recolher/expandir seções
   const [showTopPills, setShowTopPills] = useState(false);
   const [showBottomCarousel, setShowBottomCarousel] = useState(false);
 
@@ -913,26 +821,25 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [highlightedAddress, setHighlightedAddress] = useState<any>(null);
 
-  // Efeito pós-montagem para recuperar de forma segura a viewport salva do localStorage
+  // Efeito pós-montagem para recuperar viewport salva
   useEffect(() => {
-    const saved = localStorage.getItem("appmarilia:map_viewport");
+    const saved = localStorage.getItem("navegandosp:map_viewport");
     if (saved) {
       try {
         const viewport = JSON.parse(saved);
         const [lng, lat] = viewport.center;
 
-        // Bounding Box amplo ao redor de Marília, SP (~45 km de raio)
-        const minLat = -22.40;
-        const maxLat = -22.00;
-        const minLng = -50.20;
-        const maxLng = -49.70;
+        // Limita a recuperação automática a coordenadas da Grande São Paulo Capital
+        // Isso evita que viewports antigas de desenvolvimento (ex: Marília) centralizem o mapa incorretamente
+        const centroSP = [-46.6333, -23.5505];
+        const distLng = Math.abs(lng - centroSP[0]);
+        const distLat = Math.abs(lat - centroSP[1]);
+        const pertoDaCapital = distLng <= 0.6 && distLat <= 0.6;
 
-        const dentroDeMarilia = lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
-
-        if (dentroDeMarilia) {
+        if (pertoDaCapital) {
           setInitialViewport({
             center: [lng, lat],
-            zoom: viewport.zoom ?? 14,
+            zoom: viewport.zoom ?? 12,
             bearing: viewport.bearing ?? 0,
             pitch: viewport.pitch ?? 0,
           });
@@ -943,16 +850,13 @@ export default function Home() {
       }
     }
 
-    // Caso não exista viewport salva ou esteja fora dos limites, inicia no padrão de Marília
     setInitialViewport({
-      center: [-49.9458, -22.2139],
-      zoom: 14,
+      center: [-46.6333, -23.5505],
+      zoom: 12,
       bearing: 0,
       pitch: 0,
     });
   }, []);
-
-
 
   // Solicitar geolocalização ao acessar o mapa
   useEffect(() => {
@@ -974,12 +878,12 @@ export default function Home() {
 
   // Listener em tempo real do Firestore
   useEffect(() => {
-    const unsubscribe = onReclamacoesChange(
+    const unsubscribe = onEstabelecimentosChange(
       (items) => {
-        setReclamacoes(items);
+        setEstabelecimentos(items);
       },
       (error) => {
-        console.error("Erro ao carregar as reclamações em tempo real:", error);
+        console.error("Erro ao carregar os estabelecimentos em tempo real:", error);
       }
     );
     return () => unsubscribe();
@@ -987,61 +891,217 @@ export default function Home() {
 
   const handleFabClick = () => {
     if (isLoggedIn) {
-      // Se temos a localização do usuário, passar via query params
-      if (userLocation) {
-        router.push(`/usuario/reclamacao/nova?lat=${userLocation.lat}&lng=${userLocation.lng}`);
+      if (profile?.funcao === "empresa" || profile?.funcao === "admin") {
+        router.push("/empresa/dashboard");
       } else {
-        router.push("/usuario/reclamacao/nova");
+        setShowParceriaModal(true);
       }
     } else {
-      setShowLoginModal(true);
+      setShowParceriaModal(true);
     }
   };
 
+  const handleVerCupons = async (estab: Estabelecimento) => {
+    setSelectedEstabelecimento(estab);
+    setLoadingCupons(true);
+    setShowCuponsModal(true);
+    setResgateSucessoCodigo(null);
+
+    if (estab.id.startsWith("mock-")) {
+      // Cupons mockados para locais turísticos de São Paulo
+      const mocks: Record<string, Cupom[]> = {
+        "mock-masp": [
+          {
+            id: "cupom-masp-1",
+            titulo: "10% OFF na Loja MASP",
+            descricao: "Válido para catálogos de exposições, souvenirs e produtos exclusivos na loja oficial do museu.",
+            codigoBase: "MASPARTE",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+          {
+            id: "cupom-masp-2",
+            titulo: "Café Espresso Cortesia",
+            descricao: "Ganhe um café espresso cortesia ao consumir qualquer fatia de bolo ou salgado no MASP Café.",
+            codigoBase: "MASPCAFE",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+        ],
+        "mock-pinacoteca": [
+          {
+            id: "cupom-pina-1",
+            titulo: "Guia de Áudio Gratuito",
+            descricao: "Retire o dispositivo de áudio-guia na recepção sem custo e mergulhe na história da arte brasileira.",
+            codigoBase: "PINAAUDIO",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+          {
+            id: "cupom-pina-2",
+            titulo: "10% OFF na Flor Café Pinacoteca",
+            descricao: "Desconto especial em cafés especiais e quitutes na charmosa cafeteria integrada ao Jardim da Luz.",
+            codigoBase: "FLORPINA",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+        ],
+        "mock-zoologico": [
+          {
+            id: "cupom-zoo-1",
+            titulo: "15% de Desconto na Entrada Inteira",
+            descricao: "Apresente o cupom na bilheteria física e ganhe 15% de desconto na compra de ingresso tipo Inteira.",
+            codigoBase: "ZOOSP15",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+          {
+            id: "cupom-zoo-2",
+            titulo: "Cortesia Picolé no Zoo Lanches",
+            descricao: "Ganhe um picolé de frutas na compra de qualquer combo infantil no quiosque central.",
+            codigoBase: "ZOOPICOLE",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+        ],
+        "mock-mercadao": [
+          {
+            id: "cupom-merc-1",
+            titulo: "Refrigerante Cortesia no Bar do Mané",
+            descricao: "Ganhe uma lata de refrigerante ou guaraná ao pedir o famoso e gigantesco sanduíche de mortadela.",
+            codigoBase: "MORTADELA",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+        ],
+        "mock-ibirapuera": [
+          {
+            id: "cupom-ibira-1",
+            titulo: "10% OFF no Aluguel de Bicicletas",
+            descricao: "Desconto válido para a primeira hora de locação de bicicletas individuais nos portões 3 ou 4.",
+            codigoBase: "IBIRABIKE",
+            validade: null,
+            limitePorUsuario: 1,
+            ativo: true,
+            criadoEm: null,
+          },
+        ],
+      };
+
+      setCupons(mocks[estab.id] || []);
+      setLoadingCupons(false);
+      return;
+    }
+
+    try {
+      const list = await listarCupons(estab.empresaId, estab.id, true);
+      setCupons(list);
+    } catch (err) {
+      console.error("Erro ao listar cupons:", err);
+    }
+    setLoadingCupons(false);
+  };
+
+  const handleResgatarCupom = async (cupom: Cupom) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (!user || !selectedEstabelecimento) return;
+    setResgatandoId(cupom.id);
+
+    if (selectedEstabelecimento.id.startsWith("mock-")) {
+      // Simulação instantânea de resgate para estabelecimentos de demonstração
+      setTimeout(() => {
+        const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const codigo = `${cupom.codigoBase}-${randomStr}`;
+        setResgateSucessoCodigo(codigo);
+        setResgatandoId(null);
+      }, 800);
+      return;
+    }
+
+    try {
+      const codigo = await resgatarCupom(
+        selectedEstabelecimento.empresaId,
+        selectedEstabelecimento.id,
+        selectedEstabelecimento.nome,
+        cupom.id,
+        cupom.titulo,
+        user.uid,
+        cupom.codigoBase
+      );
+      setResgateSucessoCodigo(codigo);
+    } catch (err) {
+      console.error("Erro ao resgatar cupom:", err);
+      alert("Não foi possível resgatar o cupom. Tente novamente.");
+    }
+    setResgatandoId(null);
+  };
+
   // Filtragem dinâmica
-  const filteredReclamacoes = useMemo(() => {
-    return reclamacoes.filter((rec) => {
-      if (rec.status === "resolvido") return false; // Oculta problemas resolvidos do mapa
-      
+  const filteredEstabelecimentos = useMemo(() => {
+    // Mescla estabelecimentos em tempo real com as atrações e passeios mockados em São Paulo
+    const todosEstabelecimentos = [...estabelecimentos, ...ESTABELECIMENTOS_MOCKADOS];
+
+    return todosEstabelecimentos.filter((estab) => {
+      if (selectedStatus && estab.status !== selectedStatus) {
+        return false;
+      }
       if (selectedCategory) {
-        const cleanRecCat = (rec.categoria || "").toLowerCase();
+        const cleanRecCat = (estab.categoria || "").toLowerCase();
         const cleanSelCat = selectedCategory.toLowerCase();
         if (!cleanRecCat.includes(cleanSelCat)) return false;
       }
-      if (selectedStatus && rec.status !== selectedStatus) {
-        return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase().trim();
+        const nameMatch = estab.nome.toLowerCase().includes(query);
+        const descMatch = estab.descricao.toLowerCase().includes(query);
+        const addrMatch = estab.endereco.toLowerCase().includes(query);
+        if (!nameMatch && !descMatch && !addrMatch) return false;
       }
       return true;
     });
-  }, [reclamacoes, selectedCategory, selectedStatus]);
+  }, [estabelecimentos, selectedCategory, selectedStatus, searchQuery]);
 
   // Clustering
   const clusteredIds = useMemo(
-    () => findClusteredComplaints(filteredReclamacoes, 200),
-    [filteredReclamacoes]
+    () => findClusteredComplaints(filteredEstabelecimentos as any, 200),
+    [filteredEstabelecimentos]
   );
   const clusterCounts = useMemo(
-    () => getClusterCounts(filteredReclamacoes, 200),
-    [filteredReclamacoes]
+    () => getClusterCounts(filteredEstabelecimentos as any, 200),
+    [filteredEstabelecimentos]
   );
 
-  // Top 3 reclamações abertas com mais concordos
-  const topReclamacoes = useMemo(() => {
-    return [...filteredReclamacoes]
-      .filter((r) => r.status !== "resolvido" && r.concordos > 0 && r.latitude && r.longitude)
-      .sort((a, b) => b.concordos - a.concordos)
-      .slice(0, 3);
-  }, [filteredReclamacoes]);
+  // Estabelecimentos em Destaque (Destaques)
+  const topEstabelecimentos = useMemo(() => {
+    return [...filteredEstabelecimentos].slice(0, 3);
+  }, [filteredEstabelecimentos]);
 
   const topReclamacoesIds = useMemo(() => {
-    return new Set(topReclamacoes.map((r) => r.id));
-  }, [topReclamacoes]);
+    return new Set(topEstabelecimentos.map((e) => e.id));
+  }, [topEstabelecimentos]);
 
   const [isMobile, setIsMobile] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Monitorar redimensionamento de tela para cálculos adaptativos em tempo de execução
+  // Monitorar redimensionamento
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -1051,34 +1111,32 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Altura estimada da Navbar com base nas seções visíveis e expansões
+  // Altura estimada da Navbar
   const navbarHeight = useMemo(() => {
     if (isMobile) {
-      let height = 76; // altura base do container mobile
-      if (filtersOpen) height += 156; // painel de filtros empilhado na vertical no mobile
-      if (mobileMenuOpen) height += 172; // menu mobile expandido
+      let height = 76;
+      if (filtersOpen) height += 156;
+      if (mobileMenuOpen) height += 172;
       return height;
     } else {
-      let height = 88; // altura base do container desktop
-      if (filtersOpen) height += 96; // painel de filtros horizontal no desktop
+      let height = 88;
+      if (filtersOpen) height += 96;
       return height;
     }
   }, [isMobile, filtersOpen, mobileMenuOpen]);
 
-  // Top dinâmico das Pills centrais de Reclamações Populares
-  const pillsTop = navbarHeight + (isMobile ? 12 : 12);
+  const pillsTop = navbarHeight + 12;
 
-  // Top dinâmico dos Botões laterais de Clima e Em Alta
   const buttonsTop = useMemo(() => {
-    const hasPills = topReclamacoes.length > 0 && showTopPills;
+    const hasPills = topEstabelecimentos.length > 0 && showTopPills;
     if (hasPills) {
-      return pillsTop + 55; // As pílulas agora ficam em uma única linha com rolagem horizontal, ocupando altura fixa
+      return pillsTop + 55;
     } else {
       return navbarHeight + (isMobile ? 12 : 16);
     }
-  }, [navbarHeight, pillsTop, topReclamacoes.length, showTopPills, isMobile]);
+  }, [navbarHeight, pillsTop, topEstabelecimentos.length, showTopPills, isMobile]);
 
-  const handleFlyTo = useCallback((rec: Reclamacao) => {
+  const handleFlyTo = useCallback((rec: Estabelecimento) => {
     setFlyToTarget({
       lng: rec.longitude,
       lat: rec.latitude,
@@ -1102,55 +1160,26 @@ export default function Home() {
               <MapControls position="bottom-right" showZoom showLocate />
               <CamadaClimatica buttonsTop={buttonsTop} />
 
-              {/* Pins vindos do Firestore em tempo real filtrados com agrupamento inteligente */}
-              {(() => {
-                const getCoordKey = (lat: number, lng: number) => {
-                  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
-                };
+              {/* Pins vindos do Firestore em tempo real filtrados */}
+              {filteredEstabelecimentos.map((rec) => {
+                if (!rec.latitude || !rec.longitude) return null;
+                const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
+                const pinColor = cat.color;
 
-                const agrupadas: Record<string, Reclamacao[]> = {};
-                filteredReclamacoes.forEach((rec) => {
-                  if (!rec.latitude || !rec.longitude) return;
-                  const key = getCoordKey(rec.latitude, rec.longitude);
-                  if (!agrupadas[key]) agrupadas[key] = [];
-                  agrupadas[key].push(rec);
-                });
-
-                return Object.values(agrupadas).map((grupo) => {
-                  if (grupo.length === 0) return null;
-
-                  if (grupo.length === 1) {
-                    const rec = grupo[0];
-                    const cat = getCategoryByLabel(rec.categoria) ?? { color: "#94A3B8" };
-                    const pinColor = cat.color;
-
-                    return (
-                      <MapPin3D
-                        key={rec.id}
-                        rec={rec}
-                        pinColor={pinColor}
-                        cat={cat}
-                        isLoggedIn={isLoggedIn}
-                        user={user}
-                        setShowLoginModal={setShowLoginModal}
-                        isHot={topReclamacoesIds.has(rec.id)}
-                      />
-                    );
-                  } else {
-                    const ancor = grupo[0];
-                    return (
-                      <MapMultiPin3D
-                        key={`group-${ancor.id}`}
-                        reclamacoes={grupo}
-                        isLoggedIn={isLoggedIn}
-                        user={user}
-                        setShowLoginModal={setShowLoginModal}
-                        topReclamacoesIds={topReclamacoesIds}
-                      />
-                    );
-                  }
-                });
-              })()}
+                return (
+                  <MapPin3D
+                    key={rec.id}
+                    rec={rec}
+                    pinColor={pinColor}
+                    cat={cat}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    setShowLoginModal={setShowLoginModal}
+                    isHot={topReclamacoesIds.has(rec.id)}
+                    onVerCupons={handleVerCupons}
+                  />
+                );
+              })}
 
               {highlightedAddress && highlightedAddress.geojson && (
                 <MapHighlight 
@@ -1207,8 +1236,8 @@ export default function Home() {
           onAddressSelect={setHighlightedAddress}
         />
 
-        {/* ─── Top 3 Popular Complaints Pills ─── */}
-        {topReclamacoes.length > 0 && (
+        {/* ─── Top 3 Popular Partners Pills ─── */}
+        {topEstabelecimentos.length > 0 && (
           <div
             className={cn(
               "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-2 md:px-4 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
@@ -1222,7 +1251,7 @@ export default function Home() {
               className="flex flex-nowrap gap-2 overflow-x-auto pb-3 pt-1 px-2 items-center justify-start md:justify-center snap-x snap-mandatory [&::-webkit-scrollbar]:hidden pointer-events-auto w-max max-w-full mx-auto"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {topReclamacoes.map((rec, i) => {
+              {topEstabelecimentos.map((rec, i) => {
                 const cat = getCategoryByLabel(rec.categoria);
                 return (
                   <button
@@ -1235,21 +1264,16 @@ export default function Home() {
                         className="material-symbols-outlined text-[16px]"
                         style={{ color: cat?.color ?? "#94A3B8" }}
                       >
-                        {cat?.icon ?? "report"}
+                        {cat?.icon ?? "storefront"}
                       </span>
                       <span className="text-xs font-semibold text-[#112F4E] dark:text-zinc-100 truncate max-w-[120px] md:max-w-[180px]">
-                        {rec.titulo}
+                        {rec.nome}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981]/10 text-[#10B981]">
-                      <ThumbsUp className="w-3 h-3 animate-pulse" />
-                      <span className="text-[10px] font-bold">{rec.concordos}</span>
+                      <Tag className="w-3 h-3 text-[#10B981]" />
+                      <span className="text-[10px] font-bold">Cupons</span>
                     </div>
-                    {i === 0 && (
-                      <div className="flex items-center gap-0.5 text-[#F59E0B]">
-                        <TrendingUp className="w-3 h-3" />
-                      </div>
-                    )}
                   </button>
                 );
               })}
@@ -1257,8 +1281,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Botão de Alternar Relatos Em Alta (Simetria perfeita com o Botão Clima no Top-Left) */}
-        {topReclamacoes.length > 0 && (
+        {/* Botão de Alternar Destaques */}
+        {topEstabelecimentos.length > 0 && (
           <div 
             className="absolute left-4 md:left-[calc((100vw-1280px)/2+16px)] z-30 pointer-events-none transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
             style={{ top: `${buttonsTop}px` }}
@@ -1269,13 +1293,13 @@ export default function Home() {
                 "flex items-center rounded-full border shadow-elevated transition-all duration-300 pointer-events-auto active:scale-95 group cursor-pointer",
                 !showTopPills ? "w-9 h-9 justify-center p-0" : "gap-2 px-4 py-2.5",
                 showTopPills
-                  ? "bg-red-500 border-red-400 text-white hover:bg-red-600 hover:border-red-500 shadow-[0_4px_14px_rgba(239,68,68,0.4)]"
+                  ? "bg-amber-500 border-amber-400 text-white hover:bg-amber-600 hover:border-amber-500 shadow-[0_4px_14px_rgba(245,158,11,0.4)]"
                   : "bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl border-slate-200 dark:border-zinc-800/50 text-[#112F4E] dark:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-[0_8px_24px_rgba(17,47,78,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
               )}
-              title={showTopPills ? "Recolher relatos em alta" : "Mostrar relatos em alta"}
+              title={showTopPills ? "Recolher parceiros em destaque" : "Mostrar parceiros em destaque"}
             >
               <div className={cn("relative transition-transform duration-500", showTopPills && "scale-110")}>
-                <TrendingUp className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-[#112F4E] dark:text-zinc-100 group-hover:animate-bounce")} />
+                <Star className={cn("w-5 h-5 transition-colors", showTopPills ? "text-white" : "text-[#112F4E] dark:text-zinc-100 group-hover:animate-bounce")} />
               </div>
               <span 
                 className={cn(
@@ -1283,7 +1307,7 @@ export default function Home() {
                   !showTopPills && "hidden"
                 )}
               >
-                Em Alta
+                Parceiros
               </span>
             </button>
           </div>
@@ -1307,12 +1331,26 @@ export default function Home() {
           )}
         >
           <div className="flex justify-end w-full">
-            <button
-              onClick={handleFabClick}
-              className="w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer pointer-events-auto"
-            >
-              <span className="material-symbols-outlined text-[28px]">add</span>
-            </button>
+            {isLoggedIn && (profile?.funcao === "empresa" || profile?.funcao === "admin") ? (
+              <button
+                onClick={handleFabClick}
+                title="Cadastrar Novo Estabelecimento"
+                className="w-14 h-14 bg-[#1a8ccc] hover:bg-[#1572a6] text-white rounded-2xl flex items-center justify-center shadow-elevated active:scale-95 hover:scale-105 transition-all cursor-pointer pointer-events-auto group relative"
+              >
+                <span className="material-symbols-outlined text-[28px]">add</span>
+                <span className="absolute right-16 scale-0 group-hover:scale-100 transition-all duration-200 bg-zinc-900/90 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-md whitespace-nowrap">
+                  Novo Estabelecimento
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={handleFabClick}
+                className="h-14 px-5 bg-gradient-to-r from-[#1a8ccc] to-[#1572a6] hover:from-[#1572a6] hover:to-[#1a8ccc] text-white rounded-2xl flex items-center gap-2 shadow-elevated hover:shadow-[0_8px_30px_rgba(26,140,204,0.3)] active:scale-95 hover:scale-105 transition-all cursor-pointer pointer-events-auto"
+              >
+                <Store className="w-5 h-5 animate-pulse text-sky-200" />
+                <span className="text-xs font-black tracking-wider uppercase select-none">Seja um Parceiro</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1350,7 +1388,7 @@ export default function Home() {
         </div>
 
 
-        {/* Bottom Cards Carousel — dados reais filtrados */}
+        {/* Bottom Cards Carousel */}
         <div
           className={cn(
             "absolute left-1/2 -translate-x-1/2 w-full max-w-7xl z-20 px-4 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform-gpu",
@@ -1359,7 +1397,7 @@ export default function Home() {
               : "bottom-[-10px] opacity-0 translate-y-[120%] scale-95 pointer-events-none"
           )}
         >
-          {/* Botão sutil para recolher a lista (visível apenas quando aberto) */}
+          {/* Botão para recolher a lista */}
           {showBottomCarousel && (
             <div className="flex justify-center mb-2 animate-in fade-in duration-300">
               <button
@@ -1373,29 +1411,19 @@ export default function Home() {
           )}
 
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-            {filteredReclamacoes.slice(0, 10).map((card) => {
+            {filteredEstabelecimentos.slice(0, 10).map((card) => {
               const cat = getCategoryByLabel(card.categoria);
               const catColor = cat?.color ?? "#94A3B8";
               const st = statusLabels[card.status] ?? { label: card.status, color: "#94A3B8" };
-              const isInCluster = clusteredIds.has(card.id);
 
               return (
-                <Link
+                <div
                   key={card.id}
-                  href={`/reclamacao/${card.id}`}
-                  className={`min-w-[300px] max-w-[340px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-200 shrink-0 ${isInCluster
-                      ? "border-red-300 ring-1 ring-red-200"
-                      : "border-white/50 dark:border-zinc-800/50"
-                    }`}
+                  onClick={() => handleVerCupons(card)}
+                  className="min-w-[300px] max-w-[340px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-5 rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 flex flex-col gap-3 cursor-pointer hover:shadow-[0_12px_32px_rgba(17,47,78,0.1)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-200 shrink-0"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      {isInCluster && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          Região crítica
-                        </div>
-                      )}
                       <span
                         className="text-[11px] font-bold uppercase tracking-widest"
                         style={{ color: catColor }}
@@ -1403,7 +1431,7 @@ export default function Home() {
                         {cat?.label ?? card.categoria}
                       </span>
                       <h3 className="text-base font-semibold text-[#112F4E] dark:text-zinc-100 mt-0.5 truncate">
-                        {card.titulo}
+                        {card.nome}
                       </h3>
                     </div>
                   </div>
@@ -1411,35 +1439,24 @@ export default function Home() {
                     {card.descricao}
                   </p>
                   <div className="flex justify-between items-center pt-2 border-t border-[#F5F2ED] dark:border-zinc-800/50">
-                    <div className="flex items-center gap-1.5 text-[#94A3B8] dark:text-zinc-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-3.5 h-3.5 transition-colors duration-300"
-                      >
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                      </svg>
-                      <span className="text-xs font-medium">{card.concordos} Concordos</span>
+                    <div className="flex items-center gap-1 text-[#10B981]">
+                      <Tag className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span className="text-xs font-semibold">Resgatar Benefícios</span>
                     </div>
                     <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: st.color }}>
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
                       {st.label}
                     </span>
                   </div>
-                </Link>
+                </div>
               );
             })}
 
             {/* Empty state */}
-            {filteredReclamacoes.length === 0 && (
+            {filteredEstabelecimentos.length === 0 && (
               <div className="min-w-[300px] bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-6 rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 text-center">
-                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] dark:text-zinc-700 mb-2 block">map</span>
-                <p className="text-sm text-[#94A3B8] dark:text-zinc-400">Nenhuma reclamação encontrada.</p>
+                <span className="material-symbols-outlined text-[40px] text-[#E2E8F0] dark:text-zinc-700 mb-2 block">storefront</span>
+                <p className="text-sm text-[#94A3B8] dark:text-zinc-400">Nenhum parceiro comercial encontrado.</p>
               </div>
             )}
           </div>
@@ -1453,14 +1470,177 @@ export default function Home() {
               className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-[0_6px_20px_rgba(17,47,78,0.08)] dark:shadow-none rounded-full text-[10.5px] font-bold text-[#112F4E] dark:text-zinc-100 hover:text-[#1a8ccc] active:scale-95 transition-all select-none cursor-pointer tracking-wider uppercase"
             >
               <span className="material-symbols-outlined text-[14px] font-bold">expand_less</span>
-              <span>Últimas reclamações ({filteredReclamacoes.length})</span>
+              <span>Últimos parceiros ({filteredEstabelecimentos.length})</span>
             </button>
+          </div>
+        )}
+
+        {/* MODAL DE BENEFÍCIOS & CUPONS (GLASSMORPHISM PREMIUM) */}
+        {showCuponsModal && selectedEstabelecimento && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-3xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-slate-200/50 dark:border-zinc-800/50 animate-in zoom-in-95 duration-300">
+              
+              {/* Header com Banner e Logo */}
+              <div className="relative h-[160px] bg-gradient-to-br from-[#112F4E] to-[#1E4E80] flex items-end p-6">
+                {selectedEstabelecimento.bannerUrl && (
+                  <img src={selectedEstabelecimento.bannerUrl} alt="banner" className="absolute inset-0 w-full h-full object-cover opacity-60 animate-fade-in" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                
+                <button
+                  onClick={() => setShowCuponsModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all backdrop-blur-md cursor-pointer border-none z-20"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="relative flex items-center gap-4 z-10">
+                  {selectedEstabelecimento.logoUrl ? (
+                    <img src={selectedEstabelecimento.logoUrl} className="w-16 h-16 rounded-2xl border-2 border-white object-cover bg-white shadow-md shrink-0 animate-scale-up" alt="logo" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-[#E8F2F8] text-[#1a8ccc] flex items-center justify-center text-3xl shadow-md shrink-0">
+                      <span className="material-symbols-outlined">storefront</span>
+                    </div>
+                  )}
+                  <div className="text-white text-left">
+                    <h2 className="text-xl font-bold tracking-tight">{selectedEstabelecimento.nome}</h2>
+                    <p className="text-xs text-slate-350">{selectedEstabelecimento.endereco}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações Comerciais Adicionais (Serviços e Menu) */}
+              {(selectedEstabelecimento.servicos || selectedEstabelecimento.cardapioUrl) && (
+                <div className="px-6 pt-5 pb-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 text-left">
+                  {selectedEstabelecimento.servicos && (
+                    <div className="flex-1 space-y-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-650 dark:text-purple-400 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">design_services</span>
+                        Serviços & Especialidades
+                      </span>
+                      <p className="text-xs text-slate-650 dark:text-zinc-350 leading-relaxed font-light">
+                        {selectedEstabelecimento.servicos}
+                      </p>
+                    </div>
+                  )}
+                  {selectedEstabelecimento.cardapioUrl && (
+                    <div className="shrink-0 flex items-center">
+                      <a
+                        href={selectedEstabelecimento.cardapioUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">restaurant_menu</span>
+                        VER CARDÁPIO / MENU
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Lista de Cupons */}
+              <div className="p-6 max-h-[350px] overflow-y-auto space-y-4">
+                {loadingCupons ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-3">
+                    <Loader2 className="w-8 h-8 text-[#10B981] animate-spin" />
+                    <p className="text-xs text-slate-400">Carregando benefícios ativos...</p>
+                  </div>
+                ) : cupons.length === 0 ? (
+                  <div className="text-center py-10">
+                    <span className="material-symbols-outlined text-[48px] text-slate-300 mb-2 block">confirmation_number</span>
+                    <p className="text-sm font-medium text-slate-500">Nenhum cupom ativo para este parceiro no momento.</p>
+                  </div>
+                ) : (
+                  cupons.map((cupom) => {
+                    const isResgatando = resgatandoId === cupom.id;
+                    return (
+                      <div 
+                        key={cupom.id} 
+                        className="p-5 border border-dashed border-[#10B981]/40 rounded-2xl bg-[#10B981]/5 hover:bg-[#10B981]/10 transition-colors flex flex-col gap-3"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-base font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5 leading-none">
+                              <Tag className="w-4 h-4 text-[#10B981]" />
+                              {cupom.titulo}
+                            </h4>
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2.5 font-light leading-relaxed">
+                              {cupom.descricao}
+                            </p>
+                          </div>
+                        </div>
+
+                        {cupom.validade && (
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">schedule</span>
+                            Válido até: {new Date(cupom.validade.toMillis()).toLocaleDateString("pt-BR")}
+                          </span>
+                        )}
+
+                        {resgateSucessoCodigo && selectedEstabelecimento && (
+                          <div className="mt-2 p-3.5 bg-white dark:bg-zinc-950 rounded-xl border-2 border-emerald-500 text-center animate-in slide-in-from-bottom-2 duration-300">
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block tracking-widest uppercase">CÓDIGO DE RESGATE GERADO!</span>
+                            <span className="text-xl font-black text-slate-800 dark:text-white block mt-1 tracking-wider uppercase">{resgateSucessoCodigo}</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(resgateSucessoCodigo);
+                                alert("Código copiado para a área de transferência!");
+                              }}
+                              className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-2 inline-flex items-center gap-1 hover:underline cursor-pointer border-none bg-transparent"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                              Copiar código
+                            </button>
+                            <p className="text-[9px] text-slate-400 dark:text-zinc-500 mt-2 font-light">
+                              Apresente este código no balcão do parceiro para obter o desconto.
+                            </p>
+                          </div>
+                        )}
+
+                        {!resgateSucessoCodigo && (
+                          <button
+                            onClick={() => handleResgatarCupom(cupom)}
+                            disabled={isResgatando}
+                            className="w-full h-11 bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+                          >
+                            {isResgatando ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Gerando cupom...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 animate-pulse" />
+                                GERAR CUPOM DE DESCONTO
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Rodapé */}
+              <div className="p-4 bg-slate-50 dark:bg-zinc-900/60 border-t border-slate-100 dark:border-zinc-800 flex justify-between items-center text-[10px] text-slate-400">
+                <span>Navegando SP</span>
+                <span>Patrocínios & Parcerias Comerciais</span>
+              </div>
+            </div>
           </div>
         )}
 
         <LoginRequiredModal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
+        />
+
+        <ParceriaModal
+          isOpen={showParceriaModal}
+          onClose={() => setShowParceriaModal(false)}
+          onLoginClick={() => setShowLoginModal(true)}
         />
 
         {/* Estilos Globais para Partículas e Animação Elástica do Botão de Concordar */}

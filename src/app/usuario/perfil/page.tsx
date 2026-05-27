@@ -98,14 +98,20 @@ export default function Perfil() {
               </div>
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-bold truncate" style={{ color: "var(--color-text)" }}>{nome || user?.displayName || "Cidadão"}</h2>
+              <h2 className="text-lg font-bold truncate" style={{ color: "var(--color-text)" }}>{nome || user?.displayName || "Navegador"}</h2>
               <p className="text-sm truncate" style={{ color: "var(--color-text-muted)" }}>{user?.email}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  profile?.role === "admin" ? "bg-[#EDE9FE] text-[#8B5CF6]" : "bg-[#E8F2F8] text-[#1a8ccc]"
+                  profile?.funcao === "admin" ? "bg-[#EDE9FE] text-[#8B5CF6]" : "bg-[#E8F2F8] text-[#1a8ccc]"
                 }`}>
                   <Shield className="w-3 h-3" />
-                  {profile?.role === "admin" ? "Administrador" : "Cidadão"}
+                  {profile?.funcao === "admin"
+                    ? "Administrador"
+                    : profile?.funcao === "empresa"
+                    ? "Empresa Parceira"
+                    : profile?.funcao === "parceiro"
+                    ? "Parceiro Lojista"
+                    : "Membro do Clube"}
                 </span>
                 {profile?.perfilCompleto && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D1FAE5] text-[#10B981]">
@@ -131,7 +137,7 @@ export default function Perfil() {
                 >
                   <InsigniaBadge nivelId={levelInfo.id} size="lg" />
                   <div className="text-left leading-tight pr-1.5">
-                    <p className="text-[10px] font-normal uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Patente Atual</p>
+                    <p className="text-[10px] font-normal uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Nível de Patrocinador</p>
                     <p className="text-sm font-extrabold" style={{ color: "var(--color-text)" }}>{levelInfo.nome}</p>
                     <p className="text-[#1a8ccc] font-bold text-xs mt-0.5">{pontos} Pontos</p>
                   </div>
@@ -155,7 +161,7 @@ export default function Perfil() {
                 </div>
                 <div>
                   <p className="text-xs font-bold" style={{ color: "var(--color-text)" }}>Seu Avatar Oficial</p>
-                  <p className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>Este avatar é exibido em todas as suas ocorrências e apoios públicos.</p>
+                  <p className="text-[10px] font-light" style={{ color: "var(--color-text-muted)" }}>Este avatar é exibido em suas interações e resgates na plataforma.</p>
                 </div>
               </div>
               <button
@@ -310,7 +316,7 @@ export default function Perfil() {
             <div className="px-5 py-4 border-b border-[#F5F2ED] flex justify-between items-center bg-[#FAF7F2]/50">
               <div className="flex items-center gap-2">
                 <Trophy className="w-4.5 h-4.5 text-[#F59E0B]" />
-                <h3 className="font-bold text-[#112F4E] text-sm">Como funciona o Prestígio?</h3>
+                <h3 className="font-bold text-[#112F4E] text-sm">Como funciona a Fidelidade?</h3>
               </div>
               <button 
                 type="button"
@@ -324,7 +330,7 @@ export default function Perfil() {
             {/* Content */}
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
               <p className="text-xs text-[#94A3B8] leading-relaxed font-light">
-                O <strong>Prestígio de Cidadão</strong> é acumulado conforme você colabora para termos uma Marília melhor. Suas interações no app geram pontos e fazem você evoluir de patente!
+                O seu <strong>Nível de Fidelidade</strong> é acumulado conforme você utiliza a plataforma e prestigia os parceiros comerciais em São Paulo. Suas interações geram pontos e fazem você evoluir de categoria!
               </p>
 
               {/* Tabs do Modal */}
@@ -349,7 +355,7 @@ export default function Perfil() {
                       : "border-transparent text-[#94A3B8] hover:text-[#112F4E]"
                   }`}
                 >
-                  Evolução & Patentes
+                  Evolução & Níveis
                 </button>
               </div>
 
@@ -357,10 +363,9 @@ export default function Perfil() {
               {modalTab === "regras" && (
                 <div className="space-y-3 pt-1">
                   {[
-                    { acao: "Cadastrar Ocorrência Pública", pontos: "+10 pts", desc: "Reportar novos problemas geolocalizados na cidade.", icon: PlusCircle, color: "text-[#1a8ccc]", bg: "bg-[#E8F2F8]" },
-                    { acao: "Apoiar um Relato (Concordar)", pontos: "+5 pts", desc: "Fortalecer o relato de um morador apoiando o problema.", icon: Heart, color: "text-[#EF4444]", bg: "bg-[#FEE2E2]" },
-                    { acao: "Ocorrência que você Apoiou Resolvida", pontos: "+30 pts", desc: "Ganhar bônus supremo quando uma causa que você apoiou for solucionada!", icon: Award, color: "text-[#F59E0B]", bg: "bg-[#FEF3C7]" },
-                    { acao: "Sua Ocorrência Resolvida por Nós", pontos: "+50 pts", desc: "Nossa equipe deve marcar sua reclamação como resolvida para contabilizar.", icon: CheckCircle, color: "text-[#10B981]", bg: "bg-[#D1FAE5]" },
+                    { acao: "Cadastrar Novo Cupom Comercial", pontos: "+10 pts", desc: "Se você for uma empresa parceira cadastrando novos benefícios.", icon: PlusCircle, color: "text-[#1a8ccc]", bg: "bg-[#E8F2F8]" },
+                    { acao: "Apoiar Comércio Local (Resgatar)", pontos: "+5 pts", desc: "Salvar um cupom de desconto de qualquer parceiro do estado.", icon: Heart, color: "text-[#EF4444]", bg: "bg-[#FEE2E2]" },
+                    { acao: "Validar Cupom no Caixa do Parceiro", pontos: "+20 pts", desc: "Economizar consumindo no estabelecimento físico e validando seu ticket.", icon: CheckCircle, color: "text-[#10B981]", bg: "bg-[#D1FAE5]" },
                   ].map((regra, i) => {
                     const IconComp = regra.icon;
                     return (
@@ -389,13 +394,13 @@ export default function Perfil() {
               {modalTab === "patentes" && (
                 <div className="space-y-3 pt-1">
                   {[
-                    { nome: "Ovo de Dino", id: "observador", pontos: "0 a 49 pts", desc: "O Dino está no ovo, preparando-se para chocar na nossa cidade.", color: "text-slate-500", bg: "bg-slate-50/70 border-slate-200/50" },
-                    { nome: "Dino Bebê", id: "iniciante", pontos: "50 a 149 pts", desc: "Que fofura! O bebê dinossauro acabou de nascer e dar os primeiros passos.", color: "text-emerald-700", bg: "bg-emerald-50/70 border-emerald-200/50" },
-                    { nome: "Dino Explorador", id: "colaborador", pontos: "150 a 349 pts", desc: "Com um lenço de aventureiro, ele explora e mapeia problemas reais.", color: "text-sky-700", bg: "bg-sky-50/70 border-sky-200/50" },
-                    { nome: "Dino de Bronze", id: "bronze", pontos: "350 a 699 pts", desc: "Veste uma robusta armadura de bronze polido para proteger os bairros.", color: "text-amber-800", bg: "bg-amber-50/70 border-amber-200/50" },
-                    { nome: "Dino de Prata", id: "prata", pontos: "700 a 1199 pts", desc: "Armadura de prata e platina brilhante, consagrado como guardião urbano.", color: "text-zinc-800", bg: "bg-zinc-50/70 border-zinc-200/50" },
-                    { nome: "Dino de Ouro", id: "ouro", pontos: "1200 a 1999 pts", desc: "Coroado com ouro 24k e asas douradas, um líder admirado por todos.", color: "text-yellow-800", bg: "bg-yellow-50/70 border-yellow-200/50" },
-                    { nome: "Titanossauro Lendário", id: "lendario", pontos: "2000+ pts", desc: "O supremo dinossauro de Marília em cristal de obsidiana púrpura celestial!", color: "text-purple-800", bg: "bg-purple-50/70 border-purple-200/50" },
+                    { nome: "Navegador Iniciante", id: "observador", pontos: "0 a 49 pts", desc: "Iniciando a jornada pelo comércio do Estado de SP.", color: "text-slate-500", bg: "bg-slate-50/70 border-slate-200/50" },
+                    { nome: "Navegador Bronze", id: "iniciante", pontos: "50 a 149 pts", desc: "Apoiando pequenos comércios e acumulando economias.", color: "text-emerald-700", bg: "bg-emerald-50/70 border-emerald-200/50" },
+                    { nome: "Navegador Prata", id: "colaborador", pontos: "150 a 349 pts", desc: "Reconhecido pelas dezenas de descontos aproveitados.", color: "text-sky-700", bg: "bg-sky-50/70 border-sky-200/50" },
+                    { nome: "Navegador Ouro", id: "bronze", pontos: "350 a 699 pts", desc: "Líder em economia comercial e fã de parcerias premium.", color: "text-amber-800", bg: "bg-amber-50/70 border-amber-200/50" },
+                    { nome: "Parceiro Platina", id: "prata", pontos: "700 a 1199 pts", desc: "Influenciador de vantagens locais e patrocinador de destaque.", color: "text-zinc-800", bg: "bg-zinc-50/70 border-zinc-200/50" },
+                    { nome: "Embaixador SP", id: "ouro", pontos: "1200 a 1999 pts", desc: "Consagrado com parcerias vips exclusivas nas capitais paulistas.", color: "text-yellow-800", bg: "bg-yellow-50/70 border-yellow-200/50" },
+                    { nome: "Titan da Fidelidade", id: "lendario", pontos: "2000+ pts", desc: "O nível máximo de vantagens no Navegando SP!", color: "text-purple-800", bg: "bg-purple-50/70 border-purple-200/50" },
                   ].map((patente, i) => (
                     <div key={i} className={`flex gap-3 items-center p-2.5 rounded-xl border ${patente.bg} shadow-[0_1px_2px_rgba(0,0,0,0.01)]`}>
                       <div className="shrink-0 flex items-center justify-center">

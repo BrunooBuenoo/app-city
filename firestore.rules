@@ -11,81 +11,77 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
-    function isAdmin() {
-      return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    function getUsuarioData() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
     }
 
-    // ─── Users Collection ───
-    match /users/{userId} {
-      // Qualquer pessoa autenticada pode ler perfis (necessário para ranking, votantes, etc.)
-      allow read: if isAuthenticated();
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && getUsuarioData().funcao == "admin";
+    }
 
-      // Apenas o próprio usuário pode criar/atualizar seu perfil
+    function isEmpresa(empresaId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && (getUsuarioData().funcao == "empresa" && getUsuarioData().empresaId == empresaId);
+    }
+
+    function isParceiro(empresaId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && (getUsuarioData().funcao == "parceiro" && getUsuarioData().empresaId == empresaId);
+    }
+
+    // ─── Coleção usuarios ───
+    match /usuarios/{userId} {
+      allow read: if isAuthenticated();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
-
-      // Ninguém pode deletar perfis (apenas via console/admin SDK)
       allow delete: if false;
     }
 
-    // ─── Reclamações ───
-    match /reclamacoes/{reclamacaoId} {
-      // Leitura pública (mapa é acessível sem login)
+    // ─── Coleção empresas ───
+    match /empresas/{empresaId} {
+      // Qualquer usuário pode consultar informações comerciais públicas das empresas
       allow read: if true;
+      allow write: if isAdmin();
 
-      // Apenas usuários autenticados podem criar reclamações
-      allow create: if isAuthenticated();
-
-      // Apenas o autor da reclamação OU um admin pode atualizar
-      allow update: if isAuthenticated()
-        && (resource.data.autorId == request.auth.uid || isAdmin());
-
-      // Apenas admin pode deletar reclamações
-      allow delete: if isAdmin();
-
-      // ─── Timeline (sub-coleção) ───
-      match /timeline/{eventId} {
-        // Qualquer pessoa pode ler a timeline
+      // ─── Estabelecimentos (Subcoleção) ───
+      match /estabelecimentos/{estabId} {
         allow read: if true;
+        
+        // Apenas empresas parceiras da mesma empresa ou admin podem criar/atualizar estabelecimentos
+        allow create, update: if isAdmin() || isEmpresa(empresaId);
+        allow delete: if isAdmin();
 
-        // Apenas admin pode criar eventos de timeline (mudança de status)
-        // OU o sistema (via autorId da reclamação pai ao criar)
-        allow create: if isAuthenticated();
+        // ─── Cupons (Subcoleção) ───
+        match /cupons/{cupomId} {
+          allow read: if true;
+          
+          // Empresas, parceiros locais e admin podem gerenciar cupons
+          allow create, update: if isAdmin() || isEmpresa(empresaId) || isParceiro(empresaId);
+          allow delete: if isAdmin() || isEmpresa(empresaId);
+        }
 
-        allow update, delete: if isAdmin();
-      }
-
-      // ─── Comentários (sub-coleção) ───
-      match /comentarios/{comentarioId} {
-        // Qualquer pessoa pode ler comentários
-        allow read: if true;
-
-        // Apenas usuários autenticados podem comentar
-        allow create: if isAuthenticated();
-
-        // Apenas o autor do comentário ou admin pode editar/deletar
-        allow update: if isAuthenticated()
-          && (resource.data.autorId == request.auth.uid || isAdmin());
-        allow delete: if isAuthenticated()
-          && (resource.data.autorId == request.auth.uid || isAdmin());
+        // ─── Resgates (Subcoleção) ───
+        match /resgates/{resgateId} {
+          // Usuários autenticados podem ler seus resgates, e empresas/parceiros podem ler para validação
+          allow read: if isAuthenticated();
+          
+          // Qualquer usuário logado pode gerar um resgate
+          allow create: if isAuthenticated() && request.resource.data.usuarioId == request.auth.uid;
+          
+          // Apenas admin, empresa ou parceiro podem validar o resgate (mudar status para resgatado)
+          allow update: if isAdmin() || isEmpresa(empresaId) || isParceiro(empresaId);
+          allow delete: if isAdmin();
+        }
       }
     }
 
     // ─── Categorias ───
     match /categorias/{categoriaId} {
-      // Temporariamente liberado leitura e escrita pública para permitir a carga inicial (seeding) automática
       allow read, write: if true;
-    }
-
-    // ─── Configurações (Gamificação, etc.) ───
-    match /configuracoes/{configId} {
-      // Qualquer pessoa pode ler as regras de XP (necessário para a pontuação)
-      allow read: if true;
-
-      // Apenas administradores podem atualizar as regras
-      allow write: if isAdmin();
     }
 
     // ─── Catch-all: negar tudo que não foi explicitamente permitido ───

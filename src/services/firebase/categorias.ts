@@ -16,112 +16,61 @@ export interface CategoryDb extends Category {
   ordem: number;
 }
 
-// Lista padrão de subcategorias ricas (extraídas do formulário de nova reclamação)
+// Lista padrão de subcategorias ricas comerciais
 const SUBCATEGORIAS_PADRAO: Record<string, string[]> = {
-  saude: [
-    "Demora no atendimento",
-    "Falta de médicos",
-    "Falta de remédios",
-    "Unidade de saúde precária",
-    "Equipamentos quebrados",
-    "Atendimento desumano",
+  alimentacao: [
+    "Restaurante",
+    "Cafeteria",
+    "Bar/Pub",
+    "Pizzaria",
+    "Doceria/Confeitaria",
+    "Fast Food",
     "Outros",
   ],
-  transporte: [
-    "Ônibus atrasado",
-    "Ponto de ônibus quebrado",
-    "Transporte lotado",
-    "Falta de acessibilidade",
-    "Sinalização ruim",
-    "Trânsito excessivo",
+  automotivo: [
+    "Oficina Mecânica",
+    "Lava-Rápido",
+    "Autoelétrica",
+    "Borracharia",
+    "Funilaria e Pintura",
     "Outros",
   ],
-  infraestrutura: [
-    "Buraco na rua",
-    "Calçada quebrada",
-    "Praça abandonada",
-    "Asfalto deteriorado",
-    "Ponte danificada",
-    "Falta de manutenção pública",
+  saude_beleza: [
+    "Clínica Médica",
+    "Consultório Odontológico",
+    "Salão de Beleza",
+    "Barbearia",
+    "Academia/Estúdio",
+    "Clínica de Estética",
     "Outros",
   ],
-  seguranca: [
-    "Área perigosa",
-    "Falta de policiamento",
-    "Vandalismo",
-    "Furto/roubo frequente",
-    "Terreno abandonado",
-    "Ponto de tráfico",
+  comercio_varejo: [
+    "Loja de Roupas",
+    "Calçados",
+    "Supermercado/Mercearia",
+    "Farmácia",
+    "Papelaria",
+    "Eletrônicos e Celulares",
     "Outros",
   ],
-  educacao: [
-    "Escola danificada",
-    "Falta de professores",
-    "Merenda ruim",
-    "Sala sem estrutura",
-    "Falta de materiais",
-    "Transporte escolar ruim",
-    "Outros",
-  ],
-  limpeza: [
-    "Coleta de Lixo",
-    "Entulho irregular",
-    "Coleta atrasada",
-    "Terreno sujo",
-    "Rua sem limpeza",
-    "Bueiro entupido",
-    "Outros",
-  ],
-  meio_ambiente: [
-    "Queimada",
-    "Árvore caída",
-    "Desmatamento",
-    "Poluição",
-    "Maus-tratos animais",
-    "Descarte irregular",
-    "Outros",
-  ],
-  iluminacao: [
-    "Poste apagado",
-    "Poste piscando",
-    "Fiação exposta",
-    "Poste danificado",
-    "Rua escura",
-    "Curto elétrico",
-    "Outros",
-  ],
-  saneamento: [
-    "Esgoto aberto",
-    "Vazamento de água",
-    "Mau cheiro",
-    "Enchente",
-    "Água contaminada",
-    "Cano rompido",
-    "Outros",
-  ],
-  bem_estar_animal: [
-    "Animal abandonado",
-    "Maus-tratos",
-    "Animal ferido",
-    "Animal perdido",
-    "Falta de resgate",
-    "Carcaça na rua",
+  educacao_servicos: [
+    "Escola/Colégio",
+    "Cursos e Treinamentos",
+    "Assistência Técnica",
+    "Escritório de Advocacia",
+    "Contabilidade",
+    "Agência de Viagens",
     "Outros",
   ],
 };
 
-// Categorias padrão originais
+// Categorias padrão comerciais
 const CATEGORIAS_PADRAO: Omit<CategoryDb, "subcategorias">[] = [
-  { id: "saude",            label: "Saúde",              color: "#EF4444", bgLight: "#FEE2E2", icon: "medical_services", ordem: 1 },
-  { id: "transporte",       label: "Transporte",         color: "#3B82F6", bgLight: "#EFF6FF", icon: "directions_bus",    ordem: 2 },
-  { id: "infraestrutura",   label: "Infraestrutura",     color: "#F59E0B", bgLight: "#FEF3C7", icon: "construction",      ordem: 3 },
-  { id: "seguranca",        label: "Segurança",          color: "#1E3A8A", bgLight: "#E0E7FF", icon: "security",          ordem: 4 },
-  { id: "educacao",         label: "Educação",           color: "#8B5CF6", bgLight: "#F5F3FF", icon: "school",            ordem: 5 },
-  { id: "limpeza",          label: "Limpeza Urbana",     color: "#10B981", bgLight: "#D1FAE5", icon: "delete",            ordem: 6 },
-  { id: "meio_ambiente",    label: "Meio Ambiente",      color: "#22C55E", bgLight: "#E8F5E9", icon: "eco",               ordem: 7 },
-  { id: "iluminacao",       label: "Iluminação Pública", color: "#FACC15", bgLight: "#FEF9C3", icon: "lightbulb",         ordem: 8 },
-  { id: "saneamento",       label: "Saneamento",         color: "#06B6D4", bgLight: "#E0F7FA", icon: "water_drop",         ordem: 9 },
-  { id: "bem_estar_animal", label: "Bem-estar Animal",   color: "#EC4899", bgLight: "#FCE7F3", icon: "pets",              ordem: 10 },
+  { id: "alimentacao",       label: "Alimentação",        color: "#F59E0B", bgLight: "#FEF3C7", icon: "restaurant", ordem: 1 },
+  { id: "automotivo",        label: "Automotivo",         color: "#38BDF8", bgLight: "#E0F2FE", icon: "directions_car", ordem: 2 },
+  { id: "saude_beleza",      label: "Saúde & Beleza",     color: "#10B981", bgLight: "#D1FAE5", icon: "spa", ordem: 3 },
+  { id: "comercio_varejo",   label: "Comércio & Varejo",  color: "#6366F1", bgLight: "#EEF2FF", icon: "storefront", ordem: 4 },
+  { id: "educacao_servicos", label: "Educação & Serviços", color: "#8B5CF6", bgLight: "#F5F3FF", icon: "school", ordem: 5 },
 ];
 
 /**
@@ -141,7 +90,7 @@ export async function inicializarCategoriasPadrao(): Promise<CategoryDb[]> {
     });
 
     await batch.commit();
-    console.log("Carga inicial de categorias realizada com sucesso!");
+    console.log("Carga inicial de categorias comerciais realizada com sucesso!");
     return categoriasCompletas;
   } catch (error) {
     console.error("Erro ao realizar seeding das categorias:", error);
@@ -231,3 +180,4 @@ export async function excluirCategoriaDb(id: string): Promise<void> {
     throw error;
   }
 }
+

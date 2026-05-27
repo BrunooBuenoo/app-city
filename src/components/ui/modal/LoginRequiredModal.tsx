@@ -35,12 +35,11 @@ export default function LoginRequiredModal({ isOpen, onClose }: LoginRequiredMod
           <Shield className="w-7 h-7" />
         </div>
 
-        {/* Content */}
         <h3 className="text-xl font-semibold text-[#112F4E] dark:text-white mb-2">
           Login Necessário
         </h3>
         <p className="text-sm text-[#4A5D70] dark:text-zinc-400 font-light leading-relaxed mb-6">
-          Para criar uma reclamação, você precisa estar conectado com sua conta Google.
+          Para resgatar cupons de desconto exclusivos e participar do Fidelidade SP, você precisa estar conectado com sua conta Google.
         </p>
 
         {/* Actions */}

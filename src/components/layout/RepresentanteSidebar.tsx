@@ -2,22 +2,22 @@
 
 import React from "react";
 import Link from "next/link";
-import VizoorLogo from "@/components/ui/VizoorLogo";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home, MapPin, FileText, Clock, Trophy, User,
-  LogOut, Shield,
+  LayoutDashboard, Store, Tag, BarChart2,
+  LogOut, MapPin, Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import VizoorLogo from "@/components/ui/VizoorLogo";
 
-interface SidebarProps {
+interface RepresentanteSidebarProps {
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
+export default function RepresentanteSidebar({ isExpanded, onToggle }: RepresentanteSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile } = useAuth();
@@ -28,13 +28,14 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   };
 
   const menuItems = [
-    { href: "/usuario/dashboard", icon: Home, label: "Meu Painel" },
-    { href: "/", icon: MapPin, label: "Mapa de Benefícios" },
-    { href: "/usuario/perfil", icon: User, label: "Meu Perfil" },
+    { href: "/representante/dashboard", icon: LayoutDashboard, label: "Painel Geral" },
+    { href: "/representante/parceiros", icon: Store, label: "Parceiros" },
+    { href: "/representante/cupons", icon: Tag, label: "Cupons Ativos" },
+    { href: "/representante/relatorios", icon: BarChart2, label: "Relatórios" },
   ];
 
   const userPhoto = profile?.foto || user?.photoURL || "";
-  const userName = profile?.nome || user?.displayName || "Usuário";
+  const userName = profile?.nome || user?.displayName || "Representante";
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
@@ -49,10 +50,18 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
         </Link>
       </div>
 
+      {/* Badge de papel */}
+      <div className="px-4 mb-4">
+        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-[#F59E0B]/10 text-[#F59E0B] w-full">
+          <Building2 className="w-3.5 h-3.5" />
+          Gestor de Cidade
+        </span>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-0.5 px-3 overflow-y-auto">
         {menuItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
           return (
             <Link
               key={item.label}
@@ -107,7 +116,7 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
             {userPhoto ? (
               <img src={userPhoto} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-[#1a8ccc] flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-full h-full bg-[#F59E0B] flex items-center justify-center text-white text-sm font-semibold">
                 {userInitial}
               </div>
             )}
@@ -117,7 +126,7 @@ export default function Sidebar({ isExpanded, onToggle }: SidebarProps) {
               {userName}
             </p>
             <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>
-              Navegador de SP
+              Gestor de Cidade
             </p>
           </div>
         </div>

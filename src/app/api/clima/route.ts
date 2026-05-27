@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-const MARILIA_LAT = -22.2139;
-const MARILIA_LON = -49.9458;
+const SP_LAT = -23.5505;
+const SP_LON = -46.6333;
 
 // Cache em memória simples no servidor para garantir blindagem absoluta de cota
 let cachedWeather: any = null;
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${MARILIA_LAT}&lon=${MARILIA_LON}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=pt_br`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${SP_LAT}&lon=${SP_LON}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=pt_br`;
     
     // Chamada à API externa com timeout e headers limpos
     const res = await fetch(url, {
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       description: data.weather[0].description,
       feelsLike: Math.round(data.main.feels_like),
       windSpeed: Math.round(data.wind.speed * 3.6),
-      city: data.name || "Marília",
+      city: data.name || "São Paulo",
       isMocked: false,
       lastUpdated: new Date().toLocaleTimeString("pt-BR")
     };
@@ -129,7 +129,7 @@ function generateMockWeather(forcedCondition?: string) {
     description: descriptions[condition] || "Parcialmente Nublado",
     feelsLike: Math.round(feelsLike),
     windSpeed: Math.round(windSpeed),
-    city: "Marília (Simulado)",
+    city: "São Paulo (Simulado)",
     isMocked: true,
     lastUpdated: new Date().toLocaleTimeString("pt-BR")
   };

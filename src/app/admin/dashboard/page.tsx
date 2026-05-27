@@ -3,178 +3,78 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  TrendingUp, TrendingDown,
-  Clock, CheckCircle, MoreHorizontal,
-  Loader2, ChevronLeft, ChevronRight,
+  Clock, CheckCircle, XCircle, MoreHorizontal,
+  Loader2, Star, ShieldCheck, Store, MapPin, Phone, Building2, Users, TrendingUp, ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
-import { useCategorias } from "@/hooks/useCategorias";
-
-const dateFilters = [
-  { id: "hoje", label: "Hoje" },
-  { id: "mes", label: "Esse mês" },
-  { id: "30dias", label: "Últimos 30 dias" },
-  { id: "90dias", label: "Últimos 90 dias" },
-  { id: "total", label: "Todo o período" },
-];
+import { 
+  listarEstabelecimentos, 
+  aprovarEstabelecimento, 
+  rejeitarOuSuspenderEstabelecimento, 
+  type Estabelecimento 
+} from "@/services/firebase";
+import { getCategoryByLabel } from "@/utils/categories";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { categorias: CATEGORIES, obterCategoriaPorLabel: getCategoryByLabel } = useCategorias();
-  const [activeFilter, setActiveFilter] = useState("mes");
   const { showToast } = useToast();
-
-  const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("pendente_aprovacao"); // "todos" | "pendente_aprovacao" | "ativo" | "suspenso"
 
-  // Controle de mês do calendário
-  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const carregarDados = async () => {
+    try {
+      const list = await listarEstabelecimentos();
+      setEstabelecimentos(list);
+    } catch (error) {
+      console.error("Erro ao carregar estabelecimentos:", error);
+      showToast("warning", "Erro", "Erro ao carregar dados do banco.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Iniciar listener do Firestore
   useEffect(() => {
-    const unsubscribe = onReclamacoesChange(
-      (items) => {
-        setReclamacoes(items);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Erro no listener do admin dashboard:", error);
-        setIsLoading(false);
-      }
-    );
-    return () => unsubscribe();
+    carregarDados();
   }, []);
 
-  // Filtro de data
-  const filteredReclamacoes = reclamacoes.filter((r) => {
-    if (!r.criadoEm) return true;
-    const date = r.criadoEm.toDate();
-    const now = new Date();
-    if (activeFilter === "hoje") {
-      return date.toDateString() === now.toDateString();
+  const handleAprovar = async (empresaId: string, estabId: string) => {
+    try {
+      setIsLoading(true);
+      await aprovarEstabelecimento(empresaId, estabId);
+      showToast("success", "Parceiro Aprovado", "O parceiro comercial já está ativo e visível no mapa.");
+      await carregarDados();
+    } catch (error) {
+      console.error(error);
+      showToast("warning", "Erro", "Falha ao aprovar o estabelecimento.");
+      setIsLoading(false);
     }
-    if (activeFilter === "mes") {
-      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  };
+
+  const handleRejeitar = async (empresaId: string, estabId: string) => {
+    try {
+      setIsLoading(true);
+      await rejeitarOuSuspenderEstabelecimento(empresaId, estabId, "suspenso");
+      showToast("info", "Status Atualizado", "Estabelecimento suspenso/rejeitado com sucesso.");
+      await carregarDados();
+    } catch (error) {
+      console.error(error);
+      showToast("warning", "Erro", "Falha ao atualizar o parceiro.");
+      setIsLoading(false);
     }
-    if (activeFilter === "30dias") {
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 30;
-    }
-    if (activeFilter === "90dias") {
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 90;
-    }
-    return true; // "total"
+  };
+
+  // Filtragem local
+  const filteredEstabs = estabelecimentos.filter((e) => {
+    if (activeFilter === "todos") return true;
+    return e.status === activeFilter;
   });
 
   // Métricas
-  const totalCount = filteredReclamacoes.length;
-  const abertoCount = filteredReclamacoes.filter((r) => r.status === "aberto").length;
-  const emAndamentoCount = filteredReclamacoes.filter((r) => r.status === "em_andamento" || r.status === "em_analise").length;
-  const resolvidoCount = filteredReclamacoes.filter((r) => r.status === "resolvido").length;
-  const criticoCount = filteredReclamacoes.filter((r) => r.status === "critico").length;
-
-  const totalStats = totalCount || 1;
-  const pctAbertas = Math.round((abertoCount / totalStats) * 100);
-  const pctAndamento = Math.round((emAndamentoCount / totalStats) * 100);
-  const pctResolvidas = Math.round((resolvidoCount / totalStats) * 100);
-  const pctCriticas = Math.round((criticoCount / totalStats) * 100);
-
-  // Distribuição mensal de reclamações criadas e resolvidas
-  const monthlyCreated = Array(12).fill(0);
-  const monthlyResolved = Array(12).fill(0);
-
-  reclamacoes.forEach((r) => {
-    if (!r.criadoEm) return;
-    const date = r.criadoEm.toDate();
-    const month = date.getMonth();
-    monthlyCreated[month]++;
-    if (r.status === "resolvido") {
-      monthlyResolved[month]++;
-    }
-  });
-
-  const maxCreated = Math.max(...monthlyCreated, 1);
-  const maxResolved = Math.max(...monthlyResolved, 1);
-
-  // Distribuição por categoria
-  const categoryCounts: Record<string, number> = {};
-  filteredReclamacoes.forEach((r) => {
-    const matched = getCategoryByLabel(r.categoria);
-    const catLabel = matched ? matched.label : "Outros";
-    categoryCounts[catLabel] = (categoryCounts[catLabel] || 0) + 1;
-  });
-
-  const categoryDistribution = CATEGORIES.map((cat) => {
-    const count = categoryCounts[cat.label] || 0;
-    const pct = totalCount ? Math.round((count / totalCount) * 100) : 0;
-    return {
-      label: cat.label,
-      color: cat.color,
-      count,
-      pct,
-    };
-  })
-    .filter((c) => c.count > 0 || ["Infraestrutura", "Iluminação Pública", "Limpeza Urbana", "Saneamento"].includes(c.label))
-    .sort((a, b) => b.count - a.count);
-
-  // Calendário interativo
-  const calYear = currentCalendarDate.getFullYear();
-  const calMonth = currentCalendarDate.getMonth();
-  const calMonthName = currentCalendarDate.toLocaleString("pt-BR", { month: "long", year: "numeric" });
-
-  const firstDayOfMonth = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-
-  const calendarDaysList: (number | null)[] = [];
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    calendarDaysList.push(null);
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    calendarDaysList.push(d);
-  }
-
-  const calendarComplaintDays = new Set<number>();
-  reclamacoes.forEach((r) => {
-    if (r.criadoEm) {
-      const date = r.criadoEm.toDate();
-      if (date.getMonth() === calMonth && date.getFullYear() === calYear) {
-        calendarComplaintDays.add(date.getDate());
-      }
-    }
-  });
-
-  const handlePrevMonth = () => {
-    setCurrentCalendarDate(new Date(calYear, calMonth - 1, 1));
-  };
-  const handleNextMonth = () => {
-    setCurrentCalendarDate(new Date(calYear, calMonth + 1, 1));
-  };
-
-  // Helper para categoria
-  const getCatDetails = (categoria: string) => {
-    const cat = getCategoryByLabel(categoria);
-    if (cat) {
-      return {
-        letter: cat.label.charAt(0),
-        color: cat.color,
-        bgLight: cat.bgLight,
-      };
-    }
-    return { letter: "O", color: "#64748B", bgLight: "#F1F5F9" };
-  };
-
-  // Helper para status
-  const getStatusDetails = (status: string) => {
-    const clean = status || "aberto";
-    if (clean === "critico") return { label: "Crítico", color: "#EF4444" };
-    if (clean === "resolvido") return { label: "Resolvido", color: "#10B981" };
-    if (clean === "em_andamento" || clean === "em_analise") return { label: "Em Andamento", color: "#F59E0B" };
-    return { label: "Aberto", color: "#1a8ccc" };
-  };
+  const totalCount = estabelecimentos.length;
+  const pendentesCount = estabelecimentos.filter(e => e.status === "pendente_aprovacao").length;
+  const ativosCount = estabelecimentos.filter(e => e.status === "ativo").length;
+  const suspensosCount = estabelecimentos.filter(e => e.status === "suspenso").length;
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return "—";
@@ -182,382 +82,215 @@ export default function AdminDashboard() {
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
   };
 
-  if (isLoading) {
+  if (isLoading && estabelecimentos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--color-text-muted)" }} />
-        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>Carregando dados...</p>
+        <Loader2 className="w-8 h-8 text-[#1a8ccc] animate-spin" />
+        <p className="text-sm text-slate-500">Carregando painel de moderação...</p>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-50/50 dark:bg-zinc-950/20">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 md:px-8 py-5 border-b" style={{ borderColor: "var(--color-border)" }}>
-        <div>
-          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Dashboard</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-            Visão geral das ocorrências
+      <header className="flex items-center justify-between px-6 md:px-8 py-6 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+        <div className="text-left">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#1a8ccc]/10 text-[#1a8ccc]">
+              Administrador da Plataforma
+            </span>
+          </div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[#1a8ccc]" />
+            Painel de Controle Geral
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Gerencie representantes, aprove credenciamentos e monitore toda a plataforma Navegando SP.
           </p>
         </div>
       </header>
 
-      <div className="px-6 md:px-8 pb-8 space-y-6">
-        {/* Date Filter Pills */}
-        <div className="flex items-center gap-2 pt-5 overflow-x-auto no-scrollbar">
-          {dateFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === filter.id
-                  ? "text-white shadow-sm"
-                  : "border"
-              }`}
-              style={
-                activeFilter === filter.id
-                  ? { backgroundColor: "#1a8ccc" }
-                  : { backgroundColor: "var(--color-surface)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" }
-              }
+      <div className="px-6 md:px-8 py-8 space-y-6">
+        
+        {/* Stats Cards — Plataforma Geral */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total de Credenciados", value: totalCount, color: "text-slate-700 dark:text-zinc-200", icon: Store },
+            { label: "Pendentes de Aprovação", value: pendentesCount, color: "text-amber-500", icon: Clock },
+            { label: "Parceiros Ativos no Mapa", value: ativosCount, color: "text-emerald-500", icon: CheckCircle },
+            { label: "Parceiros Suspensos", value: suspensosCount, color: "text-rose-500", icon: XCircle },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800/80 shadow-sm group hover:shadow-md transition-all"
             >
-              {filter.label}
+              <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">{stat.label}</p>
+              <p className={`text-3xl font-black leading-none mt-3 group-hover:scale-105 transition-transform origin-left ${stat.color}`}>{String(stat.value).padStart(2, "0")}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Stats Cards — Rede de Cidades e Representantes (mockado) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { label: "Cidades Ativas", value: "01", sub: "São Paulo Capital", icon: MapPin, color: "#1a8ccc" },
+            { label: "Representantes", value: "01", sub: "Gestores ativos", icon: Building2, color: "#F59E0B" },
+            { label: "Usuários na Plataforma", value: "---", sub: "Dados em tempo real", icon: Users, color: "#8B5CF6" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800/80 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
+              >
+                <stat.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold leading-none" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-zinc-200 mt-0.5">{stat.label}</p>
+                <p className="text-[10px] text-slate-400">{stat.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-2 border-b border-slate-250 pb-2">
+          {[
+            { id: "pendente_aprovacao", label: `Pendentes (${pendentesCount})` },
+            { id: "ativo", label: `Ativos (${ativosCount})` },
+            { id: "suspenso", label: `Suspensos (${suspensosCount})` },
+            { id: "todos", label: `Todos (${totalCount})` },
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setActiveFilter(f.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeFilter === f.id
+                  ? "bg-[#1a8ccc] text-white shadow-sm"
+                  : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300"
+              }`}
+            >
+              {f.label}
             </button>
           ))}
         </div>
 
-        {/* Stats Cards — Brightly style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: "Total de Reclamações", value: totalCount, pct: null, up: true },
-            { label: "Em Aberto", value: abertoCount, pct: pctAbertas, up: true },
-            { label: "Em Andamento", value: emAndamentoCount, pct: pctAndamento, up: true },
-            { label: "Resolvidas", value: resolvidoCount, pct: pctResolvidas, up: true },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="p-5 rounded-xl border"
-              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-            >
-              <p className="text-[13px] mb-3" style={{ color: "var(--color-text-muted)" }}>{stat.label}</p>
-              <p className="text-[32px] font-bold leading-none mb-2" style={{ color: "var(--color-text)" }}>{String(stat.value).padStart(2, "0")}</p>
-              {stat.pct !== null && (
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-[12px] font-medium text-emerald-500">{stat.pct}%</span>
-                  <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>do total</span>
-                </div>
-              )}
-              {stat.pct === null && (
-                <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>Período filtrado</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Status Distribution — Slim bar */}
-        <div
-          className="p-5 rounded-xl border space-y-4"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Proporção por Status</h3>
-            <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>Total: {totalCount} relatos</span>
+        {/* Establishments List */}
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/60 dark:border-zinc-800/80 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-zinc-800/80">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-150">Ações & Solicitantes</h3>
+            <span className="text-xs text-slate-400">Total filtrado: {filteredEstabs.length}</span>
           </div>
 
-          <div className="w-full h-2 rounded-full flex overflow-hidden" style={{ backgroundColor: "var(--color-bg-alt)" }}>
-            <div className="bg-[#1a8ccc] h-full transition-all duration-500" style={{ width: `${pctAbertas}%` }} />
-            <div className="bg-[#F59E0B] h-full transition-all duration-500" style={{ width: `${pctAndamento}%` }} />
-            <div className="bg-[#10B981] h-full transition-all duration-500" style={{ width: `${pctResolvidas}%` }} />
-            <div className="bg-[#EF4444] h-full transition-all duration-500" style={{ width: `${pctCriticas}%` }} />
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            {[
-              { color: "#1a8ccc", label: "Abertas", value: abertoCount, pct: pctAbertas },
-              { color: "#F59E0B", label: "Em Progresso", value: emAndamentoCount, pct: pctAndamento },
-              { color: "#10B981", label: "Resolvidas", value: resolvidoCount, pct: pctResolvidas },
-              { color: "#EF4444", label: "Críticas", value: criticoCount, pct: pctCriticas },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
-                  {item.label} <strong className="font-semibold" style={{ color: "var(--color-text)" }}>{item.value}</strong> ({item.pct}%)
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Charts — 2 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Chart 1: Criadas */}
-          <div
-            className="p-5 rounded-xl border"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Volume Mensal de Relatos</h3>
-            <div className="h-[160px] flex items-end gap-1.5 px-1">
-              {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map((m, i) => {
-                const count = monthlyCreated[i];
-                const heightPct = Math.round((count / maxCreated) * 80) + 10;
-                const hasValue = count > 0;
-                return (
-                  <div key={m} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
-                    {hasValue && (
-                      <span
-                        className="absolute bottom-full mb-1 text-[10px] font-semibold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
-                        style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}
-                      >
-                        {count}
-                      </span>
-                    )}
-                    <div
-                      className={`w-full rounded transition-all ${
-                        hasValue ? "bg-[#1a8ccc] hover:bg-[#1572a6]" : ""
-                      }`}
-                      style={{
-                        height: hasValue ? `${heightPct}%` : "6%",
-                        backgroundColor: hasValue ? undefined : "var(--color-bg-alt)",
-                      }}
-                    />
-                    <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{m}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Chart 2: Resolvidas */}
-          <div
-            className="p-5 rounded-xl border"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Resoluções de Ocorrências</h3>
-            <div className="h-[160px] flex items-end gap-1.5 px-1">
-              {["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"].map((m, i) => {
-                const count = monthlyResolved[i];
-                const heightPct = Math.round((count / maxResolved) * 80) + 10;
-                const hasValue = count > 0;
-                return (
-                  <div key={m} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
-                    {hasValue && (
-                      <span
-                        className="absolute bottom-full mb-1 text-[10px] font-semibold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
-                        style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}
-                      >
-                        {count}
-                      </span>
-                    )}
-                    <div
-                      className={`w-full rounded transition-all ${
-                        hasValue ? "bg-[#10B981] hover:bg-[#059669]" : ""
-                      }`}
-                      style={{
-                        height: hasValue ? `${heightPct}%` : "6%",
-                        backgroundColor: hasValue ? undefined : "var(--color-bg-alt)",
-                      }}
-                    />
-                    <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>{m}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Details — Category Breakdown + Calendar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Category Breakdown */}
-          <div
-            className="p-5 rounded-xl border flex flex-col"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Incidência por Categoria</h3>
-            <div className="space-y-3">
-              {categoryDistribution.map((cat) => (
-                <div key={cat.label} className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                  <span className="text-[13px] flex-1 truncate" style={{ color: "var(--color-text-secondary)" }}>{cat.label}</span>
-                  <div className="w-24 h-1.5 rounded-full overflow-hidden shrink-0" style={{ backgroundColor: "var(--color-bg-alt)" }}>
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${cat.pct}%`, backgroundColor: cat.color }} />
-                  </div>
-                  <span className="text-[12px] font-medium w-16 text-right" style={{ color: "var(--color-text)" }}>{cat.count} ({cat.pct}%)</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Calendar */}
-          <div
-            className="p-5 rounded-xl border"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Registro Diário</h3>
-              <div className="flex items-center gap-1 border rounded-md p-0.5" style={{ borderColor: "var(--color-border)" }}>
-                <button
-                  onClick={handlePrevMonth}
-                  className="p-1 hover:bg-[var(--color-bg-alt)] rounded transition-colors cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-                </button>
-                <span className="text-[12px] font-medium px-2 capitalize" style={{ color: "var(--color-text)" }}>{calMonthName}</span>
-                <button
-                  onClick={handleNextMonth}
-                  className="p-1 hover:bg-[var(--color-bg-alt)] rounded transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
-                <div key={i} className="text-[11px] font-medium py-1.5" style={{ color: "var(--color-text-muted)" }}>{d}</div>
-              ))}
-              {calendarDaysList.map((day, i) => {
-                const hasComplaint = day !== null && calendarComplaintDays.has(day);
-                return (
-                  <div key={i} className="h-8 flex items-center justify-center">
-                    {day !== null ? (
-                      <span
-                        className={`w-7 h-7 flex items-center justify-center rounded-md text-[12px] transition-colors ${
-                          hasComplaint
-                            ? "bg-[#1a8ccc] text-white font-semibold"
-                            : "hover:bg-[var(--color-bg-alt)]"
-                        }`}
-                        style={!hasComplaint ? { color: "var(--color-text-secondary)" } : undefined}
-                        title={hasComplaint ? `${day} de ${calMonthName} possui reclamações` : ""}
-                      >
-                        {day}
-                      </span>
-                    ) : (
-                      <span className="w-7 h-7" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Complaints Table — Brightly style */}
-        <div
-          className="rounded-xl border overflow-hidden"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-        >
-          <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: "var(--color-border)" }}>
-            <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Ocorrências Recentes</h3>
-            <span className="text-[12px]" style={{ color: "var(--color-text-muted)" }}>
-              Clique para gerenciar
-            </span>
-          </div>
-
-          {filteredReclamacoes.length === 0 ? (
-            <div className="p-10 text-center text-[13px]" style={{ color: "var(--color-text-muted)" }}>
-              Nenhuma reclamação encontrada para o filtro ativo.
+          {filteredEstabs.length === 0 ? (
+            <div className="p-16 text-center text-slate-400">
+              <Store className="w-12 h-12 text-slate-250 mx-auto mb-3 block" />
+              Nenhum estabelecimento comercial encontrado para esta listagem.
             </div>
           ) : (
-            <>
-              {/* Mobile List View */}
-              <div className="md:hidden divide-y" style={{ borderColor: "var(--color-border)" }}>
-                {filteredReclamacoes.slice(0, 6).map((row) => {
-                  const cat = getCatDetails(row.categoria);
-                  const st = getStatusDetails(row.status);
-                  return (
-                    <div
-                      key={row.id}
-                      onClick={() => router.push(`/admin/reclamacoes/${row.id}`)}
-                      className="px-4 py-3.5 flex items-center gap-3 cursor-pointer transition-colors"
-                      style={{ borderColor: "var(--color-border)" }}
-                    >
-                      <div 
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
-                        style={{ backgroundColor: cat.bgLight, color: cat.color }}
-                      >
-                        {cat.letter}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium truncate" style={{ color: "var(--color-text)" }}>{row.titulo}</p>
-                        <p className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>
-                          {row.endereco.split(",")[0]} · {formatDate(row.criadoEm)}
+            <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
+              {filteredEstabs.map((row) => {
+                const cat = getCategoryByLabel(row.categoria) ?? { label: "Outros", color: "#64748B" };
+                return (
+                  <div
+                    key={row.id}
+                    className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 dark:hover:bg-zinc-850/10 transition-colors"
+                  >
+                    <div className="flex items-start gap-4">
+                      {row.logoUrl ? (
+                        <img
+                          src={row.logoUrl}
+                          className="w-14 h-14 rounded-2xl object-cover bg-white border shrink-0"
+                          alt="logo"
+                        />
+                      ) : (
+                        <div
+                          className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
+                        >
+                          <Store className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="text-left space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-base font-bold text-slate-800 dark:text-white leading-tight">{row.nome}</h4>
+                          <span
+                            className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                            style={{ backgroundColor: `${cat.color}18`, color: cat.color }}
+                          >
+                            {cat.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-light max-w-xl">
+                          {row.descricao || "Nenhuma descrição informada."}
                         </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
-                        <span className="text-[12px] font-medium" style={{ color: st.color }}>{st.label}</span>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-[11px] text-slate-400">
+                          {row.telefone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="w-3.5 h-3.5 shrink-0 text-slate-350" />
+                              {row.telefone}
+                            </span>
+                          )}
+                          {row.endereco && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 shrink-0 text-slate-350" />
+                              {row.endereco}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)" }}>
-                      {["Título", "Data", "Endereço", "Status", ""].map((h) => (
-                        <th key={h} className="px-6 py-3 text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredReclamacoes.slice(0, 10).map((row) => {
-                      const cat = getCatDetails(row.categoria);
-                      const st = getStatusDetails(row.status);
-                      return (
-                        <tr
-                          key={row.id}
-                          onClick={() => router.push(`/admin/reclamacoes/${row.id}`)}
-                          className="border-b cursor-pointer transition-colors group"
-                          style={{ borderColor: "var(--color-border)" }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-bg)"}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 md:self-center shrink-0">
+                      {row.status === "pendente_aprovacao" && (
+                        <>
+                          <button
+                            onClick={() => handleRejeitar(row.empresaId, row.id)}
+                            className="px-4 py-2 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Recusar
+                          </button>
+                          <button
+                            onClick={() => handleAprovar(row.empresaId, row.id)}
+                            className="px-4 py-2 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Aprovar Parceiro
+                          </button>
+                        </>
+                      )}
+                      {row.status === "ativo" && (
+                        <button
+                          onClick={() => handleRejeitar(row.empresaId, row.id)}
+                          className="px-4 py-2 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                          <td className="px-6 py-3.5">
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0"
-                                style={{ backgroundColor: cat.bgLight, color: cat.color }}
-                              >
-                                {cat.letter}
-                              </div>
-                              <div>
-                                <span className="text-[13px] font-medium" style={{ color: "var(--color-text)" }}>{row.titulo}</span>
-                                <span className="block text-[11px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>{row.categoria}{row.subcategoria ? ` · ${row.subcategoria}` : ""}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-3.5 text-[13px]" style={{ color: "var(--color-text-secondary)" }}>{formatDate(row.criadoEm)}</td>
-                          <td className="px-6 py-3.5 text-[13px] truncate max-w-[200px]" style={{ color: "var(--color-text-secondary)" }} title={row.endereco}>
-                            {row.endereco}
-                          </td>
-                          <td className="px-6 py-3.5">
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                              style={{ backgroundColor: `${st.color}12`, color: st.color }}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.color }} />
-                              {st.label}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3.5">
-                            <button className="p-1 rounded-md cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" style={{ color: "var(--color-text-muted)" }}>
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
+                          <XCircle className="w-4 h-4" />
+                          Suspender
+                        </button>
+                      )}
+                      {row.status === "suspenso" && (
+                        <button
+                          onClick={() => handleAprovar(row.empresaId, row.id)}
+                          className="px-4 py-2 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Reativar Parceiro
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

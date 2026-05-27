@@ -34,7 +34,7 @@ export function useNotifications() {
   return ctx;
 }
 
-const STORAGE_KEY = "sac_marilia_admin_notifications";
+const STORAGE_KEY = "navegandosp_admin_notifications";
 
 /**
  * Sintetiza dinamicamente um som de chime (ding) super agradável e premium
@@ -109,8 +109,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (criadoEmTime < sessionStartTime.current) {
             antigas.push({
               id: `old-${doc.id}`,
-              titulo: data.titulo || "Novo relato no mapa",
-              mensagem: `Ocorrência registrada em ${data.endereco ? data.endereco.split(",")[0] : "Marília"}`,
+              titulo: data.titulo || "Novo parceiro no mapa",
+              mensagem: `Estabelecimento registrado em ${data.endereco ? data.endereco.split(",")[0] : "São Paulo"}`,
               tipo: "nova_reclamacao",
               criadoEm: criadoEmTime,
               lida: true, // Começa marcada como lida
@@ -148,11 +148,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (criadoEmTime >= sessionStartTime.current - 5000) {
             const idReclamacao = change.doc.id;
             const titulo = docData.titulo || "Novo relato registrado";
-            const enderecoCurto = docData.endereco ? docData.endereco.split(",")[0] : "Marília";
+            const enderecoCurto = docData.endereco ? docData.endereco.split(",")[0] : "São Paulo";
 
             const novaNotif: Notificacao = {
               id: `notif-${Date.now()}-${idReclamacao}`,
-              titulo: "Nova Ocorrência Recebida",
+              titulo: "Nova Parceria Recebida",
               mensagem: `"${titulo}" em ${enderecoCurto}`,
               tipo: "nova_reclamacao",
               criadoEm: criadoEmTime,
@@ -177,7 +177,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             // Toast Deslizante Lateral
             showToast(
               "info",
-              "Novo Relato Recebido 📍",
+              "Nova Parceria Recebida 📍",
               `"${titulo}" foi registrado em ${enderecoCurto}. Clique no sino para gerenciar.`
             );
           }

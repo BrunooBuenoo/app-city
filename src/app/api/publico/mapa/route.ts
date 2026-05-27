@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
-import { listarReclamacoes } from "@/services/firebase";
+import { listarEstabelecimentos } from "@/services/firebase";
 
 export async function GET() {
   try {
-    // Busca todas as reclamações usando o serviço existente do Firebase
-    const reclamacoes = await listarReclamacoes();
+    // Busca todos os estabelecimentos ativos usando o serviço do Firebase
+    const estabelecimentos = await listarEstabelecimentos({ status: "ativo" });
     
-    // Anonimizar e retornar apenas os campos essenciais para os pins do mapa da landing page.
-    // Desta forma, UIDs de usuários, nomes de autores anônimos e descrições privadas
-    // NUNCA são expostos ao tráfego de rede do cliente, garantindo segurança robusta.
-    const safeData = reclamacoes.map((rec) => ({
-      id: rec.id,
-      titulo: rec.titulo,
-      categoria: rec.categoria,
-      latitude: rec.latitude,
-      longitude: rec.longitude,
+    // Retornar apenas os campos essenciais para os pins do mapa público
+    const safeData = estabelecimentos.map((estab) => ({
+      id: estab.id,
+      nome: estab.nome,
+      categoria: estab.categoria,
+      latitude: estab.latitude,
+      longitude: estab.longitude,
+      logoUrl: estab.logoUrl,
+      endereco: estab.endereco,
     }));
     
     // Cache de resposta (revalidação a cada 30 segundos) para performance excelente
@@ -24,10 +24,11 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Erro na API de mapa público:", error);
+    console.error("Erro na API de mapa público comercial:", error);
     return NextResponse.json(
-      { error: "Erro interno ao processar dados de mapa" },
+      { error: "Erro interno ao processar dados de mapa comercial" },
       { status: 500 }
     );
   }
 }
+

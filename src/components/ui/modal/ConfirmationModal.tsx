@@ -42,10 +42,10 @@ export default function ConfirmationModal({ isOpen, onClose }: ConfirmationModal
 
         {/* Content */}
         <h3 className="text-xl font-semibold text-[#112F4E] mb-2">
-          Reclamação Enviada!
+          Parceria Solicitada!
         </h3>
         <p className="text-sm text-[#4A5D70] font-light leading-relaxed mb-8">
-          Sua solicitação foi registrada com sucesso e será analisada pela equipe do Marília ao Contrário. Você receberá atualizações sobre o andamento.
+          A solicitação de credenciamento do estabelecimento foi registrada com sucesso e será analisada pela moderação do Navegando SP.
         </p>
 
         {/* Actions */}
@@ -58,11 +58,11 @@ export default function ConfirmationModal({ isOpen, onClose }: ConfirmationModal
             Ver no Mapa
           </Link>
           <Link
-            href="/usuario/minhas-reclamacoes"
+            href="/usuario/dashboard"
             className="w-full flex items-center justify-center gap-2 py-3 bg-[#FAF7F2] text-[#112F4E] font-medium text-sm rounded-xl hover:bg-[#F5F2ED] active:scale-[0.98] transition-all border border-[#E2E8F0]"
           >
             <ClipboardList className="w-4 h-4" />
-            Minhas Reclamações
+            Meus Cupons
           </Link>
         </div>
       </div>

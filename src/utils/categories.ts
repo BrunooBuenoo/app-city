@@ -1,5 +1,5 @@
 // Mapa centralizado de categorias com cores, ícones e labels
-// Usado nos pins do mapa, formulário de reclamação e cards
+// Usado nos pins do mapa, formulários e cards
 
 export interface Category {
   id: string;
@@ -10,16 +10,11 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: "saude",            label: "Saúde",              color: "#EF4444", bgLight: "#FEE2E2", icon: "medical_services" },
-  { id: "transporte",       label: "Transporte",         color: "#3B82F6", bgLight: "#EFF6FF", icon: "directions_bus" },
-  { id: "infraestrutura",   label: "Infraestrutura",     color: "#F59E0B", bgLight: "#FEF3C7", icon: "construction" },
-  { id: "seguranca",        label: "Segurança",          color: "#1E3A8A", bgLight: "#E0E7FF", icon: "security" },
-  { id: "educacao",         label: "Educação",           color: "#8B5CF6", bgLight: "#F5F3FF", icon: "school" },
-  { id: "limpeza",          label: "Limpeza Urbana",     color: "#10B981", bgLight: "#D1FAE5", icon: "delete" },
-  { id: "meio_ambiente",    label: "Meio Ambiente",      color: "#22C55E", bgLight: "#E8F5E9", icon: "eco" },
-  { id: "iluminacao",       label: "Iluminação Pública", color: "#FACC15", bgLight: "#FEF9C3", icon: "lightbulb" },
-  { id: "saneamento",       label: "Saneamento",         color: "#06B6D4", bgLight: "#E0F7FA", icon: "water_drop" },
-  { id: "bem_estar_animal", label: "Bem-estar Animal",   color: "#EC4899", bgLight: "#FCE7F3", icon: "pets" },
+  { id: "alimentacao",       label: "Alimentação",        color: "#F59E0B", bgLight: "#FEF3C7", icon: "restaurant" },
+  { id: "automotivo",        label: "Automotivo",         color: "#38BDF8", bgLight: "#E0F2FE", icon: "directions_car" },
+  { id: "saude_beleza",      label: "Saúde & Beleza",     color: "#10B981", bgLight: "#D1FAE5", icon: "spa" },
+  { id: "comercio_varejo",   label: "Comércio & Varejo",  color: "#6366F1", bgLight: "#EEF2FF", icon: "storefront" },
+  { id: "educacao_servicos", label: "Educação & Serviços", color: "#8B5CF6", bgLight: "#F5F3FF", icon: "school" },
 ];
 
 export const CATEGORY_MAP = Object.fromEntries(
@@ -36,8 +31,11 @@ export function getCategoryByLabel(label: string): Category | undefined {
     (cat) => 
       cat.label.toLowerCase() === normalizedLabel || 
       cat.id.toLowerCase() === normalizedLabel ||
-      // Casos específicos de mapeamento
-      (normalizedLabel === "limpeza" && cat.id === "limpeza") ||
-      (normalizedLabel === "iluminação" && cat.id === "iluminacao")
+      (normalizedLabel.includes("aliment") && cat.id === "alimentacao") ||
+      (normalizedLabel.includes("auto") && cat.id === "automotivo") ||
+      ((normalizedLabel.includes("saude") || normalizedLabel.includes("beleza")) && cat.id === "saude_beleza") ||
+      ((normalizedLabel.includes("comercio") || normalizedLabel.includes("varejo")) && cat.id === "comercio_varejo") ||
+      ((normalizedLabel.includes("educa") || normalizedLabel.includes("servi")) && cat.id === "educacao_servicos")
   );
 }
+

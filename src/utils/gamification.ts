@@ -19,7 +19,7 @@ export interface Rank {
 export const RANKS: Rank[] = [
   {
     level: 1,
-    name: "Observador",
+    name: "Navegador Iniciante",
     icon: "👁️",
     minXP: 0,
     color: "#94A3B8",
@@ -28,7 +28,7 @@ export const RANKS: Rank[] = [
   },
   {
     level: 2,
-    name: "Colaborador",
+    name: "Navegador Bronze",
     icon: "🤝",
     minXP: 50,
     color: "#1a8ccc",
@@ -37,7 +37,7 @@ export const RANKS: Rank[] = [
   },
   {
     level: 3,
-    name: "Guardião",
+    name: "Navegador Prata",
     icon: "🛡️",
     minXP: 150,
     color: "#8B5CF6",
@@ -46,7 +46,7 @@ export const RANKS: Rank[] = [
   },
   {
     level: 4,
-    name: "Protetor",
+    name: "Navegador Ouro",
     icon: "⚔️",
     minXP: 400,
     color: "#F59E0B",
@@ -55,7 +55,7 @@ export const RANKS: Rank[] = [
   },
   {
     level: 5,
-    name: "Herói da Cidade",
+    name: "Embaixador SP",
     icon: "🏆",
     minXP: 1000,
     color: "#EF4444",
@@ -236,13 +236,13 @@ export interface NivelInfo {
 }
 
 export const NIVEIS_PRESTIGIO: NivelInfo[] = [
-  { nome: "Ovo de Dino", id: "observador", minPontos: 0, maxPontos: 49 },
-  { nome: "Dino Bebê", id: "iniciante", minPontos: 50, maxPontos: 149 },
-  { nome: "Dino Explorador", id: "colaborador", minPontos: 150, maxPontos: 349 },
-  { nome: "Dino de Bronze", id: "bronze", minPontos: 350, maxPontos: 699 },
-  { nome: "Dino de Prata", id: "prata", minPontos: 700, maxPontos: 1199 },
-  { nome: "Dino de Ouro", id: "ouro", minPontos: 1200, maxPontos: 1999 },
-  { nome: "Titanossauro Lendário", id: "lendario", minPontos: 2000, maxPontos: 999999 },
+  { nome: "Navegador Iniciante", id: "observador", minPontos: 0, maxPontos: 49 },
+  { nome: "Navegador Bronze", id: "iniciante", minPontos: 50, maxPontos: 149 },
+  { nome: "Navegador Prata", id: "colaborador", minPontos: 150, maxPontos: 349 },
+  { nome: "Navegador Ouro", id: "bronze", minPontos: 350, maxPontos: 699 },
+  { nome: "Parceiro Platina", id: "prata", minPontos: 700, maxPontos: 1199 },
+  { nome: "Embaixador SP", id: "ouro", minPontos: 1200, maxPontos: 1999 },
+  { nome: "Titan da Fidelidade", id: "lendario", minPontos: 2000, maxPontos: 999999 },
 ];
 
 export function calcularNivel(pontos: number) {
@@ -273,8 +273,7 @@ export function calcularNivel(pontos: number) {
 }
 
 export const RECOMPENSAS = {
-  CRIAR_RECLAMACAO: 10,
-  CONCORDAR: 5,
-  CRIADOR_RESOLVIDO: 50,
-  VOTANTE_RESOLVIDO: 30,
+  CRIAR_CUPOM: 10,
+  RESGATAR_CUPOM: 5,
+  VALIDAR_RESGATE: 20,
 };

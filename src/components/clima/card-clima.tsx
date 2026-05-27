@@ -82,7 +82,7 @@ export default function CardClima() {
               )}>
                 {weather.isMocked ? "Simulado" : "Tempo Real"}
               </span>
-              <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-medium">Marília, SP</span>
+              <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-medium">São Paulo, SP</span>
             </div>
             
             <div className="flex items-center gap-0.5">

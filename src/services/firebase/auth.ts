@@ -6,12 +6,11 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { auth, db, googleProvider } from "./config";
-import { calcularNivel } from "@/utils/gamification";
 
 // ----- Auth Operations -----
 
 async function processUserProfile(user: User, forceAdmin?: boolean) {
-  const profileRef = doc(db, "users", user.uid);
+  const profileRef = doc(db, "usuarios", user.uid);
   const profileSnap = await getDoc(profileRef);
 
   const shouldBeAdmin = forceAdmin || user.email?.toLowerCase().includes("admin");
@@ -27,17 +26,15 @@ async function processUserProfile(user: User, forceAdmin?: boolean) {
       faixaEtaria: "",
       genero: "",
       perfilCompleto: shouldBeAdmin ? true : false,
-      role: shouldBeAdmin ? "admin" : "usuario", // "usuario" | "admin"
-      pontos: 0,
-      nivel: "Cidadão Observador",
-      interacoesCount: 0,
+      funcao: shouldBeAdmin ? "admin" : "usuario", // "admin" | "empresa" | "parceiro" | "usuario"
+      empresaId: "",
       criadoEm: serverTimestamp(),
       atualizadoEm: serverTimestamp(),
     });
   } else if (shouldBeAdmin) {
     // Atualiza papel para admin
     await setDoc(profileRef, {
-      role: "admin",
+      funcao: "admin",
       perfilCompleto: true,
       atualizadoEm: serverTimestamp(),
     }, { merge: true });
@@ -70,14 +67,15 @@ export interface UserProfile {
   faixaEtaria: string;
   genero: string;
   perfilCompleto: boolean;
-  role: "usuario" | "admin";
+  funcao: "admin" | "empresa" | "parceiro" | "usuario";
+  empresaId?: string;
   pontos?: number;
   nivel?: string;
   interacoesCount?: number;
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
-  const snap = await getDoc(doc(db, "users", uid));
+  const snap = await getDoc(doc(db, "usuarios", uid));
   if (!snap.exists()) return null;
   return snap.data() as UserProfile;
 }
@@ -87,7 +85,7 @@ export async function updateUserProfile(
   data: Partial<UserProfile>
 ): Promise<void> {
   await setDoc(
-    doc(db, "users", uid),
+    doc(db, "usuarios", uid),
     { ...data, atualizadoEm: serverTimestamp() },
     { merge: true }
   );
@@ -96,19 +94,15 @@ export async function updateUserProfile(
 export async function adicionarPontosUsuario(uid: string, quantidade: number): Promise<void> {
   if (!uid) return;
   try {
-    const userRef = doc(db, "users", uid);
+    const userRef = doc(db, "usuarios", uid);
     const snap = await getDoc(userRef);
     if (!snap.exists()) return;
 
     const data = snap.data();
     const pontosAtuais = Math.max(0, (data.pontos ?? 0) + quantidade);
-    const interacoes = (data.interacoesCount ?? 0) + (quantidade > 0 ? 1 : 0);
-    const nivelInfo = calcularNivel(pontosAtuais);
 
     await setDoc(userRef, {
       pontos: pontosAtuais,
-      nivel: nivelInfo.nome,
-      interacoesCount: interacoes,
       atualizadoEm: serverTimestamp(),
     }, { merge: true });
   } catch (err) {
@@ -119,7 +113,7 @@ export async function adicionarPontosUsuario(uid: string, quantidade: number): P
 export async function obterRankingUsuarios(limiteRanking: number = 20): Promise<UserProfile[]> {
   try {
     const q = query(
-      collection(db, "users"),
+      collection(db, "usuarios"),
       orderBy("pontos", "desc"),
       limit(limiteRanking)
     );
@@ -130,3 +124,4 @@ export async function obterRankingUsuarios(limiteRanking: number = 20): Promise<
     return [];
   }
 }
+

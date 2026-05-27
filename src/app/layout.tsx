@@ -5,8 +5,8 @@ import "./globals.css";
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sac do Marília ao Contrário",
-  description: "Gestão Urbana",
+  title: "Vizoor",
+  description: "Descubra novos passeios e atrações no Estado de São Paulo — resgate cupons de desconto exclusivos",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",

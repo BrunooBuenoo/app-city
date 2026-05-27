@@ -264,6 +264,22 @@
   display: none !important;
 }
 
+/* ─── Vizoor Logo — Animação de Piscar dos Olhos ─── */
+@keyframes vizoor-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94%, 96% { transform: scaleY(0.05); }
+}
+
+.vizoor-eye {
+  animation: vizoor-blink 4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.vizoor-eye-r {
+  animation-delay: 0.08s;
+}
+
 /* ─── Bell Shake Animation ─── */
 .animate-bell-shake {
   animation: bell-shake 0.8s cubic-bezier(.36, .07, .19, .97) both;

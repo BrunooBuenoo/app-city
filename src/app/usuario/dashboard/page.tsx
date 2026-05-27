@@ -3,433 +3,349 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
-  TrendingUp,
-  FileText, CheckCircle, Clock, Heart, Wrench, Lightbulb, Trash2, Droplets,
-  Loader2, Plus, Shield, HelpCircle,
-  ChevronRight, School, Bus, TreePine, PawPrint, Activity,
+  Compass,
+  Gift,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Tag,
+  Copy,
+  Sparkles,
+  Building,
+  Loader2,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { onReclamacoesChange, type Reclamacao } from "@/services/firebase";
-import {
-  calculateUserXP,
-  getNextRankProgress,
-  buildLeaderboard,
-  RANKS,
-  calcularNivel,
-} from "@/utils/gamification";
-import { useCategorias } from "@/hooks/useCategorias";
-import InsigniaBadge from "@/components/ui/InsigniaBadge";
-
-const dateFilters = [
-  { id: "hoje", label: "Hoje" },
-  { id: "mes", label: "Esse mês" },
-  { id: "30dias", label: "Últimos 30 dias" },
-  { id: "total", label: "Todo o período" },
-];
+import { listarResgatesDoUsuario, type Resgate } from "@/services/firebase";
 
 export default function UsuarioDashboard() {
-  const { user, profile, isLoggedIn, loading } = useAuth();
-  const { categorias: CATEGORIES } = useCategorias();
-
-  const categoryColors = useMemo(() => {
-    return Object.fromEntries(CATEGORIES.map((cat) => [cat.label, cat.color]));
-  }, [CATEGORIES]);
-  const [activeFilter, setActiveFilter] = useState("mes");
+  const { user, profile, loading } = useAuth();
   const { showToast } = useToast();
 
-  const [allReclamacoes, setAllReclamacoes] = useState<Reclamacao[]>([]);
+  const [resgates, setResgates] = useState<Resgate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<"todos" | "ativos" | "utilizados">("todos");
 
   useEffect(() => {
-    const unsubscribe = onReclamacoesChange(
-      (items) => {
-        setAllReclamacoes(items);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Erro ao carregar dados do usuário no painel:", error);
+    if (!user) return;
+
+    async function carregarResgates() {
+      try {
+        const dados = await listarResgatesDoUsuario(user!.uid);
+        setResgates(dados);
+      } catch (error) {
+        console.error("Erro ao buscar resgates do usuário:", error);
+        showToast("warning", "Erro", "Erro ao carregar seus cupons salvos.");
+      } finally {
         setIsLoading(false);
       }
-    );
-    return () => unsubscribe();
-  }, []);
-
-  // XP and Rank
-  const userXP = useMemo(
-    () => (user ? calculateUserXP(user.uid, allReclamacoes) : 0),
-    [user, allReclamacoes]
-  );
-  const rankInfo = useMemo(() => getNextRankProgress(userXP), [userXP]);
-  const leaderboard = useMemo(() => buildLeaderboard(allReclamacoes), [allReclamacoes]);
-  const userPosition = useMemo(() => {
-    if (!user) return -1;
-    return leaderboard.findIndex((e) => e.uid === user.uid) + 1;
-  }, [leaderboard, user]);
-
-  // Filter user's own complaints
-  const reclamacoes = useMemo(
-    () => allReclamacoes.filter((r) => user && r.autorId === user.uid),
-    [allReclamacoes, user]
-  );
-
-  const categoryIconMap: Record<string, any> = {
-    saude: Activity,
-    transporte: Bus,
-    infraestrutura: Wrench,
-    seguranca: Shield,
-    educacao: School,
-    limpeza: Trash2,
-    meio_ambiente: TreePine,
-    iluminacao: Lightbulb,
-    saneamento: Droplets,
-    bem_estar_animal: PawPrint,
-  };
-
-  const getCategoryIcon = (categoryLabel: string) => {
-    const cleanLabel = (categoryLabel || "").toLowerCase().trim();
-    const cat = CATEGORIES.find(
-      (c) => c.label.toLowerCase() === cleanLabel || c.id.toLowerCase() === cleanLabel
-    );
-    if (cat && categoryIconMap[cat.id]) {
-      return categoryIconMap[cat.id];
     }
-    return HelpCircle;
-  };
 
-  // Date filter
-  const filteredReclamacoes = reclamacoes.filter((r) => {
-    if (!r.criadoEm) return true;
-    const date = r.criadoEm.toDate();
-    const now = new Date();
-    if (activeFilter === "hoje") return date.toDateString() === now.toDateString();
-    if (activeFilter === "mes") return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-    if (activeFilter === "30dias") {
-      const diffDays = Math.ceil(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays <= 30;
-    }
-    return true;
-  });
+    carregarResgates();
+  }, [user, showToast]);
 
-  // Stats
-  const totalCount = filteredReclamacoes.length;
-  const resolvidoCount = filteredReclamacoes.filter((r) => r.status === "resolvido").length;
-  const emAndamentoCount = filteredReclamacoes.filter((r) => r.status === "em_andamento" || r.status === "em_analise").length;
-  const totalConcordos = filteredReclamacoes.reduce((acc, r) => acc + (r.concordos || 0), 0);
+  // Cálculos de métricas comerciais
+  const metricas = useMemo(() => {
+    const total = resgates.length;
+    const ativos = resgates.filter((r) => r.status === "gerado").length;
+    const utilizados = resgates.filter((r) => r.status === "resgatado").length;
+    
+    // Locais visitados distintos
+    const locaisUnicos = new Set(resgates.map((r) => r.estabelecimentoId || r.estabelecimentoNome));
+    const locaisVisitados = locaisUnicos.size;
 
-  // Categories
-  const categoryCounts: Record<string, number> = {};
-  filteredReclamacoes.forEach((r) => {
-    const cat = r.categoria || "Outros";
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-  });
-  const categoriesData = Object.entries(categoryCounts).map(([label, count]) => ({
-    label,
-    count,
-    pct: totalCount ? Math.round((count / totalCount) * 100) : 0,
-    color: categoryColors[label] || "#64748B",
-    Icon: getCategoryIcon(label),
-  })).sort((a, b) => b.count - a.count);
+    return { total, ativos, utilizados, locaisVisitados };
+  }, [resgates]);
 
-  // Weekly activity
-  const getWeeklyData = () => {
-    const counts = [0, 0, 0, 0];
-    const now = new Date();
-    reclamacoes.forEach((r) => {
-      if (!r.criadoEm) return;
-      const date = r.criadoEm.toDate();
-      const diffDays = Math.floor(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      const weekIndex = Math.floor(diffDays / 7);
-      if (weekIndex >= 0 && weekIndex < 4) counts[3 - weekIndex]++;
+  // Filtragem de cupons na lista
+  const cuponsFiltrados = useMemo(() => {
+    return resgates.filter((r) => {
+      if (activeFilter === "ativos") return r.status === "gerado";
+      if (activeFilter === "utilizados") return r.status === "resgatado";
+      return true;
     });
-    return counts;
-  };
-  const weeklyCounts = getWeeklyData();
-  const maxWeeklyCount = Math.max(...weeklyCounts, 1);
+  }, [resgates, activeFilter]);
 
-  const getStatusColor = (status: string) => {
-    if (status === "resolvido") return "#10B981";
-    if (status === "em_andamento" || status === "em_analise") return "#F59E0B";
-    if (status === "critico") return "#EF4444";
-    return "#1a8ccc";
+  const copiarCodigo = (codigo: string) => {
+    navigator.clipboard.writeText(codigo);
+    showToast("success", "Copiado!", "Código do cupom copiado para a área de transferência!");
   };
-  const getStatusLabel = (status: string) => {
-    if (status === "resolvido") return "Resolvido";
-    if (status === "em_andamento") return "Em Andamento";
-    if (status === "em_analise") return "Em Análise";
-    if (status === "critico") return "Crítico";
-    return "Aberto";
-  };
-  const formatDate = (timestamp: any) => {
+
+  const formatarData = (timestamp: any) => {
     if (!timestamp) return "—";
     const date = timestamp.toDate();
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--color-text-muted)" }} />
-        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>Carregando painel...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-[#1a8ccc]" />
+        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+          Carregando seus cupons de vantagens...
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-5 border-b" style={{ borderColor: "var(--color-border)" }}>
+      {/* Cabeçalho Premium */}
+      <header
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 md:px-8 py-6 border-b gap-4"
+        style={{ borderColor: "var(--color-border)" }}
+      >
         <div>
-          <h1 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>Meu Painel</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-            Acompanhe suas reclamações
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
+            <Sparkles className="w-6 h-6 text-[#F59E0B] animate-pulse" />
+            Meus Cupons & Vantagens
+          </h1>
+          <p className="text-[13px] mt-1" style={{ color: "var(--color-text-muted)" }}>
+            Olá, <span className="font-semibold text-[var(--color-text)]">{profile?.nome || user?.displayName || "Membro"}</span>! Visualize seus códigos e economize em São Paulo.
           </p>
         </div>
-        <Link href="/usuario/reclamacao/nova">
-          <button className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium bg-[#1a8ccc] text-white rounded-lg hover:bg-[#1572a6] transition-colors cursor-pointer">
-            <Plus className="w-4 h-4" />
-            Nova Reclamação
+        <Link href="/">
+          <button className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold bg-gradient-to-r from-[#1a8ccc] to-[#1572a6] text-white rounded-xl shadow-md shadow-[#1a8ccc]/10 hover:shadow-lg hover:shadow-[#1a8ccc]/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+            <Compass className="w-4 h-4 animate-spin-slow" />
+            Explorar Mapa de Parcerias
           </button>
         </Link>
       </header>
 
-      <div className="px-4 md:px-8 pb-8 space-y-5">
-        {/* Gamification Card — Clean version */}
-        {(() => {
-          const pontos = profile?.pontos || 0;
-          const nivelInfo = calcularNivel(pontos);
-          return (
+      <div className="px-6 md:px-8 pb-12 space-y-6 pt-6">
+        
+        {/* Painel de Boas-vindas Glassmorphic */}
+        <div
+          className="relative p-6 rounded-2xl border overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6"
+          style={{
+            backgroundColor: "var(--color-surface)",
+            borderColor: "var(--color-border)",
+            boxShadow: "var(--shadow-card)",
+          }}
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 bg-[#1a8ccc]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#F59E0B]/10 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="space-y-2 text-center md:text-left z-10">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F59E0B]/10 text-[#F59E0B]">
+              Navegando SP — Patrocínios & Vantagens
+            </span>
+            <h2 className="text-lg font-bold" style={{ color: "var(--color-text)" }}>
+              Economia Inteligente de Verdade
+            </h2>
+            <p className="text-xs max-w-lg leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
+              Navegue pelo mapa comercial, encontre seus estabelecimentos favoritos no Estado de São Paulo (restaurantes, oficinas, salões de beleza, escolas, lojas de varejo) e resgate descontos em instantes!
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center justify-center bg-gradient-to-br from-[#1a8ccc]/10 to-[#1572a6]/10 p-4 rounded-2xl border" style={{ borderColor: "var(--color-border)" }}>
+            <Gift className="w-12 h-12 text-[#1a8ccc]" />
+          </div>
+        </div>
+
+        {/* Métricas de Uso */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total de Cupons", value: metricas.total, sub: "Salvos no clube", icon: Tag, color: "#1a8ccc" },
+            { label: "Disponíveis para Uso", value: metricas.ativos, sub: "Prontos para apresentar", icon: Clock, color: "#F59E0B" },
+            { label: "Utilizados", value: metricas.utilizados, sub: "Economias geradas", icon: CheckCircle, color: "#10B981" },
+            { label: "Estabelecimentos", value: metricas.locaisVisitados, sub: "Locais visitados", icon: Building, color: "#8B5CF6" },
+          ].map((stat, i) => (
             <div
-              className="p-5 rounded-xl border mt-5"
-              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
+              key={i}
+              className="p-5 rounded-2xl border relative overflow-hidden group transition-all duration-200"
+              style={{
+                backgroundColor: "var(--color-surface)",
+                borderColor: "var(--color-border)",
+                boxShadow: "var(--shadow-card)",
+              }}
             >
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-5">
-                <div className="flex items-center gap-4 w-full lg:w-auto">
-                  <div className="shrink-0 select-none">
-                    <InsigniaBadge nivelId={nivelInfo.id} size="lg" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[11px] font-medium uppercase tracking-wider block mb-0.5" style={{ color: "var(--color-text-muted)" }}>
-                      Nível de Cidadania
-                    </span>
-                    <h2 className="text-[15px] font-semibold flex items-center gap-2 leading-snug" style={{ color: "var(--color-text)" }}>
-                      {nivelInfo.nome}
-                      <span
-                        className="px-2 py-0.5 rounded-md text-[11px] font-semibold"
-                        style={{ backgroundColor: "var(--color-primary-container)", color: "var(--color-on-primary-container)" }}
-                      >
-                        {pontos} pts
-                      </span>
-                    </h2>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      {nivelInfo.pontosRestantes > 0 ? (
-                        <div className="flex items-center gap-1 text-[12px]" style={{ color: "var(--color-text-muted)" }}>
-                          <span>Faltam</span>
-                          <strong className="font-semibold" style={{ color: "var(--color-text-secondary)" }}>{nivelInfo.pontosRestantes} pts</strong>
-                          <span>para</span>
-                          <span className="font-medium flex items-center gap-1" style={{ color: "var(--color-primary)" }}>
-                            {nivelInfo.proximoNivelNome}
-                            <InsigniaBadge nivelId={calcularNivel(nivelInfo.proximoNivelPontos).id} size="sm" />
+              <div className="flex justify-between items-start mb-3">
+                <span className="text-[12px] font-medium" style={{ color: "var(--color-text-muted)" }}>
+                  {stat.label}
+                </span>
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
+                >
+                  <stat.icon className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-3xl font-extrabold leading-none mb-1 group-hover:scale-105 transition-transform origin-left" style={{ color: "var(--color-text)" }}>
+                {String(stat.value).padStart(2, "0")}
+              </p>
+              <span className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>
+                {stat.sub}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Filtros e Lista */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+            {/* Filtros de Abas */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              {[
+                { id: "todos", label: "Todos os Cupons" },
+                { id: "ativos", label: "Disponíveis para Uso" },
+                { id: "utilizados", label: "Histórico de Utilizados" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveFilter(tab.id as any)}
+                  className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap border ${
+                    activeFilter === tab.id
+                      ? "text-white"
+                      : ""
+                  }`}
+                  style={
+                    activeFilter === tab.id
+                      ? { backgroundColor: "#1a8ccc", borderColor: "#1a8ccc" }
+                      : {
+                          backgroundColor: "var(--color-surface)",
+                          color: "var(--color-text-secondary)",
+                          borderColor: "var(--color-border)",
+                        }
+                  }
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+              Mostrando <strong className="font-semibold" style={{ color: "var(--color-text)" }}>{cuponsFiltrados.length}</strong> de{" "}
+              <strong className="font-semibold" style={{ color: "var(--color-text)" }}>{resgates.length}</strong> cupons
+            </span>
+          </div>
+
+          {/* Lista de Cupons Estilo Cards de Ticket Físico */}
+          {cuponsFiltrados.length === 0 ? (
+            <div
+              className="p-12 text-center rounded-2xl border flex flex-col items-center justify-center gap-4"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
+            >
+              <Gift className="w-12 h-12 text-[var(--color-text-muted)] animate-bounce" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                  Nenhum cupom encontrado para este filtro.
+                </p>
+                <p className="text-xs max-w-sm" style={{ color: "var(--color-text-muted)" }}>
+                  {activeFilter === "todos"
+                    ? "Você ainda não resgatou nenhum cupom. Navegue pelo mapa e resgate sua primeira vantagem comercial de graça!"
+                    : activeFilter === "ativos"
+                    ? "Você não possui nenhum cupom ativo pendente de uso."
+                    : "Você não possui histórico de cupons utilizados no caixa."}
+                </p>
+              </div>
+              <Link href="/">
+                <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold border rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer">
+                  Buscar Estabelecimentos
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {cuponsFiltrados.map((ticket) => {
+                const isAtivo = ticket.status === "gerado";
+
+                return (
+                  <div
+                    key={ticket.id}
+                    className="relative flex flex-col sm:flex-row border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                    style={{
+                      backgroundColor: "var(--color-surface)",
+                      borderColor: "var(--color-border)",
+                    }}
+                  >
+                    {/* Borda Picotada Estilizada Lateral */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[var(--color-bg)] rounded-r-full border-y border-r pointer-events-none" style={{ borderColor: "var(--color-border)" }} />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[var(--color-bg)] rounded-l-full border-y border-l pointer-events-none" style={{ borderColor: "var(--color-border)" }} />
+
+                    {/* Lado Esquerdo do Ticket (Info do Cupom) */}
+                    <div className="flex-1 p-6 flex flex-col justify-between gap-4 border-r border-dashed sm:border-b-0 border-b pb-6 sm:pb-6" style={{ borderColor: "var(--color-border)" }}>
+                      <div className="space-y-1 px-2">
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4 text-[#1a8ccc] shrink-0" />
+                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+                            {ticket.estabelecimentoNome}
                           </span>
                         </div>
-                      ) : (
-                        <span className="text-[#10B981] font-medium text-[12px] flex items-center gap-1">
-                          Nível Máximo Atingido
-                          <InsigniaBadge nivelId="lendario" size="sm" />
+                        <h3 className="text-base font-extrabold tracking-tight pt-1 leading-snug" style={{ color: "var(--color-text)" }}>
+                          {ticket.cupomTitulo}
+                        </h3>
+                        <p className="text-xs leading-normal" style={{ color: "var(--color-text-muted)" }}>
+                          Resgatado em {formatarData(ticket.criadoEm)}
+                        </p>
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="flex items-center gap-2 px-2">
+                        {isAtivo ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#F59E0B]/10 text-[#F59E0B]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-ping" />
+                            Disponível para uso
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#10B981]/10 text-[#10B981]">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Utilizado em {ticket.resgatadoEm ? formatarData(ticket.resgatadoEm) : ""}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Lado Direito do Ticket (Código do Resgate & Ação) */}
+                    <div className="sm:w-56 p-6 flex flex-col items-center justify-center text-center gap-3 bg-[var(--color-bg-alt)]/30 shrink-0">
+                      <span className="text-[10px] font-bold uppercase tracking-wider block" style={{ color: "var(--color-text-muted)" }}>
+                        CÓDIGO DO BENEFÍCIO
+                      </span>
+                      
+                      <div className="w-full flex items-center justify-center gap-1.5 bg-[var(--color-surface)] border border-dashed rounded-xl px-4 py-2.5" style={{ borderColor: "var(--color-border)" }}>
+                        <span className="text-sm font-extrabold tracking-widest font-mono text-[#1a8ccc]">
+                          {ticket.codigoUnicoGerado}
                         </span>
+                        {isAtivo && (
+                          <button
+                            onClick={() => copiarCodigo(ticket.codigoUnicoGerado)}
+                            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 cursor-pointer"
+                            title="Copiar Código"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {isAtivo ? (
+                        <p className="text-[10px] max-w-[160px]" style={{ color: "var(--color-text-muted)" }}>
+                          Apresente este código no caixa para validar o desconto.
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-[#10B981] font-semibold">
+                          Cupom validado e usufruído com sucesso!
+                        </p>
+                      )}
+
+                      {isAtivo && ticket.estabelecimentoId && (
+                        <Link
+                          href={`/`}
+                          className="mt-1 text-[11px] font-semibold text-[#1a8ccc] hover:underline flex items-center gap-1"
+                        >
+                          Ver no Mapa
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
                       )}
                     </div>
                   </div>
-                </div>
-
-                <div className="w-full lg:w-64 space-y-1.5">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="font-medium" style={{ color: "var(--color-text-muted)" }}>Progresso</span>
-                    <span className="font-semibold" style={{ color: "var(--color-text)" }}>{nivelInfo.progresso}%</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-bg-alt)" }}>
-                    <div 
-                      className="h-full rounded-full bg-[#1a8ccc] transition-all duration-700"
-                      style={{ width: `${nivelInfo.progresso}%` }}
-                    />
-                  </div>
-                </div>
-
-                <Link href="/usuario/ranking" className="shrink-0">
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-[13px] transition-colors cursor-pointer"
-                    style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-bg-alt)"}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                  >
-                    Ver Ranking
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </Link>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Date Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {dateFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === filter.id
-                  ? "text-white"
-                  : "border"
-              }`}
-              style={
-                activeFilter === filter.id
-                  ? { backgroundColor: "#1a8ccc" }
-                  : { backgroundColor: "var(--color-surface)", color: "var(--color-text-secondary)", borderColor: "var(--color-border)" }
-              }
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Stats Cards — Brightly style */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: "Reclamações", value: totalCount, sub: "Cadastradas" },
-            { label: "Resolvidas", value: resolvidoCount, sub: "Concluídas" },
-            { label: "Em Progresso", value: emAndamentoCount, sub: "Acompanhando" },
-            { label: "Apoios", value: totalConcordos, sub: "Concordos recebidos" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="p-4 rounded-xl border"
-              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-            >
-              <p className="text-[12px] mb-2" style={{ color: "var(--color-text-muted)" }}>{stat.label}</p>
-              <p className="text-[28px] font-bold leading-none mb-1" style={{ color: "var(--color-text)" }}>{String(stat.value).padStart(2, "0")}</p>
-              <span className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>{stat.sub}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Categories + Weekly grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Categories Card */}
-          <div
-            className="p-5 rounded-xl border flex flex-col"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Categorias</h3>
-              <Link href="/usuario/minhas-reclamacoes" className="text-[12px] font-medium" style={{ color: "var(--color-primary)" }}>
-                Ver Todas
-              </Link>
-            </div>
-            
-            {categoriesData.length === 0 ? (
-              <p className="text-[12px] text-center py-6" style={{ color: "var(--color-text-muted)" }}>Nenhuma reclamação registrada no período.</p>
-            ) : (
-              <>
-                <div className="w-full h-2 rounded-full flex overflow-hidden mb-4" style={{ backgroundColor: "var(--color-bg-alt)" }}>
-                  {categoriesData.map((cat, i) => (
-                    <div
-                      key={i}
-                      className="h-full transition-all"
-                      style={{ width: `${cat.pct}%`, backgroundColor: cat.color }}
-                      title={`${cat.label}: ${cat.pct}%`}
-                    />
-                  ))}
-                </div>
-                <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
-                  {categoriesData.map((cat, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                        <span className="text-[13px] truncate" style={{ color: "var(--color-text-secondary)" }}>{cat.label}</span>
-                      </div>
-                      <span className="text-[12px] font-medium" style={{ color: "var(--color-text)" }}>{cat.count} ({cat.pct}%)</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Activity Chart */}
-          <div
-            className="p-5 rounded-xl border flex flex-col"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-          >
-            <h3 className="text-[14px] font-semibold mb-5" style={{ color: "var(--color-text)" }}>Frequência Semanal</h3>
-            <div className="h-[140px] flex items-end gap-4 pt-4 px-2">
-              {["Sem 1", "Sem 2", "Sem 3", "Sem 4"].map((label, i) => {
-                const count = weeklyCounts[i];
-                const heightPct = Math.round((count / maxWeeklyCount) * 80) + 10;
-                const isHighlight = i === 3;
-                return (
-                  <div key={label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
-                    {count > 0 && (
-                      <span
-                        className="absolute bottom-full mb-1 text-[10px] font-semibold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
-                        style={{ backgroundColor: "var(--color-text)", color: "var(--color-surface)" }}
-                      >
-                        {count}
-                      </span>
-                    )}
-                    <div
-                      className="w-full rounded transition-all"
-                      style={{
-                        height: count > 0 ? `${heightPct}%` : "10%",
-                        backgroundColor: isHighlight ? "#1a8ccc" : "var(--color-bg-alt)",
-                      }}
-                    />
-                    <span className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>{label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div
-          className="rounded-xl border overflow-hidden"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--shadow-card)" }}
-        >
-          <div className="px-5 py-4 flex items-center justify-between border-b" style={{ borderColor: "var(--color-border)" }}>
-            <h3 className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>Histórico Recente</h3>
-            <Link href="/usuario/minhas-reclamacoes" className="text-[12px] font-medium" style={{ color: "var(--color-primary)" }}>
-              Ver tudo
-            </Link>
-          </div>
-          
-          {filteredReclamacoes.length === 0 ? (
-            <div className="p-10 text-center text-[13px]" style={{ color: "var(--color-text-muted)" }}>
-              Nenhuma reclamação ativa. Clique em "Nova Reclamação" para registrar.
-            </div>
-          ) : (
-            <div className="divide-y" style={{ borderColor: "var(--color-border)" }}>
-              {filteredReclamacoes.slice(0, 4).map((row) => {
-                const color = getStatusColor(row.status);
-                return (
-                  <Link href={`/reclamacao/${row.id}`} key={row.id} className="block transition-colors" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-bg)"} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}>
-                    <div className="px-5 py-3.5 flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium truncate" style={{ color: "var(--color-text)" }}>{row.titulo}</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-                          {row.endereco.split(",")[0]} · {formatDate(row.criadoEm)}
-                        </p>
-                      </div>
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                        style={{ backgroundColor: `${color}12`, color: color }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-                        {getStatusLabel(row.status)}
-                      </span>
-                    </div>
-                  </Link>
                 );
               })}
             </div>
@@ -439,3 +355,7 @@ export default function UsuarioDashboard() {
     </>
   );
 }
+
+
+
+

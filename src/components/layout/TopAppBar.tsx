@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, Menu, X, Home, FileText, Clock, Trophy, User, LogOut, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
+import VizoorLogo from "@/components/ui/VizoorLogo";
 
 export default function TopAppBar() {
   const pathname = usePathname();
@@ -18,12 +19,9 @@ export default function TopAppBar() {
   const userInitial = userName.charAt(0).toUpperCase();
 
   const menuItems = [
-    { href: "/usuario/dashboard", icon: Home, label: "Dashboard" },
-    { href: "/", icon: MapPin, label: "Mapa" },
-    { href: "/usuario/minhas-reclamacoes", icon: FileText, label: "Minhas Reclamações" },
-    { href: "/usuario/historico", icon: Clock, label: "Histórico" },
-    { href: "/usuario/ranking", icon: Trophy, label: "Ranking" },
-    { href: "/usuario/perfil", icon: User, label: "Perfil" },
+    { href: "/usuario/dashboard", icon: Home, label: "Meu Painel" },
+    { href: "/", icon: MapPin, label: "Mapa de Benefícios" },
+    { href: "/usuario/perfil", icon: User, label: "Meu Perfil" },
   ];
 
   const handleSignOut = async () => {
@@ -47,7 +45,9 @@ export default function TopAppBar() {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>SAC Marília</span>
+          <span className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>
+            <VizoorLogo height={22} />
+          </span>
         </div>
         <div className="hidden md:block" />
 
@@ -92,10 +92,7 @@ export default function TopAppBar() {
             <div>
               <div className="flex items-center justify-between pb-4 mb-4 border-b" style={{ borderColor: "var(--color-border)" }}>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#1a8ccc] flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">S</span>
-                  </div>
-                  <span className="font-semibold text-[15px]" style={{ color: "var(--color-text)" }}>SAC Marília</span>
+                  <VizoorLogo height={26} />
                 </div>
                 <button
                   onClick={() => setIsDrawerOpen(false)}
@@ -153,7 +150,7 @@ export default function TopAppBar() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-semibold truncate" style={{ color: "var(--color-text)" }}>{userName}</p>
-                  <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>Painel do Cidadão</p>
+                  <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>Navegador de SP</p>
                 </div>
               </div>
             </div>

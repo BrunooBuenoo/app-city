@@ -9,10 +9,8 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   const items = [
-    { href: "/usuario/dashboard", icon: Home, label: "Home" },
+    { href: "/usuario/dashboard", icon: Home, label: "Meu Painel" },
     { href: "/", icon: MapPin, label: "Mapa" },
-    { href: "/usuario/reclamacao/nova", icon: Plus, label: "Registrar", isAction: true },
-    { href: "/usuario/historico", icon: Clock, label: "Alertas" },
     { href: "/usuario/perfil", icon: User, label: "Perfil" },
   ];
 
@@ -23,18 +21,6 @@ export default function BottomNav() {
     >
       {items.map((item) => {
         const isActive = pathname === item.href;
-
-        if (item.isAction) {
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#1a8ccc] text-white active:scale-95 transition-all cursor-pointer"
-            >
-              <item.icon className="w-5 h-5" />
-            </Link>
-          );
-        }
 
         return (
           <Link

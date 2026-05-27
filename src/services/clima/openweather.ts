@@ -81,7 +81,7 @@ export function getMockWeather(forcedCondition?: WeatherData["condition"]): Weat
     description: descriptions[condition],
     feelsLike: Math.round(feelsLike),
     windSpeed: Math.round(windSpeed),
-    city: "Marília",
+    city: "São Paulo",
     isMocked: true,
   };
 }

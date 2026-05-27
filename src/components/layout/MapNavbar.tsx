@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Menu, X, LogIn, Info, LogOut, User, MapPin } from "lucide-react";
+import { Search, Menu, X, LogIn, Info, LogOut, User, MapPin, Store, Compass } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signOutUser } from "@/services/firebase";
 import { useCategorias } from "@/hooks/useCategorias";
 import ThemeToggle from "./ThemeToggle";
+import VizoorLogo from "@/components/ui/VizoorLogo";
 
 interface MapNavbarProps {
   searchQuery: string;
@@ -89,7 +90,7 @@ export default function MapNavbar({
     debounceTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputValue + " Marília SP")}&limit=5&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputValue + " SP, Brasil")}&limit=5&addressdetails=1`,
           { headers: { "Accept-Language": "pt-BR" } }
         );
         const data: AddressSuggestion[] = await res.json();
@@ -148,18 +149,8 @@ export default function MapNavbar({
       <div>
         <div className="bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl shadow-elevated border border-white/50 dark:border-zinc-800/50 px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3">
           {/* Logo */}
-          <Link href="/" className="shrink-0 flex items-center gap-2 md:gap-3 group">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-[#1a8ccc] to-[#1572a6] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow shrink-0">
-              <MapPin className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </div>
-            <div className="hidden sm:block text-left">
-              <span className="text-xs md:text-sm font-bold text-[#112F4E] dark:text-zinc-100 leading-none block">
-                SAC Marília
-              </span>
-              <span className="text-xs md:text-sm font-bold text-[#112F4E] dark:text-zinc-100 tracking-wide">
-                ao Contrário
-              </span>
-            </div>
+          <Link href="/" className="shrink-0 flex items-center group">
+            <VizoorLogo height={26} />
           </Link>
 
           {/* Search with autocomplete */}
@@ -245,10 +236,18 @@ export default function MapNavbar({
             
             <Link
               href="/sobre"
-              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-[#4A5D70] dark:text-zinc-300 hover:text-[#112F4E] dark:hover:text-zinc-100 hover:bg-[#FAF7F2] dark:hover:bg-zinc-800 rounded-xl transition-all whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#4A5D70] dark:text-zinc-300 hover:text-[#112F4E] dark:hover:text-zinc-100 hover:bg-[#FAF7F2] dark:hover:bg-zinc-800 rounded-xl transition-all whitespace-nowrap"
             >
-              <Info className="w-4 h-4" />
-              Conhecer SAC
+              <Compass className="w-3.5 h-3.5" />
+              Sobre Nós
+            </Link>
+
+            <Link
+              href="/sobre#anunciantes"
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white font-bold text-xs rounded-xl active:scale-[0.98] transition-all whitespace-nowrap shadow-sm border border-emerald-500/20"
+            >
+              <Store className="w-3.5 h-3.5 shrink-0" />
+              Divulgar
             </Link>
 
             {!loading && isLoggedIn ? (
@@ -318,11 +317,10 @@ export default function MapNavbar({
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="w-full p-2.5 bg-[#FAF7F2] dark:bg-zinc-800 border border-[#E2E8F0] dark:border-zinc-700 rounded-xl text-xs text-[#112F4E] dark:text-zinc-200 outline-none"
               >
-                <option value="">Todos os Status (Abertos)</option>
-                <option value="aberto">Aberto</option>
-                <option value="em_analise">Em Análise</option>
-                <option value="em_andamento">Em Progresso</option>
-                <option value="critico">Crítico</option>
+                <option value="">Todos os Status</option>
+                <option value="pendente_aprovacao">Pendente</option>
+                <option value="ativo">Ativo</option>
+                <option value="suspenso">Suspenso</option>
               </select>
             </div>
           </div>
@@ -341,8 +339,17 @@ export default function MapNavbar({
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-[#4A5D70] dark:text-zinc-300 hover:bg-[#FAF7F2] dark:hover:bg-zinc-800 rounded-xl transition-colors"
             >
-              <Info className="w-4 h-4" />
-              Conhecer o SAC
+              <Compass className="w-4 h-4" />
+              Sobre Nós
+            </Link>
+
+            <Link
+              href="/sobre#anunciantes"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors"
+            >
+              <Store className="w-4 h-4" />
+              Divulgar
             </Link>
 
             {!loading && isLoggedIn ? (
