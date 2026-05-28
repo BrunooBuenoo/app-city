@@ -1,30 +1,61 @@
-# VIZOOR — REGRA DE NEGÓCIO (VERSÃO INICIAL)
+# VIZOOR — REGRA DE NEGÓCIO (VERSÃO GERAL)
 
 # VISÃO GERAL
 
-A Vizoor é uma plataforma de descoberta geográfica baseada em criadores de conteúdo locais.
+A Vizoor é uma plataforma social de descoberta local baseada em experiências reais e criadores de conteúdo regionais.
 
 A plataforma conecta:
+- usuários comuns
+- criadores de conteúdo
+- estabelecimentos
+- experiências locais
+- economia física
 
-- Usuários comuns
-- Criadores de conteúdo
-- Estabelecimentos
-- A própria empresa Vizoor
-
-O objetivo é transformar criadores regionais em curadores oficiais de lugares dentro de um mapa social interativo.
+A proposta da Vizoor é utilizar tecnologia para incentivar as pessoas a explorarem o mundo real através de recomendações autênticas, experiências presenciais e descoberta geográfica social.
 
 ---
 
 # CONCEITO PRINCIPAL
 
-A Vizoor NÃO é apenas:
-- um guia turístico
-- um Google Maps
-- um catálogo de restaurantes
+A Vizoor NÃO é:
+- um aplicativo de delivery
+- um guia turístico tradicional
+- apenas um mapa
+- apenas uma rede social
 
 A Vizoor é:
 
-> Uma plataforma social de descoberta local baseada em criadores de conteúdo.
+> Uma plataforma social de descoberta local baseada em criadores regionais e experiências reais.
+
+---
+
+# PROPÓSITO DA MARCA
+
+Vivemos em um mundo cada vez mais digital:
+- delivery
+- streaming
+- redes sociais
+- consumo remoto
+- experiências através de telas
+
+A Vizoor nasce para fazer o caminho contrário.
+
+A plataforma existe para:
+- reconectar pessoas ao mundo físico
+- incentivar descobertas reais
+- fortalecer a economia local
+- valorizar experiências presenciais
+- transformar criadores locais em curadores de cidades
+
+---
+
+# POSICIONAMENTO
+
+O mundo real ainda está lá fora.
+
+Descubra restaurantes, hotéis, atrações, cafeterias e experiências incríveis através de pessoas que realmente vivem cada cidade.
+
+Explore o mapa, encontre novos lugares e viva experiências reais por todo o Brasil.
 
 ---
 
@@ -46,6 +77,7 @@ A plataforma principal possui:
 - conteúdos
 - avaliações
 - recomendações
+- experiências locais
 
 ---
 
@@ -54,7 +86,6 @@ A plataforma principal possui:
 Cada criador aprovado possui uma página pública própria dentro da Vizoor.
 
 Exemplos:
-
 - vizoor.com.br/navegandosp
 - vizoor.com.br/rolecampinas
 - vizoor.com.br/saopaulosecreto
@@ -72,35 +103,182 @@ Quando um usuário acessa:
 vizoor.com.br/navegandosp
 
 ele visualizará:
-
 - mapa personalizado do criador
-- estabelecimentos parceiros do criador
-- vídeos e conteúdos do criador
+- estabelecimentos parceiros
+- vídeos e conteúdos
 - avaliações
 - lugares favoritos
 - roteiros
 - categorias
 - identidade visual do criador
 
-Essa página funciona como o ambiente oficial daquele criador dentro do ecossistema Vizoor.
+Essa página funciona como o ambiente oficial daquele criador dentro da Vizoor.
 
 ---
 
-# RELAÇÃO ENTRE CRIADOR E MAPA GLOBAL
+# MAPA GLOBAL DA VIZOOR
 
-Todos os estabelecimentos vinculados aos criadores:
-- também aparecem automaticamente no mapa global da Vizoor
+A Vizoor possui um mapa global responsável por reunir:
+- todos os estabelecimentos aprovados
+- experiências locais
+- criadores da plataforma
+- descoberta geográfica
 
-Isso significa que:
-- o criador gera conteúdo e audiência
-- a Vizoor cresce junto
-- o mapa principal é constantemente alimentado
+O mapa global representa o ecossistema completo da Vizoor.
+
+---
+
+# MODELO DE PRESENÇA DOS ESTABELECIMENTOS
+
+Na Vizoor, um estabelecimento pode existir de duas formas:
+
+## 1. Presença direta na Vizoor
+
+O estabelecimento:
+- cria perfil diretamente na plataforma
+- aparece apenas no mapa global
+- não possui vínculo com criadores
+
+Nesse caso:
+- o local pertence apenas ao ecossistema principal da Vizoor
+
+---
+
+## 2. Presença vinculada a criadores
+
+Quando um criador possui parceria com o estabelecimento:
+- o local continua no mapa global
+- passa também a aparecer na página do criador
+
+Exemplo:
+- vizoor.com.br/navegandosp
+
+---
+
+# CRIADORES DE CONTEÚDO
+
+Os criadores são responsáveis por:
+- explorar cidades
+- descobrir experiências
+- produzir conteúdo regional
+- recomendar lugares
+- fortalecer descoberta local
+
+Eles atuam como:
+- curadores regionais
+- exploradores urbanos
+- parceiros de descoberta
+
+---
+
+# CRIAÇÃO DE ESTABELECIMENTOS PELOS CRIADORES
+
+Os criadores possuem autonomia para cadastrar e gerenciar estabelecimentos diretamente dentro de suas páginas na Vizoor.
+
+Eles poderão:
+- adicionar estabelecimentos
+- editar informações
+- enviar fotos
+- adicionar conteúdos
+- recomendar experiências
+- gerenciar parceiros
+
+---
+
+# FUNCIONAMENTO DO CADASTRO PELO CRIADOR
+
+O criador poderá cadastrar:
+- restaurantes
+- hotéis
+- cafeterias
+- bares
+- atrações
+- experiências
+- lojas
+- locais turísticos
+
+Informando:
+- nome
+- categoria
+- endereço
+- descrição
+- fotos
+- redes sociais
+- localização
+
+---
+
+# APROVAÇÃO DA VIZOOR
+
+Quando o criador cadastrar um estabelecimento:
+
+o local:
+- aparecerá imediatamente na página do criador
+- ficará disponível dentro do ambiente daquele criador
+
+Porém:
+- ainda NÃO aparecerá no mapa global da Vizoor
+
+---
+
+# MODERAÇÃO CENTRALIZADA
+
+Para aparecer oficialmente no mapa global da Vizoor:
+
+o estabelecimento deverá ser aprovado pela administração da plataforma.
+
+O administrador poderá:
+- aprovar
+- rejeitar
+- editar
+- moderar
+- solicitar ajustes
+
+---
+
+# RESULTADO APÓS APROVAÇÃO
+
+Após aprovação:
+- o estabelecimento entra oficialmente no mapa global da Vizoor
+- continua aparecendo na página do criador
+- torna-se parte oficial do ecossistema
+
+---
+
+# PARCERIAS EXTERNAS
+
+As parcerias podem surgir:
+- dentro da Vizoor
+- fora da plataforma
+
+Exemplo:
+- Instagram
+- WhatsApp
+- networking
+- visitas presenciais
+
+O criador poderá formalizar essas parcerias dentro da Vizoor posteriormente.
+
+---
+
+# RELAÇÃO ENTRE CRIADOR E ESTABELECIMENTO
+
+O criador:
+- não é dono do estabelecimento
+- não cria uma plataforma separada
+- não cria um novo mapa isolado
+
+Ele apenas:
+- recomenda
+- associa
+- divulga
+- gerencia conteúdos vinculados
 
 ---
 
 # VÍNCULO SOCIAL DOS ESTABELECIMENTOS
 
-No mapa global da Vizoor, ao clicar em um estabelecimento, o usuário verá:
+Ao abrir um estabelecimento no mapa global da Vizoor, o usuário poderá visualizar:
 
 - informações do local
 - fotos
@@ -116,110 +294,46 @@ Indicado por:
 [ Ver perfil do criador ]
 
 Ao clicar:
-- o usuário será redirecionado para:
+- o usuário será direcionado para:
 vizoor.com.br/navegandosp
-
----
-
-# ESTRUTURA DOS USUÁRIOS
-
-## 1. Usuário Comum
-
-Pode:
-- navegar no mapa
-- pesquisar lugares
-- seguir criadores
-- salvar locais
-- visualizar conteúdos
-- criar roteiros
-
-Não pode:
-- cadastrar estabelecimentos premium
-- criar vínculos comerciais
-
----
-
-## 2. Criador de Conteúdo
-
-Pode:
-- possuir página dedicada própria dentro da Vizoor
-- vincular estabelecimentos ao perfil
-- publicar conteúdos
-- adicionar vídeos/fotos
-- criar roteiros
-- acompanhar métricas
-- divulgar parceiros
-
-Não é proprietário do estabelecimento.
-
-O criador apenas:
-- recomenda
-- associa
-- divulga
-
----
-
-## 3. Estabelecimento
-
-Pode:
-- aparecer no mapa
-- possuir perfil público
-- receber conteúdos de criadores
-- contratar destaque
-- acessar métricas
-- participar de campanhas
-
----
-
-## 4. Administrador Vizoor
-
-Possui controle total:
-- criadores
-- estabelecimentos
-- aprovações
-- categorias
-- moderação
-- monetização
-- analytics
-- destaque de pins
 
 ---
 
 # REGRA MAIS IMPORTANTE
 
-## O ESTABELECIMENTO NÃO PERTENCE AO CRIADOR
+## O ESTABELECIMENTO PERTENCE À VIZOOR
 
-O estabelecimento pertence à plataforma Vizoor.
+O estabelecimento pertence ao ecossistema principal da plataforma.
 
-O criador apenas:
-- vincula
-- recomenda
-- divulga
+Os criadores apenas:
+- vinculam
+- recomendam
+- divulgam
+- gerenciam conteúdos relacionados
 
 Isso evita:
 - duplicidade
 - spam
 - desorganização
+- múltiplos cadastros do mesmo local
 
 ---
 
 # ESTRUTURA TÉCNICA DE RELACIONAMENTO
 
 ## establishments
-
-Tabela global única de estabelecimentos.
+Tabela global de estabelecimentos.
 
 ---
 
 ## creators
-
-Tabela global única de criadores.
+Tabela global de criadores.
 
 Cada criador possui:
 - slug único
-- perfil público
+- página pública
 - identidade visual própria
-- página dedicada dentro da Vizoor
+- conteúdos próprios
 
 ---
 
@@ -229,73 +343,72 @@ Tabela de relacionamento:
 
 | creator_id | establishment_id |
 
-Isso permite que:
-- um mesmo estabelecimento apareça em múltiplos criadores
+Isso permite:
+- múltiplos criadores no mesmo estabelecimento
 - sem duplicação de cadastro
 
 ---
 
 # ESTRUTURA DE URL DOS CRIADORES
 
-Cada criador será identificado por um slug único.
+Cada criador possuirá:
+- slug único
+- URL pública própria
 
 Exemplo:
+- vizoor.com.br/navegandosp
 
-- Criador: Navegando SP
-- Slug: navegandosp
-- URL pública: vizoor.com.br/navegandosp
+Regras:
+- slug único
+- memorável
+- sem conflito com rotas reservadas
 
-Regras do slug:
-- deve ser único
-- deve ser curto e memorável
-- deve representar a marca do criador
-- não pode conflitar com rotas reservadas da plataforma
-
-Exemplos de rotas reservadas:
+Rotas reservadas:
 - /login
 - /sobre
 - /mapa
 - /admin
 - /usuario
 - /empresa
-- /parceiro
-- /representante
 - /api
 
 ---
 
-# REGRA DE ESTRUTURA PÚBLICA
+# ESTRUTURA PÚBLICA DA PLATAFORMA
 
-Na Vizoor existirão dois níveis principais de navegação pública:
+A Vizoor possui dois níveis principais:
 
-## 1. Mapa global da plataforma
+## 1. Mapa Global
+Responsável pela descoberta ampla da plataforma.
 
-Responsável por reunir:
-- todos os estabelecimentos da Vizoor
-- todos os criadores
-- descoberta ampla por categoria, busca e localização
-
-## 2. Página dedicada do criador
-
-Responsável por reunir:
-- estabelecimentos vinculados àquele criador
-- conteúdos e recomendações do criador
-- identidade visual própria
-- seleção curada de lugares
-
-O mapa global mostra o ecossistema completo.
-
-A página do criador mostra a curadoria daquele criador.
+## 2. Página do Criador
+Responsável pela curadoria específica daquele criador.
 
 ---
 
-# DIFERENCIAL DA PLATAFORMA
+# DIFERENCIAL DA VIZOOR
 
 Na Vizoor:
-- o conteúdo do criador não desaparece como nos stories/reels
-- as recomendações viram permanentes
-- os lugares ficam organizados geograficamente
-- a descoberta continua gerando tráfego
+- o conteúdo não desaparece como stories
+- recomendações tornam-se permanentes
+- lugares continuam gerando descoberta
+- experiências ficam organizadas geograficamente
+
+A plataforma transforma conteúdo em descoberta contínua.
+
+---
+
+# ECONOMIA LOCAL
+
+A Vizoor busca:
+- incentivar circulação em negócios físicos
+- fortalecer economias regionais
+- gerar movimento presencial
+- conectar pessoas a experiências locais
+
+A tecnologia funciona como:
+- ponto de partida da experiência
+- e não destino final
 
 ---
 
@@ -304,7 +417,8 @@ Na Vizoor:
 Criar:
 - uma rede social geográfica
 - baseada em criadores locais
-- conectando pessoas aos melhores lugares
+- focada em experiências reais
+- conectando pessoas aos melhores lugares do Brasil
 
 ---
 
@@ -312,33 +426,33 @@ Criar:
 
 ## FASE 1
 Foco:
-- São Paulo
-- Gastronomia
-- Restaurantes
-- Cafeterias
-- Bares
+- gastronomia
+- cafeterias
+- bares
+- experiências urbanas
 
 ---
 
 ## FASE 2
-Expandir para:
+Expansão:
 - hotéis
 - turismo
 - eventos
-- experiências
 - lifestyle
-- pets
-- esportes
+- experiências
+- lazer
 - viagens
+- cultura
+- entretenimento
 
 ---
 
 # MONETIZAÇÃO FUTURA
 
-## Criador Premium
+## Criadores
+- selo verificado
 - analytics
 - destaque
-- selo verificado
 - campanhas
 
 ---
@@ -346,39 +460,29 @@ Expandir para:
 ## Estabelecimentos
 - pins patrocinados
 - destaque regional
+- campanhas
 - impulsionamento
-- campanhas locais
 
 ---
 
 # VISÃO DE LONGO PRAZO
 
 Transformar a Vizoor em:
-- o principal ecossistema de criadores locais do Brasil
-- unindo conteúdo, mapa, descoberta e negócios locais
+- o principal ecossistema de descoberta local do Brasil
+- a maior rede de criadores regionais do país
+- a principal plataforma social de experiências presenciais
 
 ---
 
-# POSICIONAMENTO
+# ESSÊNCIA DA MARCA
 
 A Vizoor não vende apenas divulgação.
 
 A Vizoor conecta:
-- criadores
-- lugares
-- experiências
 - pessoas
+- cidades
+- criadores
+- experiências
+- lugares reais
 
-Tudo através de um mapa social inteligente.
-
----
-
-# DIRETRIZ TÉCNICA INICIAL
-
-Para a primeira versão do produto:
-
-- a Vizoor utilizará páginas de criadores por URL
-- não haverá dependência inicial de subdomínios
-- a arquitetura será centralizada em rotas como `vizoor.com.br/slug-do-criador`
-
-Essa decisão reduz a complexidade técnica inicial e acelera a implantação do ecossistema de criadores sem alterar o conceito central da plataforma.
+Tudo através de um mapa social inteligente focado no mundo físico.

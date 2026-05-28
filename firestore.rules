@@ -99,10 +99,13 @@ service cloud.firestore {
       match /establishments/{estabId} {
         allow read: if true;
         allow create: if isAdmin()
-          || (request.resource.data.empresaId is string && isEmpresa(request.resource.data.empresaId));
+          || (request.resource.data.empresaId is string && request.resource.data.empresaId != "" && isEmpresa(request.resource.data.empresaId))
+          || (request.resource.data.creatorId is string && isOwnerOfCreatorDoc(request.resource.data.creatorId));
         allow update: if isAdmin()
-          || (resource.data.empresaId is string && isEmpresa(resource.data.empresaId))
-          || (request.resource.data.empresaId is string && isEmpresa(request.resource.data.empresaId));
+          || (resource.data.empresaId is string && resource.data.empresaId != "" && isEmpresa(resource.data.empresaId))
+          || (request.resource.data.empresaId is string && request.resource.data.empresaId != "" && isEmpresa(request.resource.data.empresaId))
+          || (resource.data.creatorId is string && isOwnerOfCreatorDoc(resource.data.creatorId))
+          || (request.resource.data.creatorId is string && isOwnerOfCreatorDoc(request.resource.data.creatorId));
         allow delete: if isAdmin();
       }
 

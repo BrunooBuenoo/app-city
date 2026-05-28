@@ -25,7 +25,9 @@ export {
 export {
   solicitarVinculoCriadorEstabelecimento,
   aprovarVinculoCriadorEstabelecimento,
+  aprovarSolicitacaoDeParceriaPeloCriador,
   rejeitarVinculoCriadorEstabelecimento,
+  rejeitarSolicitacaoDeParceriaPeloCriador,
   removerVinculoCriadorEstabelecimento,
   atualizarCuradoriaCriadorEstabelecimento,
   listarEstabelecimentosDoCriador,
@@ -35,12 +37,14 @@ export {
   listarCriadoresDoEstabelecimento,
   listarCriadoresAtivosDoEstabelecimento,
   type CreatorEstablishmentLink,
+  type CreatorApprovalStatus,
   type CreatorEstablishmentStatus,
   type CreatorLinkWithCreator,
   type CreatorLinkWithEstablishment,
 } from "./creator-establishments";
 export {
   criarEstabelecimento,
+  criarEstabelecimentoPeloCriador,
   aprovarEstabelecimento,
   rejeitarOuSuspenderEstabelecimento,
   listarEstabelecimentos,

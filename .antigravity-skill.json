@@ -1,0 +1,13 @@
+{
+  "active_skills": [
+    "claude-cookbook",
+    "ui-ux-pro-max"
+  ],
+  "coding_guidelines": {
+    "base": "anthropic-claude-cookbooks",
+    "strict_typescript": true,
+    "no_placeholders": true,
+    "modular_components": true,
+    "robust_error_handling": true
+  }
+}

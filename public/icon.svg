@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="92 14 106 56" width="106" height="56">
+  <defs>
+    <!-- Gradiente Azul/Lilás Elétrico Oficial da Vizoor -->
+    <linearGradient id="vz-fav-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="30%" stop-color="#007bff" />
+      <stop offset="60%" stop-color="#00d5ff" />
+      <stop offset="90%" stop-color="#AA4EFF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Olho Esquerdo -->
+  <g>
+    <circle cx="120" cy="42" r="26" fill="url(#vz-fav-g)" />
+    <circle cx="120" cy="42" r="15" fill="#ffffff" />
+    <circle cx="120" cy="42" r="9.5" fill="#080e1e" />
+    <circle cx="124" cy="37" r="3" fill="#ffffff" opacity="0.9" />
+  </g>
+
+  <!-- Olho Direito -->
+  <g>
+    <circle cx="170" cy="42" r="26" fill="url(#vz-fav-g)" />
+    <circle cx="170" cy="42" r="15" fill="#ffffff" />
+    <circle cx="170" cy="42" r="9.5" fill="#080e1e" />
+    <circle cx="174" cy="37" r="3" fill="#ffffff" opacity="0.9" />
+  </g>
+</svg>

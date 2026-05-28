@@ -14,16 +14,18 @@ import { listarCriadores, type CreatorProfile } from "./creators";
 import { listarEstabelecimentos, type Estabelecimento } from "./estabelecimentos";
 
 export type CreatorEstablishmentStatus = "pendente" | "ativo" | "rejeitado" | "removido";
+export type CreatorApprovalStatus = "pendente" | "aprovado" | "rejeitado";
 
 export interface CreatorEstablishmentLink {
   id: string;
   creatorId: string;
   establishmentId: string;
   status: CreatorEstablishmentStatus;
+  aprovacaoCriador?: CreatorApprovalStatus;
   ordem?: number;
   destaque?: boolean;
   observacaoCuradoria?: string;
-  origem?: "solicitado_pelo_criador" | "convidado_pela_plataforma" | "parceria_comercial";
+  origem?: "solicitado_pelo_criador" | "solicitado_pelo_estabelecimento" | "convidado_pela_plataforma" | "parceria_comercial";
   criadoEm?: Timestamp | null;
   atualizadoEm?: Timestamp | null;
 }
@@ -36,6 +38,9 @@ function docToLink(id: string, data: any): CreatorEstablishmentLink {
     creatorId: data.creatorId ?? "",
     establishmentId: data.establishmentId ?? "",
     status: data.status ?? "pendente",
+    aprovacaoCriador:
+      data.aprovacaoCriador ??
+      ((data.origem ?? "solicitado_pelo_criador") === "solicitado_pelo_estabelecimento" ? "pendente" : "aprovado"),
     ordem: data.ordem ?? 0,
     destaque: data.destaque ?? false,
     observacaoCuradoria: data.observacaoCuradoria ?? "",
@@ -62,6 +67,8 @@ export async function solicitarVinculoCriadorEstabelecimento(
     const linkRef = existingSnap.docs[0].ref;
     await setDoc(linkRef, {
       status: "pendente",
+      aprovacaoCriador:
+        data?.origem === "solicitado_pelo_estabelecimento" ? "pendente" : "aprovado",
       ordem: data?.ordem ?? 0,
       destaque: data?.destaque ?? false,
       observacaoCuradoria: data?.observacaoCuradoria ?? "",
@@ -76,6 +83,8 @@ export async function solicitarVinculoCriadorEstabelecimento(
     creatorId,
     establishmentId,
     status: "pendente",
+    aprovacaoCriador:
+      data?.origem === "solicitado_pelo_estabelecimento" ? "pendente" : "aprovado",
     ordem: data?.ordem ?? 0,
     destaque: data?.destaque ?? false,
     observacaoCuradoria: data?.observacaoCuradoria ?? "",
@@ -90,6 +99,21 @@ export async function solicitarVinculoCriadorEstabelecimento(
 export async function aprovarVinculoCriadorEstabelecimento(linkId: string): Promise<void> {
   await setDoc(doc(db, COLLECTION, linkId), {
     status: "ativo",
+    atualizadoEm: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function aprovarSolicitacaoDeParceriaPeloCriador(linkId: string): Promise<void> {
+  await setDoc(doc(db, COLLECTION, linkId), {
+    aprovacaoCriador: "aprovado",
+    atualizadoEm: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function rejeitarSolicitacaoDeParceriaPeloCriador(linkId: string): Promise<void> {
+  await setDoc(doc(db, COLLECTION, linkId), {
+    aprovacaoCriador: "rejeitado",
+    status: "rejeitado",
     atualizadoEm: serverTimestamp(),
   }, { merge: true });
 }
@@ -161,7 +185,7 @@ export async function listarCriadoresAtivosDoEstabelecimento(establishmentId: st
   const creatorsPorId = new Map(creators.map((creator) => [creator.id, creator]));
 
   return links
-    .filter((link) => link.status === "ativo")
+    .filter((link) => link.status === "ativo" && link.aprovacaoCriador === "aprovado")
     .map((link) => ({
       ...link,
       creator: creatorsPorId.get(link.creatorId),
@@ -185,7 +209,7 @@ export async function listarEstabelecimentosAtivosDoCriador(creatorId: string): 
   const estabelecimentosPorId = new Map(estabelecimentos.map((estabelecimento) => [estabelecimento.id, estabelecimento]));
 
   return links
-    .filter((link) => link.status === "ativo")
+    .filter((link) => link.status === "ativo" && link.aprovacaoCriador === "aprovado")
     .map((link) => ({
       ...link,
       establishment: estabelecimentosPorId.get(link.establishmentId),

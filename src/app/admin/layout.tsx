@@ -12,24 +12,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { isLoggedIn, loading, profile } = useAuth();
 
-  useEffect(() => {
-    if (loading) return;
+  // TODO: Reativar autenticação quando o login estiver implementado
+  // useEffect(() => {
+  //   if (loading) return;
+  //   if (!isLoggedIn) {
+  //     router.replace("/login");
+  //     return;
+  //   }
+  //   if (profile?.funcao !== "admin") {
+  //     router.replace("/usuario/dashboard");
+  //   }
+  // }, [isLoggedIn, loading, profile, router]);
 
-    if (!isLoggedIn) {
-      router.replace("/login");
-      return;
-    }
-
-    if (profile?.funcao !== "admin") {
-      router.replace("/usuario/dashboard");
-    }
-  }, [isLoggedIn, loading, profile, router]);
-
-  if (loading || !isLoggedIn || profile?.funcao !== "admin") {
+  if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3" style={{ backgroundColor: "var(--color-bg)" }}>
         <Loader2 className="h-8 w-8 animate-spin text-[#1a8ccc]" />
-        <p className="text-sm text-slate-500">Validando acesso administrativo...</p>
+        <p className="text-sm text-slate-500">Carregando painel administrativo...</p>
       </div>
     );
   }

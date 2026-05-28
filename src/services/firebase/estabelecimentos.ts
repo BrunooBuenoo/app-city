@@ -27,6 +27,8 @@ const GLOBAL_ESTABLISHMENTS_COLLECTION = "establishments";
 export interface Estabelecimento {
   id: string;
   empresaId: string;
+  creatorId?: string;
+  origemCadastro?: "empresa" | "criador";
   nome: string;
   descricao: string;
   categoria: "alimentacao" | "automotivo" | "saude_beleza" | "comercio_varejo" | "educacao_servicos";
@@ -75,6 +77,8 @@ function docToEstabelecimento(id: string, data: DocumentData): Estabelecimento {
   return {
     id,
     empresaId: data.empresaId ?? "",
+    creatorId: data.creatorId ?? "",
+    origemCadastro: data.origemCadastro ?? "empresa",
     nome: data.nome ?? "",
     descricao: data.descricao ?? "",
     categoria: data.categoria ?? "comercio_varejo",
@@ -92,10 +96,19 @@ function docToEstabelecimento(id: string, data: DocumentData): Estabelecimento {
   };
 }
 
+function isPermissionDeniedError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const code = "code" in error ? String((error as { code?: unknown }).code ?? "") : "";
+  return code === "permission-denied" || code === "firestore/permission-denied";
+}
+
 function buildEstabelecimentoConstraints(filtros?: {
   status?: string;
   categoria?: string;
   empresaId?: string;
+  creatorId?: string;
+  origemCadastro?: string;
 }): QueryConstraint[] {
   const constraints: QueryConstraint[] = [];
 
@@ -107,6 +120,12 @@ function buildEstabelecimentoConstraints(filtros?: {
   }
   if (filtros?.empresaId) {
     constraints.push(where("empresaId", "==", filtros.empresaId));
+  }
+  if (filtros?.creatorId) {
+    constraints.push(where("creatorId", "==", filtros.creatorId));
+  }
+  if (filtros?.origemCadastro) {
+    constraints.push(where("origemCadastro", "==", filtros.origemCadastro));
   }
 
   return constraints;
@@ -149,6 +168,7 @@ export async function criarEstabelecimento(
   const docRef = await addDoc(colRef, {
     ...data,
     empresaId,
+    origemCadastro: "empresa",
     status: "pendente_aprovacao",
     criadoEm: serverTimestamp(),
   });
@@ -158,18 +178,42 @@ export async function criarEstabelecimento(
   await syncGlobalEstabelecimento(docRef.id, {
     ...data,
     empresaId,
+    origemCadastro: "empresa",
     status: "pendente_aprovacao",
     criadoEm: Timestamp.now(),
   });
   return docRef.id;
 }
 
-export async function aprovarEstabelecimento(empresaId: string, estabId: string): Promise<void> {
-  const docRef = doc(db, "empresas", empresaId, "estabelecimentos", estabId);
-  await updateDoc(docRef, {
-    status: "ativo",
-    aprovadoEm: serverTimestamp(),
+export async function criarEstabelecimentoPeloCriador(
+  creatorId: string,
+  data: Omit<Estabelecimento, "id" | "empresaId" | "creatorId" | "origemCadastro" | "status" | "criadoEm" | "aprovadoEm">
+): Promise<string> {
+  const docRef = doc(collection(db, GLOBAL_ESTABLISHMENTS_COLLECTION));
+
+  await setDoc(docRef, {
+    ...data,
+    id: docRef.id,
+    empresaId: "",
+    creatorId,
+    origemCadastro: "criador",
+    status: "pendente_aprovacao",
+    criadoEm: serverTimestamp(),
+    atualizadoEm: serverTimestamp(),
   });
+
+  return docRef.id;
+}
+
+export async function aprovarEstabelecimento(empresaId: string, estabId: string): Promise<void> {
+  if (empresaId) {
+    const docRef = doc(db, "empresas", empresaId, "estabelecimentos", estabId);
+    await updateDoc(docRef, {
+      status: "ativo",
+      aprovadoEm: serverTimestamp(),
+    });
+  }
+
   await syncGlobalEstabelecimento(estabId, {
     empresaId,
     status: "ativo",
@@ -178,10 +222,13 @@ export async function aprovarEstabelecimento(empresaId: string, estabId: string)
 }
 
 export async function rejeitarOuSuspenderEstabelecimento(empresaId: string, estabId: string, status: "suspenso" | "pendente_aprovacao"): Promise<void> {
-  const docRef = doc(db, "empresas", empresaId, "estabelecimentos", estabId);
-  await updateDoc(docRef, {
-    status,
-  });
+  if (empresaId) {
+    const docRef = doc(db, "empresas", empresaId, "estabelecimentos", estabId);
+    await updateDoc(docRef, {
+      status,
+    });
+  }
+
   await syncGlobalEstabelecimento(estabId, {
     empresaId,
     status,
@@ -192,6 +239,8 @@ export async function listarEstabelecimentos(filtros?: {
   status?: string;
   categoria?: string;
   empresaId?: string;
+  creatorId?: string;
+  origemCadastro?: string;
 }): Promise<Estabelecimento[]> {
   if (filtros?.empresaId) {
     const constraints = buildEstabelecimentoConstraints(filtros);
@@ -225,6 +274,32 @@ export function onEstabelecimentosChange(
 ) {
   let globalItems: Estabelecimento[] = [];
   let legacyItems: Estabelecimento[] = [];
+  let globalUnavailable = false;
+  let legacyUnavailable = false;
+
+  const reportSourceError = (source: "global" | "legacy", error: unknown) => {
+    if (isPermissionDeniedError(error)) {
+      if (source === "global") {
+        globalUnavailable = true;
+        globalItems = [];
+      } else {
+        legacyUnavailable = true;
+        legacyItems = [];
+      }
+
+      console.warn(`Firestore onEstabelecimentosChange ${source} permission denied; usando fonte disponivel.`, error);
+      emit();
+
+      if (globalUnavailable && legacyUnavailable && onError) {
+        onError(error);
+      }
+
+      return;
+    }
+
+    console.error(`Firestore onEstabelecimentosChange ${source} error:`, error);
+    if (onError) onError(error);
+  };
 
   const emit = () => {
     callback(mergeEstabelecimentos(legacyItems, globalItems));
@@ -233,24 +308,24 @@ export function onEstabelecimentosChange(
   const unsubscribeGlobal = onSnapshot(
     query(collection(db, GLOBAL_ESTABLISHMENTS_COLLECTION), where("status", "==", "ativo")),
     (snap) => {
+      globalUnavailable = false;
       globalItems = snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
       emit();
     },
     (error) => {
-      console.error("Firestore onEstabelecimentosChange global error:", error);
-      if (onError) onError(error);
+      reportSourceError("global", error);
     }
   );
 
   const unsubscribeLegacy = onSnapshot(
     query(collectionGroup(db, "estabelecimentos"), where("status", "==", "ativo")),
     (snap) => {
+      legacyUnavailable = false;
       legacyItems = snap.docs.map((d) => docToEstabelecimento(d.id, d.data()));
       emit();
     },
     (error) => {
-      console.error("Firestore onEstabelecimentosChange legacy error:", error);
-      if (onError) onError(error);
+      reportSourceError("legacy", error);
     }
   );
 

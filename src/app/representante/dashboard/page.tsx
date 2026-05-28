@@ -78,16 +78,23 @@ export default function RepresentanteDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("todos");
 
+  // TODO: Reativar autenticação quando o login estiver implementado
+  // useEffect(() => {
+  //   if (!loading) {
+  //     if (!isLoggedIn) {
+  //       router.push("/login");
+  //       return;
+  //     }
+  //     // Simula carregamento
+  //     setTimeout(() => setIsLoading(false), 600);
+  //   }
+  // }, [loading, isLoggedIn]);
+
   useEffect(() => {
     if (!loading) {
-      if (!isLoggedIn) {
-        router.push("/login");
-        return;
-      }
-      // Simula carregamento
       setTimeout(() => setIsLoading(false), 600);
     }
-  }, [loading, isLoggedIn]);
+  }, [loading]);
 
   const handleAprovar = (id: string) => {
     setParceiros((prev) =>

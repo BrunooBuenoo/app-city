@@ -165,6 +165,9 @@ export default function AdminVinculosPage() {
                     <p className="text-xs text-slate-500 dark:text-zinc-400">
                       slug: /{link.creator?.slug || "indefinido"}
                     </p>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      aprovacao do criador: {link.aprovacaoCriador || "aprovado"}
+                    </p>
                     <p className="max-w-xl text-xs leading-relaxed text-slate-500 dark:text-zinc-400">
                       {link.observacaoCuradoria || link.establishment?.descricao || "Sem observacao adicional para este vinculo."}
                     </p>

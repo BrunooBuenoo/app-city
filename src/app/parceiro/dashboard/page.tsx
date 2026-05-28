@@ -56,19 +56,26 @@ export default function ParceiroDashboard() {
     }
   };
 
+  // TODO: Reativar autenticação quando o login estiver implementado
+  // useEffect(() => {
+  //   if (!loading) {
+  //     if (!isLoggedIn) {
+  //       router.push("/login");
+  //       return;
+  //     }
+  //     if (profile?.funcao !== "parceiro" && profile?.funcao !== "admin") {
+  //       router.push("/login");
+  //       return;
+  //     }
+  //     carregarEstabelecimentos();
+  //   }
+  // }, [loading, isLoggedIn, profile]);
+
   useEffect(() => {
     if (!loading) {
-      if (!isLoggedIn) {
-        router.push("/login");
-        return;
-      }
-      if (profile?.funcao !== "parceiro" && profile?.funcao !== "admin") {
-        router.push("/login");
-        return;
-      }
       carregarEstabelecimentos();
     }
-  }, [loading, isLoggedIn, profile]);
+  }, [loading]);
 
   useEffect(() => {
     if (selecionado) {

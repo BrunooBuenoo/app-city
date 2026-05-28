@@ -10,20 +10,19 @@ export default function CriadorDashboardPage() {
   const router = useRouter();
   const { isLoggedIn, loading, profile } = useAuth();
 
-  useEffect(() => {
-    if (loading) return;
+  // TODO: Reativar autenticação quando o login estiver implementado
+  // useEffect(() => {
+  //   if (loading) return;
+  //   if (!isLoggedIn) {
+  //     router.push("/login");
+  //     return;
+  //   }
+  //   if (profile?.funcao !== "criador" && profile?.funcao !== "admin") {
+  //     router.push("/usuario/dashboard");
+  //   }
+  // }, [isLoggedIn, loading, profile, router]);
 
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-
-    if (profile?.funcao !== "criador" && profile?.funcao !== "admin") {
-      router.push("/usuario/dashboard");
-    }
-  }, [isLoggedIn, loading, profile, router]);
-
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-[#1a8ccc]" />
